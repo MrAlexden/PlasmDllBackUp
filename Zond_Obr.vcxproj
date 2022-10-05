@@ -161,7 +161,6 @@
     <ClCompile Include="MainDllFunc.cpp" />
     <ClCompile Include="Matrix Class\matrix.cpp" />
     <ClCompile Include="Savitsky-Golay\Savitsky-Golay.cpp" />
-    <ClCompile Include="Savitsky-Golay\Source.cpp" />
     <ClCompile Include="Setka\Setka.cpp" />
     <ClCompile Include="SubFunctions\SubFuncs.cpp" />
     <ClCompile Include="Zond\Zond.cpp" />
