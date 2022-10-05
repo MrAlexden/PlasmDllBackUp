@@ -1,6 +1,6 @@
 #include "Setka.h"
 
-extern "C" __declspec(dllexport) myflo *** Setka(vector <myflo> vPila, vector <myflo> vSignal, vector <myflo> AdditionalData)
+extern "C" __declspec(dllexport) Plasma_proc_result * Setka(vector <myflo> vPila, vector <myflo> vSignal, vector <myflo> AdditionalData)
 {
 	if (vPila.size() == 0
 		|| vPila.empty()
@@ -80,83 +80,28 @@ extern "C" __declspec(dllexport) myflo *** Setka(vector <myflo> vPila, vector <m
 		return nullptr;
 	}
 
-	vector <myflo> vadd = { linfitP, filtS };
+	Plasma_proc_result* fdata = new Plasma_proc_result(numSegments, vSegPila.size(), dimension);
 
-	myflo*** fdata = new myflo ** [5];
-	for (int i = 0; i < 3; ++i)
-	{
-		fdata[i] = new myflo * [numSegments + 1];
-		for (int j = 0; j < numSegments + 1; ++j)
-		{
-			fdata[i][j] = new myflo[vSegPila.size()];
-		}
-	}
-	fdata[3] = new myflo * [numSegments];
-	for (int j = 0; j < numSegments; ++j)
-	{
-		fdata[3][j] = new myflo[dimension];
-	}
-	fdata[4] = new myflo * [1];
-	fdata[4][0] = new myflo[3];
-
-	/*=============================================================================================
-	-- fdata[0] - оригинальные данные
-		--[i][j]
-			i::столбики(количество отрезков + 1, т.к. первая пила)
-			j::строки(размер отрезка)
-	-- fdata[1] - обработанные данные(результат)
-		--[i][j]
-			i::столбики(количество отрезков + 1, т.к. первая пила)
-			j::строки(размер отрезка)
-	-- fdata[2] - фильтрованный сигнал
-		--[i][j]
-			i::столбики(количество отрезков + 1, т.к. первая пила)
-			j::строки(размер отрезка)
-	-- fdata[3] - массив с параметрами
-		--[i][j]
-			i::строки(количество отрезков)
-			j::столбики, их всегда 5 для сетки
-				--1. время
-				--2. максимальное значение гаусса
-				--3. температура
-				--4. потенциал плазмы
-				--5. енергия частиц
-	-- fdata[4] - массив из одного элемента из трех элементов
-		--[0][i]
-			i::3 размера данных
-			--1. столбики для fdata[0],fdata[1],fdata[2](количество отрезков + 1, т.к. первая пила)
-				и количество строк для fdata[3](нужно отнять 1, т.к. нет пилы)
-			--2. размер отрезка для fdata[0],fdata[1],fdata[2]
-			--3. столбики для fdata[3], их всегда 5 для сетки
-	=============================================================================================*/
-
-	fdata[4][0][0] = (myflo)numSegments;
-	fdata[4][0][1] = (myflo)vSegPila.size();
-	fdata[4][0][2] = (myflo)dimension;
-
-	memcpy(fdata[0][0], vSegPila.data(), sizeof myflo * vSegPila.size());
-	memcpy(fdata[1][0], vSegPila.data(), sizeof myflo * vSegPila.size());
-	memcpy(fdata[2][0], vSegPila.data(), sizeof myflo * vSegPila.size());
+	fdata->SetPila(vSegPila);
 
 #pragma omp parallel for schedule(static, 1) 
-	for (int segnum = 1; segnum < numSegments + 1; ++segnum)
+	for (int segnum = 0; segnum < numSegments; ++segnum)
 	{
 		vector <myflo> vY, vres, vfilt, vcoeffs = { filtS , linfitP };
 
-		vY.assign(vSignal.begin() + vStartSegIndxs[segnum - 1] + one_segment_width * leftP,
-			vSignal.begin() + vStartSegIndxs[segnum - 1] + one_segment_width * leftP + vSegPila.size());
+		vY.assign(vSignal.begin() + vStartSegIndxs[segnum] + one_segment_width * leftP,
+			vSignal.begin() + vStartSegIndxs[segnum] + one_segment_width * leftP + vSegPila.size());
 
-		memcpy(fdata[0][segnum], vY.data(), sizeof myflo * vSegPila.size());
+		fdata->SetOriginSegment(vY, segnum);
 
 		if (make_one_segment(1, vSegPila, vY, vres, vfilt, vcoeffs) == -1) 
 			continue;
 
-		memcpy(fdata[1][segnum], vres.data(), sizeof myflo * vSegPila.size());
-		memcpy(fdata[2][segnum], vfilt.data(), sizeof myflo * vSegPila.size());
+		vcoeffs.insert(vcoeffs.begin(), vStartSegIndxs[segnum] * (1.0 / (one_segment_width * freqP)));
 
-		fdata[3][segnum - 1][0] = vStartSegIndxs[segnum - 1] * (1.0 / (one_segment_width * freqP));
-		for (int i = 1, j = 0; i < dimension; ++i, ++j)
-			fdata[3][segnum - 1][i] = vcoeffs[j];
+		fdata->SetFiltedSegment(vfilt, segnum);
+		fdata->SetApproxSegment(vres, segnum);
+		fdata->SetParamsSegment(vcoeffs, segnum);
 	}
 
 	return fdata;

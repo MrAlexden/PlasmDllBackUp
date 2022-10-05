@@ -8,7 +8,9 @@
 
 using namespace std;
 
+#ifndef WIN32_LEAN_AND_MEAN
 typedef double myflo;
+#endif
 
 class Plasma_proc_result
 {
@@ -48,7 +50,7 @@ public:
 		SizeOfSegment = Size_Of_Segment;
 	}
 
-	void SetSegmentsNumber(int Number_Of_Parameters)
+	void SetParamsNumber(int Number_Of_Parameters)
 	{
 		NumberOfParameters = Number_Of_Parameters;
 	}

@@ -431,6 +431,24 @@ int find_signal_and_make_pila(_In_ vector <myflo> & vPila,
 	return 0;
 }
 
+double metod_hord(myflo x0, myflo x1, vector <myflo>& vParams, myflo(*fx)(myflo, vector <myflo>&))
+{
+	myflo x_cashe = 2 * x1;
+	int n = 0;
+	while (abs(x1 - x0) > 10E-10)
+	{
+		x0 = x1 - (x1 - x0) * fx(x1, vParams) / (fx(x1, vParams) - fx(x0, vParams));
+		x1 = x0 - (x0 - x1) * fx(x0, vParams) / (fx(x0, vParams) - fx(x1, vParams));
+		n++;
+		if (x1 > x_cashe || x0 > x_cashe || n > 500)
+		{
+			x1 = x_cashe;
+			break;
+		}
+	}
+	return x1;
+}
+
 myflo metod_Newton(myflo x0, vector <myflo>& vParams, myflo(*fx)(myflo, vector <myflo>&))
 {
 	myflo x1 = 0.0, x_cashe = 2 * x0;
@@ -451,9 +469,16 @@ myflo metod_Newton(myflo x0, vector <myflo>& vParams, myflo(*fx)(myflo, vector <
 
 myflo dens(vector <myflo> & vPila, vector <myflo> & vParams)
 {
-	myflo x = metod_Newton(vPila[vPila.size() - 1], vParams, fx_STEP), ans = 0.0, M = 0.0;
-
+	myflo x = metod_hord(vPila[0], vPila[vPila.size() - 1], vParams, fx_STEP), ans = 0.0, M = 0.0;
+	
+	if (is_invalid(x) || !x)
+		x = metod_Newton(vPila[vPila.size() - 1], vParams, fx_STEP);
+	if (is_invalid(x) || !x)
+		x = vPila[vPila.size() - 1];
 	ans = abs(vParams[0] + vParams[1] * x);
+
+	string str = to_string(x) + "\n" + to_string(ans);
+	MessageBoxA(NULL, str.c_str(), "Error!", MB_ICONWARNING | MB_OK);
 
 	switch (fuel)
 	{
@@ -465,8 +490,8 @@ myflo dens(vector <myflo> & vPila, vector <myflo> & vParams)
 		break;
 	}
 
-	return ans * (10e-6) / (0.52026 * S * (1.602 * 10e-19) * sqrt((1.380649 * 10e-23) * vParams[3] * 11604.51812 / M)); //моя формула
-	//return ans * (10e-6) / (S * (1.602 * 10e-19) * sqrt(2 * vParams[3] * (1.602 * 10e-19) / M)); //формула сергея
+	return ans * (10E-6) / (0.52026 * S * (1.602 * 10E-19) * sqrt((1.380649 * 10E-23) * vParams[3] * 11604.51812 / M)); //моя формула
+	//return ans * (10E-6) / (S * (1.602 * 10E-19) * sqrt(2 * vParams[3] * (1.602 * 10E-19) / M)); //формула сергея
 }
 
 int make_one_segment(_In_ int diagnostics,					 // diagnostics type (zond::0|setka::1|cilind::2)
@@ -518,7 +543,7 @@ int make_one_segment(_In_ int diagnostics,					 // diagnostics type (zond::0|set
 			}
 			else
 			{
-				vParams[0] = vPila[0];
+				vParams[0] = vSignal[0];
 				vParams[1] = 1;
 			}
 
@@ -543,8 +568,12 @@ int make_one_segment(_In_ int diagnostics,					 // diagnostics type (zond::0|set
 				vParams[1] = 1;
 				vParams[2] = 1;
 				vParams[3] = 10;
+
 				vFixed[0] = vFixed[1] = vFixed[2] = vFixed[3] = false;
-				levmarq(vPila, vSignal, vParams, vFixed, Num_iter * 2, fx_STEP);
+
+				levmarq(vPila, vSignal, vParams, vFixed, max(Num_iter * 2, 100), fx_STEP);
+
+				if (vParams[3] < 0 || vParams[3] > 100) vParams[3] = 10;
 			}
 			/*if (vParams[2] <= 0)
 				vParams[2] = -vParams[0] / 4;*/
@@ -584,17 +613,17 @@ int make_one_segment(_In_ int diagnostics,					 // diagnostics type (zond::0|set
 
 			vParams[0] = 0;													// y0 - offset
 			vParams[1] = vPila[vPila.size() * 0.5];							// xc - center
-			vParams[2] = abs(vPila[vPila.size() - 1] - vPila[0]) / 10;	// w - width
+			vParams[2] = abs(vPila[vPila.size() - 1] - vPila[0]) / 10;		// w - width
 			vParams[3] = 1;													// A - area
 
 			/* аппроксимируем производную Гауссом */
 			levmarq(vPila, vres, vParams, vFixed, Num_iter * 2, fx_GAUSS);
 
 			vcoeffs.resize(4);
-			vcoeffs[0] = vParams[0] + vParams[3] / (vParams[2] * sqrt(Pi / 2));	// Max Value
+			vcoeffs[0] = vParams[0] + vParams[3] / (vParams[2] * sqrt(Pi / 2));		// Max Value
 			vcoeffs[1] = vParams[2];												// Temp
 			vcoeffs[2] = vParams[1];												// Peak Voltage
-			vcoeffs[3] = sqrt(log(4)) * vParams[2];							// Energy
+			vcoeffs[3] = sqrt(log(4)) * vParams[2];									// Energy
 
 			/* записываем в vres */
 			for (i = 0; i < vPila.size(); ++i)
@@ -625,17 +654,17 @@ int make_one_segment(_In_ int diagnostics,					 // diagnostics type (zond::0|set
 
 			vParams[0] = 0;													// y0 - offset
 			vParams[1] = vPila[vPila.size() * 0.5];							// xc - center
-			vParams[2] = abs(vPila[vPila.size() - 1] - vPila[0]) / 10;	// w - width
+			vParams[2] = abs(vPila[vPila.size() - 1] - vPila[0]) / 10;		// w - width
 			vParams[3] = 1;													// A - area
 
 			/* аппроксимируем производную Гауссом */
 			levmarq(vPila, vSignal, vParams, vFixed, Num_iter * 2, fx_GAUSS);
 
 			vcoeffs.resize(4);
-			vcoeffs[0] = vParams[0] + vParams[3] / (vParams[2] * sqrt(Pi / 2));	// Max Value
+			vcoeffs[0] = vParams[0] + vParams[3] / (vParams[2] * sqrt(Pi / 2));		// Max Value
 			vcoeffs[1] = vParams[2];												// Temp
 			vcoeffs[2] = vParams[1];												// Peak Voltage
-			vcoeffs[3] = sqrt(log(4)) * vParams[2];							// Energy
+			vcoeffs[3] = sqrt(log(4)) * vParams[2];									// Energy
 
 			/* записываем в vres */
 			for (i = 0; i < vPila.size(); ++i)

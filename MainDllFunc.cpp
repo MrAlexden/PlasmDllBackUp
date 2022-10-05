@@ -47,7 +47,7 @@ extern "C" __declspec(dllexport) void MainWrapper(_In_ int diagnostics,         
     vector <myflo> vSignal(arrSignal, arrSignal + arrSsize);
     vector <myflo> vAdd(AdditionalData, AdditionalData + 14);
 
-    myflo *** fdata = nullptr;
+    Plasma_proc_result * fdata = nullptr;
     switch (diagnostics)
     {
     case 0: // Zond
@@ -66,41 +66,21 @@ extern "C" __declspec(dllexport) void MainWrapper(_In_ int diagnostics,         
         return;
     }
 
-    int d1 = fdata[4][0][0], d2 = fdata[4][0][1], d3 = fdata[4][0][2];
+    int d1 = fdata->Get_NumberOfSegments(), d2 = fdata->Get_SizeOfSegment(), d3 = fdata->Get_NumberOfParameters();
     try
     {
-        for (int i = 1, j = 0; i < d1 + 1; ++i, j += d2)
+        for (int i = 0, j = 0, k = 0; i < d1; ++i, j += d2, k += d3)
         {
-            memcpy(&OriginalData[j], fdata[0][i], sizeof myflo * d2);
-            memcpy(&ResultData[j], fdata[1][i], sizeof myflo * d2);
-            memcpy(&FiltedData[j], fdata[2][i], sizeof myflo * d2);
+            memcpy(&OriginalData[j], &fdata->Get_mOriginalData()[i][0], sizeof myflo * d2);
+            memcpy(&FiltedData[j], &fdata->Get_mFeltrationData()[i][0], sizeof myflo * d2);
+            memcpy(&ResultData[j], &fdata->Get_mApproximatedData()[i][0], sizeof myflo * d2);
+            memcpy(&Parameters[k], &fdata->Get_mParametersData()[i][0], sizeof myflo * d3);
         }
-        for (int i = 0, j = 0; i < d1; ++i, j += d3)
-            memcpy(&Parameters[j], fdata[3][i], sizeof myflo * d3);
     }
     catch (...)
     {
         MessageBoxA(NULL, "Index is out of range. Programm continued running", "Error!", MB_ICONWARNING | MB_OK);
     }
-
-    /* !!! deliting used pointers !!! */
-    //for (int i = 0; i < d1 + 1; ++i)
-    //{
-    //    delete [] fdata[0][i];
-    //    delete [] fdata[1][i];
-    //    delete [] fdata[2][i];
-    //    delete [] fdata[3][i];
-    //}
-
-    delete [] fdata[4][0];
-
-    delete [] fdata[0];
-    delete [] fdata[1];
-    delete [] fdata[2];
-    delete [] fdata[3];
-    delete [] fdata[4];
-
-    delete [] fdata;
 }
 
 extern "C" __declspec(dllexport) void FindSignalWrapper(_In_ myflo * arrPila,           // 1д массив с данными пилы
@@ -179,10 +159,10 @@ extern "C" __declspec(dllexport) void FindSignalWrapper(_In_ myflo * arrPila,   
 }
 
 extern "C" __declspec(dllexport) void SetUpPila(_In_ myflo * arrPila,           // 1д массив с данными пилы
-    _In_ myflo * arrSignal,         // 1д массив с данными сигнала
-    _In_ int arrPsize,              // размер пилы
-    _In_ int arrSsize,              // размер сигнала
-    _Out_ myflo * vResP)            // возвращяемый 1д массив с пилой для построения графика
+                                                _In_ myflo * arrSignal,         // 1д массив с данными сигнала
+                                                _In_ int arrPsize,              // размер пилы
+                                                _In_ int arrSsize,              // размер сигнала
+                                                _Out_ myflo * vResP)            // возвращяемый 1д массив с пилой для построения графика
 {
     if (arrPila == nullptr ||
         arrSignal == nullptr ||

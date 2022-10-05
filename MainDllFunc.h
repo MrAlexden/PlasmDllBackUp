@@ -7,6 +7,8 @@
 #define ef_koef 5 /* коэффициент эффективности, если == 1 то метод обрабатывает все точки, 
                 если == 2 каждую вторую (в два раза быстре, но точность меньше) и тд */
 
+typedef float myflo;
+
 // Файлы заголовков Windows
 #include <windows.h>    // for windows interface
 #include <iostream>     // for std::
@@ -20,8 +22,6 @@
 #include "Processing_Result_class/ProcessingResultClass.h"
 
 using namespace std;
-
-typedef float myflo;
 
 ////////////////////////////////////////////// GLOBAL FUNCTIONS //////////////////////////////////////////////
 /*===================================== GAUSS =====================================*/
@@ -127,15 +127,15 @@ int make_one_segment(_In_ int,                      // diagnostics type (zond::0
                      _Out_ vector <myflo>&,			// vector to be filled with the filtration
                      _Out_ vector <myflo>&);		// additional coeffs/results vector
 
-extern "C" __declspec(dllexport) myflo *** Zond(_In_ vector <myflo> Pila,                // входной одномерный массив пилы
-                                                _In_ vector <myflo> Signal,              // входной одномерный массив сигнала
-                                                _In_ vector <myflo> AdditionalData);     // дополнительные данные по импульсу
-extern "C" __declspec(dllexport) myflo *** Setka(_In_ vector <myflo> Pila,               // входной одномерный массив пилы
-                                                 _In_ vector <myflo> Signal,             // входной одномерный массив сигнала
-                                                 _In_ vector <myflo> AdditionalData);    // дополнительные данные по импульсу
-extern "C" __declspec(dllexport) myflo *** Cilinder(_In_ vector <myflo> Pila,            // входной одномерный массив пилы
-                                                    _In_ vector <myflo> Signal,          // входной одномерный массив сигнала
-                                                    _In_ vector <myflo> AdditionalData); // дополнительные данные по импульсу
+extern "C" __declspec(dllexport) Plasma_proc_result * Zond(_In_ vector <myflo> Pila,                // входной одномерный массив пилы
+                                                           _In_ vector <myflo> Signal,              // входной одномерный массив сигнала
+                                                           _In_ vector <myflo> AdditionalData);     // дополнительные данные по импульсу
+extern "C" __declspec(dllexport) Plasma_proc_result * Setka(_In_ vector <myflo> Pila,               // входной одномерный массив пилы
+                                                            _In_ vector <myflo> Signal,             // входной одномерный массив сигнала
+                                                            _In_ vector <myflo> AdditionalData);    // дополнительные данные по импульсу
+extern "C" __declspec(dllexport) Plasma_proc_result * Cilinder(_In_ vector <myflo> Pila,            // входной одномерный массив пилы
+                                                               _In_ vector <myflo> Signal,          // входной одномерный массив сигнала
+                                                               _In_ vector <myflo> AdditionalData); // дополнительные данные по импульсу
 
 bool is_invalid(myflo val); // from SubFuncs.cpp
 bool is_invalid(int val);   // from SubFuncs.cpp
