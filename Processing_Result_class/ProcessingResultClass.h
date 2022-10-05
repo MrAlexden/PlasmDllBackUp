@@ -31,14 +31,6 @@ public:
 		mFeltrationData.resize(Number_Of_Segments);
 		mApproximatedData.resize(Number_Of_Segments);
 		mParametersData.resize(Number_Of_Segments);
-
-		for (int i = 0; i < Number_Of_Segments; ++i)
-		{
-			mOriginalData[i].resize(Size_Of_Segment);
-			mFeltrationData[i].resize(Size_Of_Segment);
-			mApproximatedData[i].resize(Size_Of_Segment);
-			mParametersData[i].resize(Number_Of_Parameters);
-		}
 	}
 
 	void SetSegmentsNumber(int Number_Of_Segments)

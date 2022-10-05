@@ -77,8 +77,5 @@
     <ClCompile Include="Savitsky-Golay\Savitsky-Golay.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="Savitsky-Golay\Source.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
   </ItemGroup>
 </Project>
