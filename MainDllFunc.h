@@ -17,8 +17,6 @@
 #include <algorithm>    // for min_element|max_element
 #include <omp.h>        // for multithreading
 
-#include "Processing_Result_class/ProcessingResultClass.h"
-
 using namespace std;
 
 typedef float myflo;

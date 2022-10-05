@@ -1,6 +1,6 @@
 #include "Zond.h"
 
-extern "C" __declspec(dllexport) Plasma_proc_result * Zond(vector <myflo> vPila, vector <myflo> vSignal, vector <myflo> AdditionalData)
+extern "C" __declspec(dllexport) myflo *** Zond(vector <myflo> vPila, vector <myflo> vSignal, vector <myflo> AdditionalData)
 {
 	if (vPila.size() == 0
 		|| vPila.empty()
