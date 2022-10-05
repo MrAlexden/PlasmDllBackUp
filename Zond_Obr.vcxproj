@@ -148,7 +148,7 @@
     <ClInclude Include="MainDllFunc.h" />
     <ClInclude Include="Matrix Class\matrix.h" />
     <ClInclude Include="Processing_Result_class\ProcessingResultClass.h" />
-    <ClInclude Include="Savitky-Golay\Savitsky-Golay.h" />
+    <ClInclude Include="Savitsky-Golay\Savitsky-Golay.h" />
     <ClInclude Include="Setka\Setka.h" />
     <ClInclude Include="SubFunctions\SubFuncs.h" />
     <ClInclude Include="Zond\Zond.h" />
@@ -160,7 +160,8 @@
     <ClCompile Include="Lev-Marq\Lev-Marq.cpp" />
     <ClCompile Include="MainDllFunc.cpp" />
     <ClCompile Include="Matrix Class\matrix.cpp" />
-    <ClCompile Include="Savitky-Golay\Savitsky-Golay.cpp" />
+    <ClCompile Include="Savitsky-Golay\Savitsky-Golay.cpp" />
+    <ClCompile Include="Savitsky-Golay\Source.cpp" />
     <ClCompile Include="Setka\Setka.cpp" />
     <ClCompile Include="SubFunctions\SubFuncs.cpp" />
     <ClCompile Include="Zond\Zond.cpp" />

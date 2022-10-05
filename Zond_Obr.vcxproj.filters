@@ -24,9 +24,6 @@
     <ClInclude Include="Lev-Marq\Lev-Marq.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="Savitky-Golay\Savitsky-Golay.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
     <ClInclude Include="Find_Peaks\PeakFinder.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
@@ -45,6 +42,9 @@
     <ClInclude Include="Processing_Result_class\ProcessingResultClass.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
+    <ClInclude Include="Savitsky-Golay\Savitsky-Golay.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Matrix Class\matrix.cpp">
@@ -54,9 +54,6 @@
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="Lev-Marq\Lev-Marq.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
-    <ClCompile Include="Savitky-Golay\Savitsky-Golay.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="Zond\Zond.cpp">
@@ -75,6 +72,12 @@
       <Filter>Исходные файлы</Filter>
     </ClCompile>
     <ClCompile Include="GlobalVarsInit.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="Savitsky-Golay\Savitsky-Golay.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
+    <ClCompile Include="Savitsky-Golay\Source.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
   </ItemGroup>
