@@ -1,0 +1,310 @@
+// dllmain.cpp : Определяет точку входа для приложения DLL.
+#include "pch.h"
+
+#define TOL 1e-30 /* smallest value allowed in cholesky_decomp() */
+#define Pi 3.14159265
+#define ef_koef 2 /* коэффициент эффективности, если == 1 то метод обрабатывает все точки, 
+				если == 2 каждую вторую (в два раза быстре, но точность меньше) и тд */
+
+BOOL APIENTRY DllMain( HMODULE hModule,
+                       DWORD  ul_reason_for_call,
+                       LPVOID lpReserved
+                     )
+{
+    switch (ul_reason_for_call)
+    {
+    case DLL_PROCESS_ATTACH:
+    case DLL_THREAD_ATTACH:
+    case DLL_THREAD_DETACH:
+    case DLL_PROCESS_DETACH:
+        break;
+    }
+    return TRUE;
+}
+
+void levmarq(vector <double> &vec_Y,				// dependent data
+			 vector <double> &vParams,				// vector of parameters we are searching for
+			 vector <bool> &vFixed,					// vector of param's fixed status 
+			 UINT Num_iter,							// number of max iterations this method does
+			 double (*fx)(double, vector <double> &), // the function that the data will be approximated by
+			 void (*gradient)(vector <double> &, double, vector <double> &, vector <bool> &)) // func of derivative with respect to each param
+{
+	UINT x, i, j, it, npar = 0; // npar = ceil(vParams.size() % 2);
+	double lambda = 0.001, up = 10, down = 1 / up, mult, err = 0, newerr = 0, derr = 0, target_derr = 10 ^ -12;
+
+	/* params counting, fixed params are not calculated */
+	if (vParams.size() == vFixed.size())
+		for (i = 0; i < vFixed.size(); i++)
+			if (vFixed[i] == false) 
+				npar++;
+	else return;
+
+	Matrix Hessian(npar, npar, 0.0), ch(npar, npar, 0.0);
+	vector <double> grad(npar), drvtv(npar), delta(npar), newvParams = vParams;
+
+	/* zeroing */
+	for (i = 0; i < npar; i++)
+	{
+		grad[i] = 0.0;
+		delta[i] = 0.0;
+	}
+
+	/* calculate the initial error ("chi-squared") */
+	err = error_func(vec_Y, vParams, fx);
+
+	/* main iteration */
+	for (it = 0; it < Num_iter; it++)
+	{
+		/* zeroing */
+		for (i = 0; i < npar; i++)
+		{
+			drvtv[i] = 0.0;
+			for (j = 0; j < npar; j++)
+			{
+				Hessian(i, j) = 0;
+			}
+		}
+
+		/* calculate the approximation to the Hessian and the "derivative" drvtv */
+		for (x = 0; x < vec_Y.size(); x += ef_koef)
+		{
+			gradient(grad, x, vParams, vFixed);
+
+			for (i = 0; i < npar; i++)
+			{
+				drvtv[i] += (vec_Y[x] - fx(x, vParams)) * grad[i] * ef_koef;
+
+				for (j = 0; j < npar; j++)
+				{
+					Hessian(i, j) += grad[i] * grad[j] * ef_koef;
+				}
+			}
+		}
+
+		/*  make a step "delta."  If the step is rejected, increase lambda and try again */
+		mult = 1 + lambda;
+		bool ill = true; /* ill-conditioned? */
+		while (ill && (it < Num_iter))
+		{
+			for (i = 0; i < npar; i++) 
+				Hessian(i, i) = Hessian(i, i) * mult;
+
+			ill = cholesky_decomp(ch, Hessian);
+
+			if (!ill)
+			{
+				solve_axb_cholesky(ch, delta, drvtv);
+
+				for (i = 0; i < vFixed.size(); i++)
+					if (vFixed[i] == false) 
+						newvParams[i] = vParams[i] + delta[i];
+
+				newerr = error_func(vec_Y, newvParams, fx);
+				derr = newerr - err;
+				ill = (derr > 0);
+			}
+
+			if (ill)
+			{
+				mult = (1 + lambda * up) / (1 + lambda);
+				lambda *= up;
+				it++;
+			}
+		}
+
+		for (i = 0; i < vFixed.size(); i++)
+			if (vFixed[i] == false)
+				vParams[i] = newvParams[i];
+
+		err = newerr;
+		lambda *= down;
+
+		if ((!ill) && (-derr < target_derr)) break;
+	}
+}
+
+/* calculate the error function (chi-squared) */
+double error_func(vector <double> &vec_Y, vector <double> &vParams, double (*fx)(double, vector <double> &))
+{
+	double res, e = 0;
+	for (int x = 0; x < vec_Y.size(); x += ef_koef)
+	{
+		res = fx(x, vParams) - vec_Y[x];
+		e += res * res * ef_koef;
+	}
+	return e;
+}
+
+/* solve the equation Ax=b for a symmetric positive-definite matrix A,
+   using the Cholesky decomposition A=LL^T.  The matrix L is passed in "ch".
+   Elements above the diagonal are ignored. */
+void solve_axb_cholesky(Matrix &ch, vector <double> &delta, vector <double> &drvtv)
+{
+	int i, j, npar = ch.getCols();
+	double sum;
+
+	/* solve (ch)*y = drvtv for y (where delta[] is used to store y) */
+
+	for (i = 0; i < npar; i++)
+	{
+		sum = 0;
+		for (j = 0; j < i; j++) 
+			sum += ch(i, j) * delta[j];
+		delta[i] = (drvtv[i] - sum) / ch(i, i);
+	}
+
+	/* solve (ch)^T*delta = y for delta (where delta[] is used to store both y and delta) */
+
+	for (i = npar - 1; i >= 0; i--)
+	{
+		sum = 0;
+		for (j = i + 1; j < npar; j++) 
+			sum += ch(j, i) * delta[j];
+		delta[i] = (delta[i] - sum) / ch(i, i);
+	}
+}
+
+/* This function takes a symmetric, positive-definite matrix "Hessian" and returns
+   its (lower-triangular) Cholesky factor in "ch".  Elements above the
+   diagonal are neither used nor modified.  The same array may be passed
+   as both ch and Hessian, in which case the decomposition is performed in place. */
+bool cholesky_decomp(Matrix &ch, Matrix &Hessian)
+{
+	int i, j, k, npar = ch.getCols();
+	double sum;
+
+	for (i = 0; i < npar; i++)
+	{
+		for (j = 0; j < i; j++)
+		{
+			sum = 0;
+			for (k = 0; k < j; k++) 
+				sum += ch(i, k) * ch(j, k);
+			ch(i, j) = (Hessian(i, j) - sum) / ch(j, j);
+		}
+
+		sum = 0;
+		for (k = 0; k < i; k++) 
+			sum += ch(i, k) * ch(i, k);
+		sum = Hessian(i, i) - sum;
+		if (sum < TOL) return true; /* not positive-definite */
+		ch(i, i) = sqrt(sum);
+	}
+	return false;
+}
+
+/*===================================== GAUSS =====================================*/
+double fx_GAUSS(double x, vector <double> &vParams)
+{
+	double y0 = vParams[0], xc = vParams[1], w = vParams[2], A = vParams[3];
+	return y0 + (A / (w * sqrt(Pi / 2))) * exp(-2 * pow(((x - xc) / w), 2));
+}
+
+void grad_GAUSS(vector <double>& grad, double x, vector <double>& vParams, vector <bool>& vFixed)
+{
+	int i, j = 0;
+	for (i = 0; i < vFixed.size(); i++)
+	{
+		if (vFixed[i] == false)
+		{
+			switch (i)
+			{
+			case 0:
+				grad[j] = 1;
+			case 1:
+				grad[j] = -(2 * sqrt(2) * vParams[3] * exp(-(2 * pow(x - vParams[1], 2)) / pow(vParams[2], 2)) * (2 * x - 2 * vParams[1])) / (sqrt(Pi) * pow(vParams[2], 3));
+			case 2:
+				grad[j] = (4 * sqrt(2) * vParams[3] * exp(-(2 * pow(x - vParams[1], 2)) / pow(vParams[2], 2)) * pow(x - vParams[1], 2)) / (sqrt(Pi) * pow(vParams[2], 4)) -
+					(sqrt(2) * vParams[3] * exp(-(2 * pow(x - vParams[1], 2)) / pow(vParams[2], 2))) / (sqrt(Pi) * pow(vParams[2], 2));
+			case 3:
+				grad[j] = (sqrt(2) * exp(-(2 * pow(x - vParams[1], 2)) / pow(vParams[2], 2))) / (sqrt(Pi) * vParams[2]);
+			}
+			j++;
+		}
+	}
+
+
+}
+
+/*double dfxdx_GAUSS(double x, double xc, double w, double A)
+{
+	return -(2 * sqrt(2) * A * exp(-(2 * pow(x - xc, 2)) / pow(w, 2)) * (2 * x - 2 * xc)) / (sqrt(Pi) * pow(w, 3));
+}
+
+double dfxdy0_GAUSS()
+{
+	return 1;
+}
+
+double dfxdxc_GAUSS(double x, double xc, double w, double A)
+{
+	return -(2 * sqrt(2) * A * exp(-(2 * pow(x - xc, 2)) / pow(w, 2)) * (2 * x - 2 * xc)) / (sqrt(Pi) * pow(w, 3));
+}
+
+double dfxdw_GAUSS(double x, double xc, double w, double A)
+{
+	return (4 * sqrt(2) * A * exp(-(2 * pow(x - xc, 2)) / pow(w, 2)) * pow(x - xc, 2)) / (sqrt(Pi) * pow(w, 4)) - 
+		(sqrt(2) * A * exp(-(2 * pow(x - xc, 2)) / pow(w, 2))) / (sqrt(Pi) * pow(w, 2));
+}
+
+double dfxdA_GAUSS(double x, double xc, double w)
+{
+	return (sqrt(2) * exp(-(2 * pow(x - xc, 2)) / pow(w, 2))) / (sqrt(Pi) * w);
+}*/
+/*===================================== GAUSS =====================================*/
+
+/*===================================== STEP =====================================*/
+double fx_STEP(double x, vector <double> &vParams)
+{
+	double A = vParams[0], B = vParams[1], C = vParams[2], D = vParams[3];
+	return A + B * x + C * exp(x / D);
+}
+
+void grad_STEP(vector <double>& grad, double x, vector <double>& vParams, vector <bool>& vFixed)
+{
+	int i, j = 0;
+	for (i = 0; i < vFixed.size(); i++)
+	{
+		if (vFixed[i] == false)
+		{
+			switch (i)
+			{
+			case 0:
+				grad[j] = 1;
+			case 1:
+				grad[j] = x;
+			case 2:
+				grad[j] = exp(x / vParams[3]);
+			case 3:
+				grad[j] = -(vParams[2] * x * exp(x / vParams[3])) / (vParams[3] * vParams[3]);
+			}
+			j++;
+		}
+	}
+}
+
+/*double dfxdx_STEP(double x, double B, double C, double D)
+{
+	return B + (C * exp(x / D)) / D;
+}
+
+double dfxdA_STEP()
+{
+	return 1;
+}
+
+double dfxdB_STEP(double x)
+{
+	return x;
+}
+
+double dfxdC_STEP(double x, double D)
+{
+	return exp(x / D);
+}
+
+double dfxdD_STEP(double x, double C, double D)
+{
+	return -(C * x * exp(x / D)) / (D * D);
+}*/
+/*===================================== STEP =====================================*/
