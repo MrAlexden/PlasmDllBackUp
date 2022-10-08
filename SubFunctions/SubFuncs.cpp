@@ -469,16 +469,16 @@ myflo metod_Newton(myflo x0, vector <myflo>& vParams, myflo(*fx)(myflo, vector <
 
 myflo dens(vector <myflo> & vPila, vector <myflo> & vParams)
 {
-	myflo x = metod_hord(vPila[0], vPila[vPila.size() - 1], vParams, fx_STEP), ans = 0.0, M = 0.0;
+	myflo x = metod_Newton(vPila[vPila.size() - 1], vParams, fx_STEP), ans = 0.0;
+	double M = 0.0;
 	
-	if (is_invalid(x) || !x)
-		x = metod_Newton(vPila[vPila.size() - 1], vParams, fx_STEP);
-	if (is_invalid(x) || !x)
+	if (is_invalid(x) || !x || x == 0)
+		x = metod_hord(vPila[0], vPila[vPila.size() - 1], vParams, fx_STEP);
+	if (is_invalid(x) || !x || x == 0)
 		x = vPila[vPila.size() - 1];
 	ans = abs(vParams[0] + vParams[1] * x);
-
-	string str = to_string(x) + "\n" + to_string(ans);
-	MessageBoxA(NULL, str.c_str(), "Error!", MB_ICONWARNING | MB_OK);
+	if (is_invalid(ans) || !ans || ans == 0)
+		ans = vParams[0];
 
 	switch (fuel)
 	{
@@ -490,8 +490,12 @@ myflo dens(vector <myflo> & vPila, vector <myflo> & vParams)
 		break;
 	}
 
-	return ans * (10E-6) / (0.52026 * S * (1.602 * 10E-19) * sqrt((1.380649 * 10E-23) * vParams[3] * 11604.51812 / M)); //моя формула
-	//return ans * (10E-6) / (S * (1.602 * 10E-19) * sqrt(2 * vParams[3] * (1.602 * 10E-19) / M)); //формула сергея
+	//string str = to_string(x) + "\n" + to_string(ans) + "\n" + to_string(vParams[0]) + "\n" + to_string(vParams[1]);
+	//string str = to_string(M_He) + "\n" + to_string(M_Ar) + "\n" + to_string(S);
+	//MessageBoxA(NULL, str.c_str(), "Error!", MB_ICONWARNING | MB_OK);
+
+	return (double)ans * (10E-6) / (0.52026 * S * (1.602 * 10E-19) * sqrt((1.380649 * 10E-23) * (double)vParams[3] * 11604.51812 / M)); //моя формула
+	//return (double)ans * (10E-6) / (S * (1.602 * 10E-19) * sqrt(2 * (double)vParams[3] * (1.602 * 10E-19) / M)); //формула сергея
 }
 
 int make_one_segment(_In_ int diagnostics,					 // diagnostics type (zond::0|setka::1|cilind::2)
@@ -562,21 +566,30 @@ int make_one_segment(_In_ int diagnostics,					 // diagnostics type (zond::0|set
 			else
 				levmarq(vPila, vSignal, vParams, vFixed, Num_iter, fx_STEP);
 
-			if (vParams[3] < 0 || vParams[3] > 100)
+			if (vParams[3] < 0.0 || vParams[3] > 100.0)
 			{
-				vParams[0] = -1;
-				vParams[1] = 1;
-				vParams[2] = 1;
+				vector <myflo> vX, vY;
+
+				vX.assign(vPila.begin(), vPila.begin() + vPila.size() * 0.5);
+				vY.assign(vSignal.begin(), vSignal.begin() + vPila.size() * 0.5);
+
+				vector <myflo> vAB = linear_fit(vX, vY);
+
+				vParams[0] = vAB[0];
+				vParams[1] = vAB[1];
+				vParams[2] = -vParams[0];
 				vParams[3] = 10;
 
-				vFixed[0] = vFixed[1] = vFixed[2] = vFixed[3] = false;
+				//vFixed[0] = vFixed[1] = true;
 
-				levmarq(vPila, vSignal, vParams, vFixed, max(Num_iter * 2, 100), fx_STEP);
+				vX.assign(vPila.begin() + vPila.size() * (1 - 0.5), vPila.end());
+				vY.assign(vSignal.begin() + vPila.size() * (1 - 0.5), vSignal.end());
 
-				if (vParams[3] < 0 || vParams[3] > 100) vParams[3] = 10;
+				levmarq(vX, vY, vParams, vFixed, min(Num_iter, 2), fx_STEP);
+
+				if (vParams[3] < 0.0 || vParams[3] > 100.0)
+					vParams[3] = 10;
 			}
-			/*if (vParams[2] <= 0)
-				vParams[2] = -vParams[0] / 4;*/
 
 			vcoeffs = vParams;
 

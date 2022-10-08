@@ -156,7 +156,7 @@ extern myflo leftP,
              linfitP,
              filtS,
              st_time_end_time[2],
-             S,
-             M_Ar,
-             M_He;
+             S;
+extern double M_Ar,
+              M_He;
 ////////////////////////////////////////////// GLOBAL VARIABLES //////////////////////////////////////////////
