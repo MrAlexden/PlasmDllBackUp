@@ -17,8 +17,8 @@ extern "C" __declspec(dllexport) void MainWrapper(_In_ int diagnostics,         
         FiltedData == nullptr ||
         Parameters == nullptr)
     {
-        MessageBoxA(NULL, "Input data pointers equals nullptr", "Error!", MB_ICONWARNING | MB_OK);
-        return;
+        //MessageBoxA(NULL, "Input data pointers equals nullptr", "Error!", MB_ICONWARNING | MB_OK);
+        return;//ERR_BadInputVecs
     }
 
     if (AdditionalData[0] == 0 ||
@@ -29,15 +29,15 @@ extern "C" __declspec(dllexport) void MainWrapper(_In_ int diagnostics,         
         AdditionalData[12] == 0 ||
         AdditionalData[13] == 0)
     {
-        MessageBoxA(NULL, "Input data error, some values equals 0", "Error!", MB_ICONWARNING | MB_OK);
-        return;
+        //MessageBoxA(NULL, "Input data error, some values equals 0", "Error!", MB_ICONWARNING | MB_OK);
+        return;//ZeroInputVals
     }
 
     if (diagnostics < 0 ||
         diagnostics > 2)
     {
-        MessageBoxA(NULL, "Diagnostics number < 0 or > 3", "Error!", MB_ICONWARNING | MB_OK);
-        return;
+        //MessageBoxA(NULL, "Diagnostics number < 0 or > 2", "Error!", MB_ICONWARNING | MB_OK);
+        return;//ERR_BadDiagNum
     }
 
     int arrPsize = (int)AdditionalData[12];				// размер входного массива пилы
@@ -62,7 +62,7 @@ extern "C" __declspec(dllexport) void MainWrapper(_In_ int diagnostics,         
     }
     if (fdata == nullptr)
     {
-        MessageBoxA(NULL, "Processig Error", "Error!", MB_ICONWARNING | MB_OK);
+        //MessageBoxA(NULL, "Processig Error", "Error!", MB_ICONWARNING | MB_OK);
         return;
     }
 
@@ -79,7 +79,7 @@ extern "C" __declspec(dllexport) void MainWrapper(_In_ int diagnostics,         
     }
     catch (...)
     {
-        MessageBoxA(NULL, "Index is out of range. Programm continued running", "Error!", MB_ICONWARNING | MB_OK);
+        //MessageBoxA(NULL, "Index is out of range. Programm continued running", "Error!", MB_ICONWARNING | MB_OK);
     }
 }
 
@@ -94,8 +94,8 @@ extern "C" __declspec(dllexport) void FindSignalWrapper(_In_ myflo * arrPila,   
         arrSignal == nullptr ||
         AdditionalData == nullptr)
     {
-        MessageBoxA(NULL, "Input data pointers equals nullptr", "Error!", MB_ICONWARNING | MB_OK);
-        return;
+        //MessageBoxA(NULL, "Input data pointers equals nullptr", "Error!", MB_ICONWARNING | MB_OK);
+        return;//ERR_BadInputVecs
     }
 
     if (AdditionalData[0] == 0 ||
@@ -106,8 +106,8 @@ extern "C" __declspec(dllexport) void FindSignalWrapper(_In_ myflo * arrPila,   
         AdditionalData[12] == 0 ||
         AdditionalData[13] == 0)
     {
-        MessageBoxA(NULL, "Input data error, some values equals 0", "Error!", MB_ICONWARNING | MB_OK);
-        return;
+        //MessageBoxA(NULL, "Input data error, some values equals 0", "Error!", MB_ICONWARNING | MB_OK);
+        return;//ZeroInputVals
     }
 
     st_time_end_time[0] = AdditionalData[1];		    // время начала обработки (если этот параметр не выбран: -1)
@@ -135,8 +135,8 @@ extern "C" __declspec(dllexport) void FindSignalWrapper(_In_ myflo * arrPila,   
         || is_invalid(vSignal[0])
         || is_invalid(vSignal[vSignal.size() - 1]))
     {
-        MessageBoxA(NULL, "Error after Pila|Signal factorizing", "Error!", MB_ICONWARNING | MB_OK);
-        return;
+        //MessageBoxA(NULL, "Error after Pila|Signal factorizing", "Error!", MB_ICONWARNING | MB_OK);
+        return;//ERR_BadFactorizing
     }
 
     find_signal_and_make_pila(vPila, vSignal, vSegPila, vStartSegIndxs);
@@ -149,8 +149,8 @@ extern "C" __declspec(dllexport) void FindSignalWrapper(_In_ myflo * arrPila,   
         || is_invalid(vStartSegIndxs[0])
         || is_invalid(vStartSegIndxs[vStartSegIndxs.size() - 1]))
     {
-        MessageBoxA(NULL, "Error after noise extracting", "Error!", MB_ICONWARNING | MB_OK);
-        return;
+        //MessageBoxA(NULL, "Error after noise extracting", "Error!", MB_ICONWARNING | MB_OK);
+        return;//ERR_BadNoise
     }
 
     DIM1 = numSegments;
@@ -168,15 +168,15 @@ extern "C" __declspec(dllexport) void SetUpPila(_In_ myflo * arrPila,           
         arrSignal == nullptr ||
         vResP == nullptr)
     {
-        MessageBoxA(NULL, "Input data pointers equals nullptr", "Error!", MB_ICONWARNING | MB_OK);
-        return;
+        //MessageBoxA(NULL, "Input data pointers equals nullptr", "Error!", MB_ICONWARNING | MB_OK);
+        return;//ERR_BadInputVecs
     }
 
     if (arrPsize == 0 ||
         arrSsize == 0)
     {
-        MessageBoxA(NULL, "Input data error, some values equals 0", "Error!", MB_ICONWARNING | MB_OK);
-        return;
+        //MessageBoxA(NULL, "Input data error, some values equals 0", "Error!", MB_ICONWARNING | MB_OK);
+        return;//ZeroInputVals
     }
 
     st_time_end_time[0] = -1;		    // время начала обработки (если этот параметр не выбран: -1)
@@ -198,8 +198,8 @@ extern "C" __declspec(dllexport) void SetUpPila(_In_ myflo * arrPila,           
         || is_invalid(vStartSegIndxs[0])
         || is_invalid(vStartSegIndxs[vStartSegIndxs.size() - 1]))
     {
-        MessageBoxA(NULL, "Error after noise extracting", "Error!", MB_ICONWARNING | MB_OK);
-        return;
+        //MessageBoxA(NULL, "Error after noise extracting", "Error!", MB_ICONWARNING | MB_OK);
+        return;//ERR_BadNoise
     }
 
     /* находим все участки на пиле при помощи пиков */
@@ -207,8 +207,8 @@ extern "C" __declspec(dllexport) void SetUpPila(_In_ myflo * arrPila,           
     PeakFinder::findPeaks(vPila, vnIndices, false);
     if (vnIndices.size() <= 3) // 3 потому что дальше в функцию я передаю начало второго и он нужен целиком, тоесть от второго до третьего индекса
     {
-        MessageBoxA(NULL, "Less then 4 segments found", "Error!", MB_ICONWARNING | MB_OK);
-        return;
+        //MessageBoxA(NULL, "Less then 4 segments found", "Error!", MB_ICONWARNING | MB_OK);
+        return;//ERR_TooFewSegs
     }
     if (vPila.size() != vSignal.size())
         vectordiv(vnIndices, (myflo)vPila.size() / vSignal.size());
@@ -220,7 +220,7 @@ extern "C" __declspec(dllexport) void SetUpPila(_In_ myflo * arrPila,           
     }
     catch (...)
     {
-        MessageBoxA(NULL, "Index is out of range. Programm continued running", "Error!", MB_ICONWARNING | MB_OK);
+        //MessageBoxA(NULL, "Index is out of range. Programm continued running", "Error!", MB_ICONWARNING | MB_OK);
     }
 
     try
@@ -235,7 +235,7 @@ extern "C" __declspec(dllexport) void SetUpPila(_In_ myflo * arrPila,           
     }
     catch (...)
     {
-        MessageBoxA(NULL, "Index is out of range. Programm continued running", "Error!", MB_ICONWARNING | MB_OK);
+        //MessageBoxA(NULL, "Index is out of range. Programm continued running", "Error!", MB_ICONWARNING | MB_OK);
     }
 
     try
@@ -250,7 +250,7 @@ extern "C" __declspec(dllexport) void SetUpPila(_In_ myflo * arrPila,           
     }
     catch (...)
     {
-        MessageBoxA(NULL, "Index is out of range. Programm continued running", "Error!", MB_ICONWARNING | MB_OK);
+        //MessageBoxA(NULL, "Index is out of range. Programm continued running", "Error!", MB_ICONWARNING | MB_OK);
     }
 
     try
@@ -261,6 +261,6 @@ extern "C" __declspec(dllexport) void SetUpPila(_In_ myflo * arrPila,           
     }
     catch (...)
     {
-        MessageBoxA(NULL, "Index is out of range. Programm continued running", "Error!", MB_ICONWARNING | MB_OK);
+        //MessageBoxA(NULL, "Index is out of range. Programm continued running", "Error!", MB_ICONWARNING | MB_OK);
     }
 }

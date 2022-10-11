@@ -9,26 +9,26 @@ extern "C" __declspec(dllexport) Plasma_proc_result * Setka(vector <myflo> vPila
 		|| AdditionalData.size() == 0
 		|| AdditionalData.empty())
 	{
-		MessageBoxA(NULL, "Corrupted input vectors", "Error!", MB_ICONWARNING | MB_OK);
-		return nullptr;
+		//MessageBoxA(NULL, "Corrupted input vectors", "Error!", MB_ICONWARNING | MB_OK);
+		return nullptr;//ERR_BadInputVecs
 	}
 	if ((int)AdditionalData[7] == 0 || is_invalid(AdditionalData[7]) ||
 		(int)AdditionalData[8] == 0 || is_invalid(AdditionalData[8]) ||
 		(int)AdditionalData[9] == 0 || is_invalid(AdditionalData[9]) ||
 		(int)AdditionalData[11] == 0 || is_invalid(AdditionalData[11]))
 	{
-		MessageBoxA(NULL, "Input data error, some values equals 0", "Error!", MB_ICONWARNING | MB_OK);
-		return nullptr;
+		//MessageBoxA(NULL, "Input data error, some values equals 0", "Error!", MB_ICONWARNING | MB_OK);
+		return nullptr;//ZeroInputVals
 	}
 	if (AdditionalData[3] >= 0.5 || AdditionalData[3] < 0.0)
 	{
-		MessageBoxA(NULL, "Ñut-off points on the left value must be > 0.0 and < 0.5", "Error!", MB_ICONWARNING | MB_OK);
-		return nullptr;
+		//MessageBoxA(NULL, "Ñut-off points on the left value must be > 0.0 and < 0.5", "Error!", MB_ICONWARNING | MB_OK);
+		return nullptr;//BadCutOffLeft
 	}
 	if (AdditionalData[4] >= 0.5 || AdditionalData[4] < 0.0)
 	{
-		MessageBoxA(NULL, "Ñut-off points on the right value must be > 0.0 and < 0.5", "Error!", MB_ICONWARNING | MB_OK);
-		return nullptr;
+		//MessageBoxA(NULL, "Ñut-off points on the right value must be > 0.0 and < 0.5", "Error!", MB_ICONWARNING | MB_OK);
+		return nullptr;//BadCutOffRight
 	}
 
 	vector <myflo> vSegPila;
@@ -62,8 +62,8 @@ extern "C" __declspec(dllexport) Plasma_proc_result * Setka(vector <myflo> vPila
 		|| is_invalid(vSignal[0])
 		|| is_invalid(vSignal[vSignal.size() - 1]))
 	{
-		MessageBoxA(NULL, "Error after Pila|Signal factorizing", "Error!", MB_ICONWARNING | MB_OK);
-		return nullptr;
+		//MessageBoxA(NULL, "Error after Pila|Signal factorizing", "Error!", MB_ICONWARNING | MB_OK);
+		return nullptr;//BadFactorizing
 	}
 
 	if (find_signal_and_make_pila(vPila, vSignal, vSegPila, vStartSegIndxs) == -1) return nullptr;
@@ -76,8 +76,8 @@ extern "C" __declspec(dllexport) Plasma_proc_result * Setka(vector <myflo> vPila
 		|| is_invalid(vStartSegIndxs[0])
 		|| is_invalid(vStartSegIndxs[vStartSegIndxs.size() - 1]))
 	{
-		MessageBoxA(NULL, "Error after noise extracting", "Error!", MB_ICONWARNING | MB_OK);
-		return nullptr;
+		//MessageBoxA(NULL, "Error after noise extracting", "Error!", MB_ICONWARNING | MB_OK);
+		return nullptr;//BadNoise
 	}
 
 	Plasma_proc_result* fdata = new Plasma_proc_result(numSegments, vSegPila.size(), dimension);

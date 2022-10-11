@@ -6,6 +6,7 @@
 #define Pi 3.14159265
 #define ef_koef 5 /* коэффициент эффективности, если == 1 то метод обрабатывает все точки, 
                 если == 2 каждую вторую (в два раза быстре, но точность меньше) и тд */
+#define ddcChk(f) if (err = (f), err < 0) goto Error;
 
 typedef float myflo;
 
@@ -159,4 +160,25 @@ extern myflo leftP,
              S;
 extern double M_Ar,
               M_He;
+
+// Error codes
+typedef enum {
+
+    ERR_NoError = 0,                // No error
+    ERR_BadInputVecs = -6201,       // Corrupted input vectors
+    ERR_ZeroInputVals = -6202,      // Input data error, some values equals 0
+    ERR_BadCutOffLeft = -6203,      // Сut-off points on the left value must be > 0.0 and < 0.5
+    ERR_BadCutOffRight = -6204,     // Сut-off points on the right value must be > 0.0 and < 0.5
+    ERR_BadFactorizing = -6205,     // Error after Pila|Signal factorizing
+    ERR_BadNoise = -6206,           // Error after noise extracting
+    ERR_BadSegInput = -6207,        // Input segment's values error while segmend approximating
+    ERR_TooFewSegs = -6208,         // Less then 4 segments found, check input arrays  
+    ERR_BadSegsLength = -6209,      // Error in finding segments length, check input params
+    ERR_BadLinearPila = -6210,      // Error in pila linearizing, check cut-off params
+    ERR_TooManyAttempts = -6211,    // More than 5 attempts to find signal, check if signal is noise or not
+    ERR_BadStartEnd = -6212,        // Error in finding start|end of signal, check if signal is noise or not
+    ERR_TooManySegs = -6213,        // Too many segments, check if signal is noise or not
+    ERR_NoSegs = -6214,             // No segments found, check if signal is noise or not
+    ERR_BadDiagNum = -6215          // Diagnostics number must be > 0 and < 2
+};
 ////////////////////////////////////////////// GLOBAL VARIABLES //////////////////////////////////////////////

@@ -257,8 +257,8 @@ int find_signal_and_make_pila(_In_ vector <myflo> & vPila,
 	PeakFinder::findPeaks(vPila, vnIndices, false, 1);
 	if (vnIndices.size() <= 3) // 3 потому что дальше в функцию я передаю начало второго и он нужен целиком, тоесть от второго до третьего индекса
 	{
-		MessageBoxA(NULL, "Less then 4 segments found", "Error!", MB_ICONWARNING | MB_OK);
-		return -1;
+		//MessageBoxA(NULL, "Less then 4 segments found", "Error!", MB_ICONWARNING | MB_OK);
+		return ERR_TooFewSegs;
 	}
 
 	/* определяем длину участка изначальной пилы */
@@ -282,16 +282,16 @@ int find_signal_and_make_pila(_In_ vector <myflo> & vPila,
 		|| one_segment_width > vSignal.size()
 		|| NumPointsOfOriginalPila > vSignal.size())
 	{
-		MessageBoxA(NULL, "Error in finding segments length", "Error!", MB_ICONWARNING | MB_OK);
-		return -1;
+		//MessageBoxA(NULL, "Error in finding segments length", "Error!", MB_ICONWARNING | MB_OK);
+		return ERR_BadSegsLength;
 	}
 
 	/* линейно аппроксимируем пилу и задаем ей размер с учетом leftP и rightP */
 	fit_linear_pila(vPila, vnIndices[1] + 5, vSegPila); // +5 потому что мы нашли пики пилы, а в этой функции пила строится от заданной точки, соответственно нужно спуститься вниз пилы
 	if (vSegPila.size() <= 0)
 	{
-		MessageBoxA(NULL, "Error in pila linearizing", "Error!", MB_ICONWARNING | MB_OK);
-		return -1;
+		//MessageBoxA(NULL, "Error in pila linearizing", "Error!", MB_ICONWARNING | MB_OK);
+		return ERR_BadLinearPila;
 	}
 
 	/* приводим индексы начал отрезков к одной фазе с током */
@@ -337,8 +337,8 @@ int find_signal_and_make_pila(_In_ vector <myflo> & vPila,
 		k++;
 		if (k > 5)
 		{
-			MessageBoxA(NULL, "More than 5 attepts to find signal", "Error!", MB_ICONWARNING | MB_OK);
-			return -1;
+			//MessageBoxA(NULL, "More than 5 attempts to find signal", "Error!", MB_ICONWARNING | MB_OK);
+			return ERR_TooManyAttempts;
 		}
 
 		i_nach = find_i_nach(vSignal, mnL_mxL_mnR_mxR, vnIndices);
@@ -352,8 +352,8 @@ int find_signal_and_make_pila(_In_ vector <myflo> & vPila,
 			segments_amount = abs(i_konec - i_nach) / one_segment_width;
 		else
 		{
-			MessageBoxA(NULL, "Error in finding start|end of signal", "Error!", MB_ICONWARNING | MB_OK);
-			return -1;
+			//MessageBoxA(NULL, "Error in finding start|end of signal", "Error!", MB_ICONWARNING | MB_OK);
+			return ERR_BadStartEnd;
 		}
 
 		/* если количество всех отрезков меньше 0.1 от потенциально максимального, то их слишком мало -> пересчитываем (нужно увеличить количество) */
@@ -395,8 +395,8 @@ int find_signal_and_make_pila(_In_ vector <myflo> & vPila,
 	/* проверка на случай если найдено слишком много отрезков, например сигнал - шум, а не полезный ток */
 	if (abs(i_konec - i_nach) / one_segment_width >= (int)(0.8 * vSignal.size() / (one_segment_width)))
 	{
-		MessageBoxA(NULL, "Too many segments. Probably the signal is noise", "Error!", MB_ICONWARNING | MB_OK);
-		return -1;
+		//MessageBoxA(NULL, "Too many segments. Probably the signal is noise", "Error!", MB_ICONWARNING | MB_OK);
+		return ERR_TooManySegs;
 	}
 
 	/* ВАЖНО! ЗАДАЕМ РАЗМЕРА ВЕКТОРА НАЧАЛ ОТРЕЗКОВ */
@@ -424,8 +424,8 @@ int find_signal_and_make_pila(_In_ vector <myflo> & vPila,
 
 	if (vStartSegIndxs.size() <= 0) 
 	{
-		MessageBoxA(NULL, "No segments found", "Error!", MB_ICONWARNING | MB_OK);
-		return -1;
+		//MessageBoxA(NULL, "No segments found", "Error!", MB_ICONWARNING | MB_OK);
+		return ERR_NoSegs;
 	}
 
 	return 0;
@@ -490,10 +490,6 @@ myflo dens(vector <myflo> & vPila, vector <myflo> & vParams)
 		break;
 	}
 
-	//string str = to_string(x) + "\n" + to_string(ans) + "\n" + to_string(vParams[0]) + "\n" + to_string(vParams[1]);
-	//string str = to_string(M_He) + "\n" + to_string(M_Ar) + "\n" + to_string(S);
-	//MessageBoxA(NULL, str.c_str(), "Error!", MB_ICONWARNING | MB_OK);
-
 	return (double)ans * (10E-6) / (0.52026 * S * (1.602 * 10E-19) * sqrt((1.380649 * 10E-23) * (double)vParams[3] * 11604.51812 / M)); //моя формула
 	//return (double)ans * (10E-6) / (S * (1.602 * 10E-19) * sqrt(2 * (double)vParams[3] * (1.602 * 10E-19) / M)); //формула сергея
 }
@@ -512,10 +508,15 @@ int make_one_segment(_In_ int diagnostics,					 // diagnostics type (zond::0|set
 	{
 		case 0: // Zond
 		{
-			if (vPila.size() != vSignal.size())
+			if (vPila.size() != vSignal.size() 
+				|| vPila.empty() 
+				|| vSignal.empty() 
+				|| vres.empty() 
+				|| vfilt.empty() 
+				|| vcoeffs.empty())
 			{
-				MessageBoxA(NULL, "Input segment's values error", "Error!", MB_ICONWARNING | MB_OK);
-				return -1;
+				//MessageBoxA(NULL, "Input segment's values error", "Error!", MB_ICONWARNING | MB_OK);
+				return ERR_BadSegInput;
 			}
 
 			int i = 0;
@@ -602,10 +603,15 @@ int make_one_segment(_In_ int diagnostics,					 // diagnostics type (zond::0|set
 		}
 		case 1: // Setka
 		{
-			if (vPila.size() != vSignal.size())
+			if (vPila.size() != vSignal.size()
+				|| vPila.empty()
+				|| vSignal.empty()
+				|| vres.empty()
+				|| vfilt.empty()
+				|| vcoeffs.empty())
 			{
-				MessageBoxA(NULL, "Input segment's values error", "Error!", MB_ICONWARNING | MB_OK);
-				return -1;
+				//MessageBoxA(NULL, "Input segment's values error", "Error!", MB_ICONWARNING | MB_OK);
+				return ERR_BadSegInput;
 			}
 
 			int i = 0;
@@ -646,10 +652,15 @@ int make_one_segment(_In_ int diagnostics,					 // diagnostics type (zond::0|set
 		}
 		case 2: // Cilinder|Magnit
 		{
-			if (vPila.size() != vSignal.size())
+			if (vPila.size() != vSignal.size()
+				|| vPila.empty()
+				|| vSignal.empty()
+				|| vres.empty()
+				|| vfilt.empty()
+				|| vcoeffs.empty())
 			{
-				MessageBoxA(NULL, "Input segment's values error", "Error!", MB_ICONWARNING | MB_OK);
-				return -1;
+				//MessageBoxA(NULL, "Input segment's values error", "Error!", MB_ICONWARNING | MB_OK);
+				return ERR_BadSegInput;
 			}
 
 			int i = 0;

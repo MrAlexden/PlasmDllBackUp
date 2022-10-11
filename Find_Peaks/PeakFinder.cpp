@@ -301,12 +301,8 @@ void PeakFinder::findPeaks(vector <myflo> & x0, vector <int> & peakInds, bool in
 			}
 			catch (...)
 			{
-				MessageBoxA(NULL, "Index is out of range. Programm continued running", "Error!", MB_ICONWARNING | MB_OK);
+				//MessageBoxA(NULL, "Index is out of range. Programm continued running", "Error!", MB_ICONWARNING | MB_OK);
 			}
 		}
 	}
-	//else
-	//{
-		//input signal length <= 2
-	//}
 }
