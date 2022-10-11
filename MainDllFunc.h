@@ -6,7 +6,7 @@
 #define Pi 3.14159265
 #define ef_koef 5 /* коэффициент эффективности, если == 1 то метод обрабатывает все точки, 
                 если == 2 каждую вторую (в два раза быстре, но точность меньше) и тд */
-#define ddcChk(f) if (err = (f), err < 0) goto Error;
+#define ERR(f) if (err = (f), err < 0) goto Error;
 
 typedef float myflo;
 
@@ -128,38 +128,23 @@ int make_one_segment(_In_ int,                      // diagnostics type (zond::0
                      _Out_ vector <myflo>&,			// vector to be filled with the filtration
                      _Out_ vector <myflo>&);		// additional coeffs/results vector
 
-extern "C" __declspec(dllexport) Plasma_proc_result * Zond(_In_ vector <myflo> Pila,                // входной одномерный массив пилы
-                                                           _In_ vector <myflo> Signal,              // входной одномерный массив сигнала
-                                                           _In_ vector <myflo> AdditionalData);     // дополнительные данные по импульсу
-extern "C" __declspec(dllexport) Plasma_proc_result * Setka(_In_ vector <myflo> Pila,               // входной одномерный массив пилы
-                                                            _In_ vector <myflo> Signal,             // входной одномерный массив сигнала
-                                                            _In_ vector <myflo> AdditionalData);    // дополнительные данные по импульсу
-extern "C" __declspec(dllexport) Plasma_proc_result * Cilinder(_In_ vector <myflo> Pila,            // входной одномерный массив пилы
-                                                               _In_ vector <myflo> Signal,          // входной одномерный массив сигнала
-                                                               _In_ vector <myflo> AdditionalData); // дополнительные данные по импульсу
+extern "C" __declspec(dllexport) int Zond(_In_ vector <myflo> Pila,                // входной одномерный массив пилы
+                                          _In_ vector <myflo> Signal,              // входной одномерный массив сигнала
+                                          _In_ vector <myflo> AdditionalData,      // дополнительные данные по импульсу
+                                          _Out_ Plasma_proc_result & fdata);
+extern "C" __declspec(dllexport) int Setka(_In_ vector <myflo> Pila,               // входной одномерный массив пилы
+                                           _In_ vector <myflo> Signal,             // входной одномерный массив сигнала
+                                           _In_ vector <myflo> AdditionalData,     // дополнительные данные по импульсу
+                                           _Out_ Plasma_proc_result & fdata);
+extern "C" __declspec(dllexport) int Cilinder(_In_ vector <myflo> Pila,            // входной одномерный массив пилы
+                                              _In_ vector <myflo> Signal,          // входной одномерный массив сигнала
+                                              _In_ vector <myflo> AdditionalData,  // дополнительные данные по импульсу
+                                              _Out_ Plasma_proc_result & fdata);
 
 bool is_invalid(myflo val); // from SubFuncs.cpp
 bool is_invalid(int val);   // from SubFuncs.cpp
 
 bool is_signalpeakslookingdown(vector <myflo>& v); // from SubFuncs.cpp
-////////////////////////////////////////////// GLOBAL FUNCTIONS //////////////////////////////////////////////
-
-
-
-////////////////////////////////////////////// GLOBAL VARIABLES //////////////////////////////////////////////
-extern int freqP,
-           Num_iter,
-           one_segment_width,
-           fuel;
-
-extern myflo leftP,
-             rightP,
-             linfitP,
-             filtS,
-             st_time_end_time[2],
-             S;
-extern double M_Ar,
-              M_He;
 
 // Error codes
 typedef enum {
@@ -179,6 +164,27 @@ typedef enum {
     ERR_BadStartEnd = -6212,        // Error in finding start|end of signal, check if signal is noise or not
     ERR_TooManySegs = -6213,        // Too many segments, check if signal is noise or not
     ERR_NoSegs = -6214,             // No segments found, check if signal is noise or not
-    ERR_BadDiagNum = -6215          // Diagnostics number must be > 0 and < 2
+    ERR_BadDiagNum = -6215,         // Diagnostics number must be > 0 and < 2
+    ERR_IdxOutOfRange = -6216       // Index is out of range. Programm continued running
 };
+
+extern "C" __declspec(dllexport) string ERR_GetErrorDescription(int);
+////////////////////////////////////////////// GLOBAL FUNCTIONS //////////////////////////////////////////////
+
+
+
+////////////////////////////////////////////// GLOBAL VARIABLES //////////////////////////////////////////////
+extern int freqP,
+           Num_iter,
+           one_segment_width,
+           fuel;
+
+extern myflo leftP,
+             rightP,
+             linfitP,
+             filtS,
+             st_time_end_time[2],
+             S;
+extern double M_Ar,
+              M_He;
 ////////////////////////////////////////////// GLOBAL VARIABLES //////////////////////////////////////////////

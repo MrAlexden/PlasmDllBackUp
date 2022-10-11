@@ -1,13 +1,71 @@
 ﻿#include "MainDllFunc.h"
 
-extern "C" __declspec(dllexport) void MainWrapper(_In_ int diagnostics,               // diagnostics type (zond::0|setka::1|cilind::2)
-                                                  _In_ myflo * arrPila,               // 1д массив с данными пилы
-                                                  _In_ myflo * arrSignal,             // 1д массив с данными сигнала
-                                                  _In_ myflo * AdditionalData,        // 1д дополнительная информация об импульсе (!размер 14!)
-                                                  _Out_ myflo * OriginalData,         // возвращаемый 1д массив с разделенными на отрезки оригинальными данными
-                                                  _Out_ myflo * ResultData,           // возвращяемый 1д массив с результатом обработки
-                                                  _Out_ myflo * FiltedData,           // возвращяемый 1д массив с отфильтрованными данными (если эта функция выбрана)
-                                                  _Out_ myflo * Parameters)           // возвращаемый 1д массив с параметрами резултата обработки (температура, плотность и тд)
+string ERR_GetErrorDescription(int err)
+{
+    switch (err)
+    {
+    case ERR_BadInputVecs:
+        return "Corrupted input vectors";
+        break;
+    case ERR_ZeroInputVals:
+        return "Input data error, some values equals 0";
+        break;
+    case ERR_BadCutOffLeft:
+        return "Сut-off points on the left value must be > 0.0 and < 0.5";
+        break;
+    case ERR_BadCutOffRight:
+        return "Сut-off points on the right value must be > 0.0 and < 0.5";
+        break;
+    case ERR_BadFactorizing:
+        return "Error after Pila|Signal factorizing";
+        break;
+    case ERR_BadNoise:
+        return "Error after noise extracting";
+        break;
+    case ERR_BadSegInput:
+        return "Input segment's values error while segmend approximating";
+        break;
+    case ERR_TooFewSegs:
+        return "Less then 4 segments found, check input arrays";
+        break;
+    case ERR_BadSegsLength:
+        return "Error in finding segments length, check input params";
+        break;
+    case ERR_BadLinearPila:
+        return "Error in pila linearizing, check cut-off params";
+        break;
+    case ERR_TooManyAttempts:
+        return "More than 5 attempts to find signal, check if signal is noise or not";
+        break;
+    case ERR_BadStartEnd:
+        return "Error in finding start|end of signal, check if signal is noise or not";
+        break;
+    case ERR_TooManySegs:
+        return "Too many segments, check if signal is noise or not";
+        break;
+    case ERR_NoSegs:
+        return "No segments found, check if signal is noise or not";
+        break;
+    case ERR_BadDiagNum:
+        return "Diagnostics number must be > 0 and < 2";
+        break;
+    case ERR_IdxOutOfRange:
+        return "Index is out of range. Programm continued running";
+        break;
+    default:
+        return "No Error";
+        break;
+    }
+}
+
+extern "C" __declspec(dllexport) int MainWrapper(_In_ int diagnostics,               // diagnostics type (zond::0|setka::1|cilind::2)
+                                                 _In_ myflo * arrPila,               // 1д массив с данными пилы
+                                                 _In_ myflo * arrSignal,             // 1д массив с данными сигнала
+                                                 _In_ myflo * AdditionalData,        // 1д дополнительная информация об импульсе (!размер 14!)
+                                                 _Out_ myflo * OriginalData,         // возвращаемый 1д массив с разделенными на отрезки оригинальными данными
+                                                 _Out_ myflo * ResultData,           // возвращяемый 1д массив с результатом обработки
+                                                 _Out_ myflo * FiltedData,           // возвращяемый 1д массив с отфильтрованными данными (если эта функция выбрана)
+                                                 _Out_ myflo * Parameters)           // возвращаемый 1д массив с параметрами резултата обработки (температура, плотность и тд)
 {
     if (arrPila == nullptr || 
         arrSignal == nullptr || 
@@ -18,7 +76,7 @@ extern "C" __declspec(dllexport) void MainWrapper(_In_ int diagnostics,         
         Parameters == nullptr)
     {
         //MessageBoxA(NULL, "Input data pointers equals nullptr", "Error!", MB_ICONWARNING | MB_OK);
-        return;//ERR_BadInputVecs
+        return ERR_BadInputVecs;
     }
 
     if (AdditionalData[0] == 0 ||
@@ -30,43 +88,39 @@ extern "C" __declspec(dllexport) void MainWrapper(_In_ int diagnostics,         
         AdditionalData[13] == 0)
     {
         //MessageBoxA(NULL, "Input data error, some values equals 0", "Error!", MB_ICONWARNING | MB_OK);
-        return;//ZeroInputVals
+        return ERR_ZeroInputVals;
     }
 
     if (diagnostics < 0 ||
         diagnostics > 2)
     {
         //MessageBoxA(NULL, "Diagnostics number < 0 or > 2", "Error!", MB_ICONWARNING | MB_OK);
-        return;//ERR_BadDiagNum
+        return ERR_BadDiagNum;
     }
 
     int arrPsize = (int)AdditionalData[12];				// размер входного массива пилы
     int arrSsize = (int)AdditionalData[13];				// размер входного массива сигнала
+    int d1, d2, d3, err = 0;
 
     vector <myflo> vPila(arrPila, arrPila + arrPsize);
     vector <myflo> vSignal(arrSignal, arrSignal + arrSsize);
     vector <myflo> vAdd(AdditionalData, AdditionalData + 14);
 
-    Plasma_proc_result * fdata = nullptr;
+    Plasma_proc_result * fdata = new Plasma_proc_result;
     switch (diagnostics)
     {
     case 0: // Zond
-        fdata = Zond(vPila, vSignal, vAdd); // вызов обработчика зонда
+        ERR(Zond(vPila, vSignal, vAdd, *fdata)); // вызов обработчика зонда
         break;
     case 1: // Setka
-        fdata = Setka(vPila, vSignal, vAdd); // вызов обработчика сетки
+        ERR(Setka(vPila, vSignal, vAdd, *fdata)); // вызов обработчика сетки
         break;
     case 2: // Cilinder|Magnit
-        fdata = Cilinder(vPila, vSignal, vAdd); // вызов обработчика цилиндра|магнита
+        ERR(Cilinder(vPila, vSignal, vAdd, *fdata)); // вызов обработчика цилиндра|магнита
         break;
     }
-    if (fdata == nullptr)
-    {
-        //MessageBoxA(NULL, "Processig Error", "Error!", MB_ICONWARNING | MB_OK);
-        return;
-    }
 
-    int d1 = fdata->Get_NumberOfSegments(), d2 = fdata->Get_SizeOfSegment(), d3 = fdata->Get_NumberOfParameters();
+    d1 = fdata->Get_NumberOfSegments(), d2 = fdata->Get_SizeOfSegment(), d3 = fdata->Get_NumberOfParameters();
     try
     {
         for (int i = 0, j = 0, k = 0; i < d1; ++i, j += d2, k += d3)
@@ -81,21 +135,24 @@ extern "C" __declspec(dllexport) void MainWrapper(_In_ int diagnostics,         
     {
         //MessageBoxA(NULL, "Index is out of range. Programm continued running", "Error!", MB_ICONWARNING | MB_OK);
     }
+
+Error:
+    return err;
 }
 
-extern "C" __declspec(dllexport) void FindSignalWrapper(_In_ myflo * arrPila,           // 1д массив с данными пилы
-                                                        _In_ myflo * arrSignal,         // 1д массив с данными сигнала
-                                                        _In_ myflo * AdditionalData,    // 1д дополнительная информация об импульсе (!размер 14!)
-                                                        _Out_ int & DIM1,               // выходное значение (количество строк в матрице (количество отрезков))
-                                                        _Out_ int & DIM2,               // выходное значение (количество столбиков в матрице (количество точек на отрезк))
-                                                        _Out_ myflo * vResP)            // возвращяемый 1д массив с одним сегментом пилы (X для построения графика)
+extern "C" __declspec(dllexport) int FindSignalWrapper(_In_ myflo * arrPila,           // 1д массив с данными пилы
+                                                       _In_ myflo * arrSignal,         // 1д массив с данными сигнала
+                                                       _In_ myflo * AdditionalData,    // 1д дополнительная информация об импульсе (!размер 14!)
+                                                       _Out_ int & DIM1,               // выходное значение (количество строк в матрице (количество отрезков))
+                                                       _Out_ int & DIM2,               // выходное значение (количество столбиков в матрице (количество точек на отрезк))
+                                                       _Out_ myflo * vResP)            // возвращяемый 1д массив с одним сегментом пилы (X для построения графика)
 {
     if (arrPila == nullptr ||
         arrSignal == nullptr ||
         AdditionalData == nullptr)
     {
         //MessageBoxA(NULL, "Input data pointers equals nullptr", "Error!", MB_ICONWARNING | MB_OK);
-        return;//ERR_BadInputVecs
+        return ERR_BadInputVecs;
     }
 
     if (AdditionalData[0] == 0 ||
@@ -107,7 +164,7 @@ extern "C" __declspec(dllexport) void FindSignalWrapper(_In_ myflo * arrPila,   
         AdditionalData[13] == 0)
     {
         //MessageBoxA(NULL, "Input data error, some values equals 0", "Error!", MB_ICONWARNING | MB_OK);
-        return;//ZeroInputVals
+        return ERR_ZeroInputVals;
     }
 
     st_time_end_time[0] = AdditionalData[1];		    // время начала обработки (если этот параметр не выбран: -1)
@@ -119,6 +176,9 @@ extern "C" __declspec(dllexport) void FindSignalWrapper(_In_ myflo * arrPila,   
     int coefPila = (int)AdditionalData[9];				// коэффициент усиления пилы
     int arrPsize = (int)AdditionalData[12];				// размер входного массива пилы
     int arrSsize = (int)AdditionalData[13];				// размер входного массива сигнала
+
+    int numSegments = 0,
+        err = 0;
 
     vector <myflo> vPila(arrPila, arrPila + arrPsize);
     vector <myflo> vSignal(arrSignal, arrSignal + arrSsize);
@@ -136,11 +196,11 @@ extern "C" __declspec(dllexport) void FindSignalWrapper(_In_ myflo * arrPila,   
         || is_invalid(vSignal[vSignal.size() - 1]))
     {
         //MessageBoxA(NULL, "Error after Pila|Signal factorizing", "Error!", MB_ICONWARNING | MB_OK);
-        return;//ERR_BadFactorizing
+        return ERR_BadFactorizing;
     }
 
-    find_signal_and_make_pila(vPila, vSignal, vSegPila, vStartSegIndxs);
-    int numSegments = vStartSegIndxs.size();
+    ERR(find_signal_and_make_pila(vPila, vSignal, vSegPila, vStartSegIndxs));
+    numSegments = vStartSegIndxs.size();
 
     if (vStartSegIndxs.size() == 0
         || vStartSegIndxs.empty()
@@ -150,33 +210,38 @@ extern "C" __declspec(dllexport) void FindSignalWrapper(_In_ myflo * arrPila,   
         || is_invalid(vStartSegIndxs[vStartSegIndxs.size() - 1]))
     {
         //MessageBoxA(NULL, "Error after noise extracting", "Error!", MB_ICONWARNING | MB_OK);
-        return;//ERR_BadNoise
+        return ERR_BadNoise;
     }
 
     DIM1 = numSegments;
     DIM2 = vSegPila.size();
     memcpy(vResP, vSegPila.data(), sizeof myflo * vSegPila.size());
+
+Error:
+    if (err < 0)
+        MessageBoxA(NULL, ERR_GetErrorDescription(err).c_str(), "Error!", MB_ICONWARNING | MB_OK);
+    return err;
 }
 
-extern "C" __declspec(dllexport) void SetUpPila(_In_ myflo * arrPila,           // 1д массив с данными пилы
-                                                _In_ myflo * arrSignal,         // 1д массив с данными сигнала
-                                                _In_ int arrPsize,              // размер пилы
-                                                _In_ int arrSsize,              // размер сигнала
-                                                _Out_ myflo * vResP)            // возвращяемый 1д массив с пилой для построения графика
+extern "C" __declspec(dllexport) int SetUpPila(_In_ myflo * arrPila,           // 1д массив с данными пилы
+                                               _In_ myflo * arrSignal,         // 1д массив с данными сигнала
+                                               _In_ int arrPsize,              // размер пилы
+                                               _In_ int arrSsize,              // размер сигнала
+                                               _Out_ myflo * vResP)            // возвращяемый 1д массив с пилой для построения графика
 {
     if (arrPila == nullptr ||
         arrSignal == nullptr ||
         vResP == nullptr)
     {
         //MessageBoxA(NULL, "Input data pointers equals nullptr", "Error!", MB_ICONWARNING | MB_OK);
-        return;//ERR_BadInputVecs
+        return ERR_BadInputVecs;
     }
 
     if (arrPsize == 0 ||
         arrSsize == 0)
     {
         //MessageBoxA(NULL, "Input data error, some values equals 0", "Error!", MB_ICONWARNING | MB_OK);
-        return;//ZeroInputVals
+        return ERR_ZeroInputVals;
     }
 
     st_time_end_time[0] = -1;		    // время начала обработки (если этот параметр не выбран: -1)
@@ -184,12 +249,15 @@ extern "C" __declspec(dllexport) void SetUpPila(_In_ myflo * arrPila,           
     leftP = 0.0;					    // часть точек отсечки слева
     rightP = 0.0;					    // часть точек отсечки справа
 
+    int err = 0;
+
     vector <myflo> vPila(arrPila, arrPila + arrPsize);
     vector <myflo> vSignal(arrSignal, arrSignal + arrSsize);
     vector <myflo> vSegPila;
     vector <int> vStartSegIndxs;
+    vector <int> vnIndices;
 
-    find_signal_and_make_pila(vPila, vSignal, vSegPila, vStartSegIndxs);
+    ERR(find_signal_and_make_pila(vPila, vSignal, vSegPila, vStartSegIndxs));
 
     if (vStartSegIndxs.size() == 0
         || vStartSegIndxs.empty()
@@ -199,16 +267,15 @@ extern "C" __declspec(dllexport) void SetUpPila(_In_ myflo * arrPila,           
         || is_invalid(vStartSegIndxs[vStartSegIndxs.size() - 1]))
     {
         //MessageBoxA(NULL, "Error after noise extracting", "Error!", MB_ICONWARNING | MB_OK);
-        return;//ERR_BadNoise
+        return ERR_BadNoise;
     }
 
     /* находим все участки на пиле при помощи пиков */
-    vector <int> vnIndices;
     PeakFinder::findPeaks(vPila, vnIndices, false);
     if (vnIndices.size() <= 3) // 3 потому что дальше в функцию я передаю начало второго и он нужен целиком, тоесть от второго до третьего индекса
     {
         //MessageBoxA(NULL, "Less then 4 segments found", "Error!", MB_ICONWARNING | MB_OK);
-        return;//ERR_TooFewSegs
+        return ERR_TooFewSegs;
     }
     if (vPila.size() != vSignal.size())
         vectordiv(vnIndices, (myflo)vPila.size() / vSignal.size());
@@ -263,4 +330,7 @@ extern "C" __declspec(dllexport) void SetUpPila(_In_ myflo * arrPila,           
     {
         //MessageBoxA(NULL, "Index is out of range. Programm continued running", "Error!", MB_ICONWARNING | MB_OK);
     }
+
+Error:
+    return err;
 }

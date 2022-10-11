@@ -510,10 +510,7 @@ int make_one_segment(_In_ int diagnostics,					 // diagnostics type (zond::0|set
 		{
 			if (vPila.size() != vSignal.size() 
 				|| vPila.empty() 
-				|| vSignal.empty() 
-				|| vres.empty() 
-				|| vfilt.empty() 
-				|| vcoeffs.empty())
+				|| vSignal.empty())
 			{
 				//MessageBoxA(NULL, "Input segment's values error", "Error!", MB_ICONWARNING | MB_OK);
 				return ERR_BadSegInput;
@@ -605,10 +602,7 @@ int make_one_segment(_In_ int diagnostics,					 // diagnostics type (zond::0|set
 		{
 			if (vPila.size() != vSignal.size()
 				|| vPila.empty()
-				|| vSignal.empty()
-				|| vres.empty()
-				|| vfilt.empty()
-				|| vcoeffs.empty())
+				|| vSignal.empty())
 			{
 				//MessageBoxA(NULL, "Input segment's values error", "Error!", MB_ICONWARNING | MB_OK);
 				return ERR_BadSegInput;
@@ -654,10 +648,7 @@ int make_one_segment(_In_ int diagnostics,					 // diagnostics type (zond::0|set
 		{
 			if (vPila.size() != vSignal.size()
 				|| vPila.empty()
-				|| vSignal.empty()
-				|| vres.empty()
-				|| vfilt.empty()
-				|| vcoeffs.empty())
+				|| vSignal.empty())
 			{
 				//MessageBoxA(NULL, "Input segment's values error", "Error!", MB_ICONWARNING | MB_OK);
 				return ERR_BadSegInput;
