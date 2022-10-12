@@ -472,12 +472,14 @@ myflo dens(vector <myflo> & vPila, vector <myflo> & vParams)
 	myflo x = metod_Newton(vPila[vPila.size() - 1], vParams, fx_STEP), ans = 0.0;
 	double M = 0.0;
 	
-	if (is_invalid(x) || !x || x == 0)
+	if (is_invalid(x) || !x)
+	{
 		x = metod_hord(vPila[0], vPila[vPila.size() - 1], vParams, fx_STEP);
-	if (is_invalid(x) || !x || x == 0)
-		x = vPila[vPila.size() - 1];
+		if (is_invalid(x) || !x)
+			x = vPila[vPila.size() - 1];
+	}
 	ans = abs(vParams[0] + vParams[1] * x);
-	if (is_invalid(ans) || !ans || ans == 0)
+	if (is_invalid(ans) || !ans)
 		ans = vParams[0];
 
 	switch (fuel)
