@@ -12,17 +12,20 @@ typedef float myflo;
 
 // Файлы заголовков Windows
 #include <windows.h>    // for windows interface
-#include <iostream>     // for std::
+#include <iostream>     // for cin/cout
 #include <fstream>      // for file access
 #include <sstream>      // for file access
 #include <vector>       // for vector
 #include <tuple>        // for tuple
 #include <algorithm>    // for min_element|max_element
 #include <omp.h>        // for multithreading
+//#define _SILENCE_AMP_DEPRECATION_WARNINGS // for GPU multithreading
+//#include <amp.h>                          // for GPU multithreading
 
 #include "Processing_Result_class/ProcessingResultClass.h"
 
-using namespace std;
+//using namespace concurrency; // for GPU multithreading
+using namespace std;         // for std::
 
 ////////////////////////////////////////////// GLOBAL FUNCTIONS //////////////////////////////////////////////
 /*===================================== GAUSS =====================================*/

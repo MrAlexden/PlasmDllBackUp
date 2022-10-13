@@ -35,3 +35,61 @@ myflo fx_LINE(myflo x, vector <myflo>& vParams)
 	myflo A = vParams[0], B = vParams[1];
 	return A + B * x;
 }
+
+string ERR_GetErrorDescription(int err)
+{
+    switch (err)
+    {
+    case ERR_BadInputVecs:
+        return "Corrupted input vectors";
+        break;
+    case ERR_ZeroInputVals:
+        return "Input data error, some values equals 0";
+        break;
+    case ERR_BadCutOffLeft:
+        return "Ñut-off points on the left value must be > 0.0 and < 0.5";
+        break;
+    case ERR_BadCutOffRight:
+        return "Ñut-off points on the right value must be > 0.0 and < 0.5";
+        break;
+    case ERR_BadFactorizing:
+        return "Error after Pila|Signal factorizing";
+        break;
+    case ERR_BadNoise:
+        return "Error after noise extracting";
+        break;
+    case ERR_BadSegInput:
+        return "Input segment's values error while segmend approximating";
+        break;
+    case ERR_TooFewSegs:
+        return "Less then 4 segments found, check input arrays";
+        break;
+    case ERR_BadSegsLength:
+        return "Error in finding segments length, check input params";
+        break;
+    case ERR_BadLinearPila:
+        return "Error in pila linearizing, check cut-off params";
+        break;
+    case ERR_TooManyAttempts:
+        return "More than 5 attempts to find signal, check if signal is noise or not";
+        break;
+    case ERR_BadStartEnd:
+        return "Error in finding start|end of signal, check if signal is noise or not";
+        break;
+    case ERR_TooManySegs:
+        return "Too many segments, check if signal is noise or not";
+        break;
+    case ERR_NoSegs:
+        return "No segments found, check if signal is noise or not";
+        break;
+    case ERR_BadDiagNum:
+        return "Diagnostics number must be > 0 and < 2";
+        break;
+    case ERR_IdxOutOfRange:
+        return "Index is out of range. Programm continued running";
+        break;
+    default:
+        return "No Error";
+        break;
+    }
+}

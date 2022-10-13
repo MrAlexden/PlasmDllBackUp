@@ -394,9 +394,11 @@ void matrixmult(float_mat & a, float_mat & b, float_mat & res)
     }
 
     res.resize(a.nr_rows());
+#pragma omp parallel for schedule(static, 1)
     for (i = 0; i < res.size(); ++i)
     {
         res[i].resize(b.nr_cols());
+#pragma omp parallel for schedule(static, 1)
         for (j = 0; j < res[i].size(); ++j)
         {
             myflo sum(0.0);
@@ -440,9 +442,7 @@ void sg_smooth(vector <myflo>& vorig, vector <myflo>& res, const int width, int 
     if ((width < 1) || (deg < 0) || (vorig.size() < (2 * width + 2)))
         return;
 
-    res.resize(vorig.size());
-    for (i = 0; i < res.size(); ++i)
-        res[i] = 0.0;
+    res.resize(vorig.size(), 0.0);
 
     const int window = 2 * width + 1;
     const int endidx = vorig.size() - 1;

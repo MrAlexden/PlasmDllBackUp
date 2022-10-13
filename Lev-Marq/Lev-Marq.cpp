@@ -21,7 +21,7 @@ void solve_axb_cholesky(Matrix& ch, vector <myflo>& delta, vector <myflo>& drvtv
 	myflo sum;
 
 	/* solve (ch)*y = drvtv for y (where delta[] is used to store y) */
-
+#pragma omp parallel for schedule(static, 1) 
 	for (i = 0; i < npar; ++i)
 	{
 		sum = 0;
@@ -31,7 +31,7 @@ void solve_axb_cholesky(Matrix& ch, vector <myflo>& delta, vector <myflo>& drvtv
 	}
 
 	/* solve (ch)^T*delta = y for delta (where delta[] is used to store both y and delta) */
-
+#pragma omp parallel for schedule(static, 1) 
 	for (i = npar - 1; i >= 0; --i)
 	{
 		sum = 0;

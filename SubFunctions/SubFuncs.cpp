@@ -593,6 +593,8 @@ int make_one_segment(_In_ int diagnostics,					 // diagnostics type (zond::0|set
 
 			vcoeffs = vParams;
 
+			/* записываем в vres */
+#pragma omp parallel for schedule(static, 1) 
 			for (i = 0; i < vPila.size(); ++i)
 				vres[i] = fx_STEP(vPila[i], vParams);
 
@@ -641,6 +643,7 @@ int make_one_segment(_In_ int diagnostics,					 // diagnostics type (zond::0|set
 			vcoeffs[3] = sqrt(log(4)) * vParams[2];									// Energy
 
 			/* записываем в vres */
+#pragma omp parallel for schedule(static, 1) 
 			for (i = 0; i < vPila.size(); ++i)
 				vres[i] = fx_GAUSS(vPila[i], vParams);
 
@@ -684,6 +687,7 @@ int make_one_segment(_In_ int diagnostics,					 // diagnostics type (zond::0|set
 			vcoeffs[3] = sqrt(log(4)) * vParams[2];									// Energy
 
 			/* записываем в vres */
+#pragma omp parallel for schedule(static, 1) 
 			for (i = 0; i < vPila.size(); ++i)
 				vres[i] = fx_GAUSS(vPila[i], vParams);
 
