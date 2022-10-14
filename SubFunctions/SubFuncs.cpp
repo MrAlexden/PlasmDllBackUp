@@ -246,7 +246,8 @@ int find_signal_and_make_pila(_In_ vector <myflo> & vPila,
 	int i = 0,
 		j = 0,
 		k = 0,
-		segments_amount = 0;
+		segments_amount = 0,
+		err = 0;
 
 	/* слабо фильтруем для того чтобы убрать всплески */
 	//vector <myflo> vSignal_copy(vSignal);
@@ -254,7 +255,7 @@ int find_signal_and_make_pila(_In_ vector <myflo> & vPila,
 
 	/* находим все участки на пиле при помощи пиков */
 	vector <int> vnIndices;
-	PeakFinder::findPeaks(vPila, vnIndices, false, 1);
+	err = PeakFinder::findPeaks(vPila, vnIndices, false, 1);
 	if (vnIndices.size() <= 3) // 3 потому что дальше в функцию я передаю начало второго и он нужен целиком, тоесть от второго до третьего индекса
 	{
 		//MessageBoxA(NULL, "Less then 4 segments found", "Error!", MB_ICONWARNING | MB_OK);
@@ -428,7 +429,7 @@ int find_signal_and_make_pila(_In_ vector <myflo> & vPila,
 		return ERR_NoSegs;
 	}
 
-	return 0;
+	return err;
 }
 
 double metod_hord(myflo x0, myflo x1, vector <myflo>& vParams, myflo(*fx)(myflo, vector <myflo>&))

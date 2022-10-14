@@ -29,7 +29,7 @@ void selectElementsFromIndices(vector <myflo>& in, vector <int>& indices, vector
 	out.resize(indices.size());
 
 	for (int i = 0; i < indices.size(); ++i)
-		out[i] = in[indices[i]];
+		out.at(i) = in.at(indices.at(i));
 }
 
 void selectElementsFromIndices(vector <int>& in, vector <int>& indices, vector <int>& out)
@@ -37,7 +37,7 @@ void selectElementsFromIndices(vector <int>& in, vector <int>& indices, vector <
 	out.resize(indices.size());
 
 	for (int i = 0; i < indices.size(); ++i)
-		out[i] = in[indices[i]];
+		out.at(i) = in.at(indices.at(i));
 }
 
 void signVector(vector <myflo>& in, vector<int>& out)
@@ -105,13 +105,13 @@ void vectordiv(vector <int>& in, myflo scalar)
 		in[i] /= scalar;
 }
 
-void PeakFinder::findPeaks(vector <myflo> & x0, vector <int> & peakInds, bool includeEndpoints, int extrema)
+int PeakFinder::findPeaks(vector <myflo> & x0, vector <int> & peakInds, bool includeEndpoints, int extrema)
 {
 	int minIdx = distance(x0.begin(), min_element(x0.begin(), x0.end()));
 	int maxIdx = distance(x0.begin(), max_element(x0.begin(), x0.end()));
 
 	myflo sel = (x0[maxIdx] - x0[minIdx]) / 4.0;
-	int len0 = x0.size();
+	int len0 = x0.size(), err = 0;
 
 	if (extrema == -1) 
 		vectormult(x0, extrema);
@@ -179,7 +179,7 @@ void PeakFinder::findPeaks(vector <myflo> & x0, vector <int> & peakInds, bool in
 
 			if (signDx[0] <= 0) // The first point is larger or equal to the second
 			{
-				if (signDx[0] == signDx[1]) // Want alternating signs
+				if (signDx[0] == signDx[0]) // Want alternating signs
 				{
 					x.erase(x.begin() + 1);
 					ind.erase(ind.begin() + 1);
@@ -188,7 +188,7 @@ void PeakFinder::findPeaks(vector <myflo> & x0, vector <int> & peakInds, bool in
 			}
 			else // First point is smaller than the second
 			{
-				if (signDx[0] == signDx[1]) // Want alternating signs
+				if (signDx[0] == signDx[0]) // Want alternating signs
 				{
 					x.erase(x.begin());
 					ind.erase(ind.begin());
@@ -301,8 +301,10 @@ void PeakFinder::findPeaks(vector <myflo> & x0, vector <int> & peakInds, bool in
 			}
 			catch (...)
 			{
-				//MessageBoxA(NULL, "Index is out of range. Programm continued running", "Error!", MB_ICONWARNING | MB_OK);
+				err = ERR_Exception;
 			}
 		}
 	}
+
+	return err;
 }

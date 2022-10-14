@@ -61,10 +61,10 @@ int Setka(_In_ vector <myflo> vPila,
 	/* переворачиваем ток чтобы смотрел вверх(если нужно), и делим на сопротивление */
 	vectordiv(vSignal, resistance);
 
-	if (is_invalid(vPila[0])
-		|| is_invalid(vPila[vPila.size() - 1])
-		|| is_invalid(vSignal[0])
-		|| is_invalid(vSignal[vSignal.size() - 1]))
+	if (is_invalid(vPila.at(0))
+		|| is_invalid(vPila.at(vPila.size() - 1))
+		|| is_invalid(vSignal.at(0))
+		|| is_invalid(vSignal.at(vSignal.size() - 1)))
 	{
 		//MessageBoxA(NULL, "Error after Pila|Signal factorizing", "Error!", MB_ICONWARNING | MB_OK);
 		return ERR_BadFactorizing;
@@ -75,10 +75,10 @@ int Setka(_In_ vector <myflo> vPila,
 
 	if (vStartSegIndxs.size() == 0
 		|| vStartSegIndxs.empty()
-		|| is_invalid(vSegPila[0])
-		|| is_invalid(vSegPila[vSegPila.size() - 1])
-		|| is_invalid(vStartSegIndxs[0])
-		|| is_invalid(vStartSegIndxs[vStartSegIndxs.size() - 1]))
+		|| is_invalid(vSegPila.at(0))
+		|| is_invalid(vSegPila.at(vSegPila.size() - 1))
+		|| is_invalid(vStartSegIndxs.at(0))
+		|| is_invalid(vStartSegIndxs.at(vStartSegIndxs.size() - 1)))
 	{
 		//MessageBoxA(NULL, "Error after noise extracting", "Error!", MB_ICONWARNING | MB_OK);
 		return ERR_BadNoise;
@@ -95,15 +95,15 @@ int Setka(_In_ vector <myflo> vPila,
 	{
 		vector <myflo> vY, vres, vfilt, vcoeffs = { filtS , linfitP };
 
-		vY.assign(vSignal.begin() + vStartSegIndxs[segnum] + one_segment_width * leftP,
-			vSignal.begin() + vStartSegIndxs[segnum] + one_segment_width * leftP + vSegPila.size());
+		vY.assign(vSignal.begin() + vStartSegIndxs.at(segnum) + one_segment_width * leftP,
+			vSignal.begin() + vStartSegIndxs.at(segnum) + one_segment_width * leftP + vSegPila.size());
 
 		fdata.SetOriginSegment(vY, segnum);
 
 		if (make_one_segment(1, vSegPila, vY, vres, vfilt, vcoeffs) < 0) 
 			continue;
 
-		vcoeffs.insert(vcoeffs.begin(), vStartSegIndxs[segnum] * (1.0 / (one_segment_width * freqP)));
+		vcoeffs.insert(vcoeffs.begin(), vStartSegIndxs.at(segnum) * (1.0 / (one_segment_width * freqP)));
 
 		fdata.SetFiltedSegment(vfilt, segnum);
 		fdata.SetApproxSegment(vres, segnum);

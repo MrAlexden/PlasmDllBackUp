@@ -70,7 +70,7 @@ namespace PeakFinder {
         Output
         peakInds: Indices of peaks in x0
     */
-    void findPeaks(vector <myflo>& x0, vector <int>& peakInds, bool includeEndpoints = true, int extrema = 1); // from PeakFinder.cpp
+    int findPeaks(vector <myflo>& x0, vector <int>& peakInds, bool includeEndpoints = true, int extrema = 1); // from PeakFinder.cpp
 }
 
 class Matrix { // from matrix.cpp
@@ -168,7 +168,8 @@ typedef enum {
     ERR_TooManySegs = -6213,        // Too many segments, check if signal is noise or not
     ERR_NoSegs = -6214,             // No segments found, check if signal is noise or not
     ERR_BadDiagNum = -6215,         // Diagnostics number must be > 0 and < 2
-    ERR_IdxOutOfRange = -6216       // Index is out of range. Programm continued running
+    ERR_IdxOutOfRange = -6216,      // Index is out of range. Programm continued running
+    ERR_Exception = -6217           // An exception been occured whule running, script did not stopt working
 };
 
 extern "C" __declspec(dllexport) string ERR_GetErrorDescription(int);

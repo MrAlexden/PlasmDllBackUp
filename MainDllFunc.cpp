@@ -17,7 +17,6 @@ extern "C" __declspec(dllexport) int MainWrapper(_In_ int diagnostics,          
         FiltedData == nullptr ||
         Parameters == nullptr)
     {
-        //MessageBoxA(NULL, "Input data pointers equals nullptr", "Error!", MB_ICONWARNING | MB_OK);
         return ERR_BadInputVecs;
     }
 
@@ -26,17 +25,15 @@ extern "C" __declspec(dllexport) int MainWrapper(_In_ int diagnostics,          
         AdditionalData[8] == 0 ||
         AdditionalData[9] == 0 ||
         AdditionalData[11] == 0 ||
-        AdditionalData[12] == 0 ||
-        AdditionalData[13] == 0)
+        AdditionalData[12] <= 1 ||
+        AdditionalData[13] <= 1)
     {
-        //MessageBoxA(NULL, "Input data error, some values equals 0", "Error!", MB_ICONWARNING | MB_OK);
         return ERR_ZeroInputVals;
     }
 
     if (diagnostics < 0 ||
         diagnostics > 2)
     {
-        //MessageBoxA(NULL, "Diagnostics number < 0 or > 2", "Error!", MB_ICONWARNING | MB_OK);
         return ERR_BadDiagNum;
     }
 
@@ -61,23 +58,23 @@ extern "C" __declspec(dllexport) int MainWrapper(_In_ int diagnostics,          
         ERR(Cilinder(vPila, vSignal, vAdd, *fdata)); // вызов обработчика цилиндра|магнита
         break;
     }
-
+    
     d1 = fdata->Get_NumberOfSegments(), d2 = fdata->Get_SizeOfSegment(), d3 = fdata->Get_NumberOfParameters();
     try
     {
         for (int i = 0, j = 0, k = 0; i < d1; ++i, j += d2, k += d3)
         {
-            memcpy(&OriginalData[j], &fdata->Get_mOriginalData()[i][0], sizeof myflo * d2);
-            memcpy(&FiltedData[j], &fdata->Get_mFeltrationData()[i][0], sizeof myflo * d2);
-            memcpy(&ResultData[j], &fdata->Get_mApproximatedData()[i][0], sizeof myflo * d2);
-            memcpy(&Parameters[k], &fdata->Get_mParametersData()[i][0], sizeof myflo * d3);
+            memcpy(&OriginalData[j], &fdata->Get_mOriginalData().at(i).at(0), sizeof myflo * d2);
+            memcpy(&FiltedData[j], &fdata->Get_mFeltrationData().at(i).at(0), sizeof myflo * d2);
+            memcpy(&ResultData[j], &fdata->Get_mApproximatedData().at(i).at(0), sizeof myflo * d2);
+            memcpy(&Parameters[k], &fdata->Get_mParametersData().at(i).at(0), sizeof myflo * d3);
         }
     }
     catch (...)
     {
-        //MessageBoxA(NULL, "Index is out of range. Programm continued running", "Error!", MB_ICONWARNING | MB_OK);
+        err = ERR_Exception;
     }
-
+    
 Error:
     return err;
 }
@@ -93,7 +90,6 @@ extern "C" __declspec(dllexport) int FindSignalWrapper(_In_ myflo * arrPila,    
         arrSignal == nullptr ||
         AdditionalData == nullptr)
     {
-        //MessageBoxA(NULL, "Input data pointers equals nullptr", "Error!", MB_ICONWARNING | MB_OK);
         return ERR_BadInputVecs;
     }
 
@@ -102,10 +98,9 @@ extern "C" __declspec(dllexport) int FindSignalWrapper(_In_ myflo * arrPila,    
         AdditionalData[8] == 0 ||
         AdditionalData[9] == 0 ||
         AdditionalData[11] == 0 ||
-        AdditionalData[12] == 0 ||
-        AdditionalData[13] == 0)
+        AdditionalData[12] <= 1 ||
+        AdditionalData[13] <= 1)
     {
-        //MessageBoxA(NULL, "Input data error, some values equals 0", "Error!", MB_ICONWARNING | MB_OK);
         return ERR_ZeroInputVals;
     }
 
@@ -137,7 +132,6 @@ extern "C" __declspec(dllexport) int FindSignalWrapper(_In_ myflo * arrPila,    
         || is_invalid(vSignal[0])
         || is_invalid(vSignal[vSignal.size() - 1]))
     {
-        //MessageBoxA(NULL, "Error after Pila|Signal factorizing", "Error!", MB_ICONWARNING | MB_OK);
         return ERR_BadFactorizing;
     }
 
@@ -151,7 +145,6 @@ extern "C" __declspec(dllexport) int FindSignalWrapper(_In_ myflo * arrPila,    
         || is_invalid(vStartSegIndxs[0])
         || is_invalid(vStartSegIndxs[vStartSegIndxs.size() - 1]))
     {
-        //MessageBoxA(NULL, "Error after noise extracting", "Error!", MB_ICONWARNING | MB_OK);
         return ERR_BadNoise;
     }
 
@@ -175,14 +168,12 @@ extern "C" __declspec(dllexport) int SetUpPila(_In_ myflo * arrPila,           /
         arrSignal == nullptr ||
         vResP == nullptr)
     {
-        //MessageBoxA(NULL, "Input data pointers equals nullptr", "Error!", MB_ICONWARNING | MB_OK);
         return ERR_BadInputVecs;
     }
 
-    if (arrPsize == 0 ||
-        arrSsize == 0)
+    if (arrPsize <= 1 ||
+        arrSsize <= 1)
     {
-        //MessageBoxA(NULL, "Input data error, some values equals 0", "Error!", MB_ICONWARNING | MB_OK);
         return ERR_ZeroInputVals;
     }
 
@@ -208,71 +199,55 @@ extern "C" __declspec(dllexport) int SetUpPila(_In_ myflo * arrPila,           /
         || is_invalid(vStartSegIndxs[0])
         || is_invalid(vStartSegIndxs[vStartSegIndxs.size() - 1]))
     {
-        //MessageBoxA(NULL, "Error after noise extracting", "Error!", MB_ICONWARNING | MB_OK);
         return ERR_BadNoise;
     }
 
     /* находим все участки на пиле при помощи пиков */
-    PeakFinder::findPeaks(vPila, vnIndices, false);
+    err = PeakFinder::findPeaks(vPila, vnIndices, false);
     if (vnIndices.size() <= 3) // 3 потому что дальше в функцию я передаю начало второго и он нужен целиком, тоесть от второго до третьего индекса
     {
-        //MessageBoxA(NULL, "Less then 4 segments found", "Error!", MB_ICONWARNING | MB_OK);
         return ERR_TooFewSegs;
     }
     if (vPila.size() != vSignal.size())
         vectordiv(vnIndices, (myflo)vPila.size() / vSignal.size());
-
+    
     try
     {
         for (int i = 0; i < vnIndices.size() - 1; ++i)
-            memcpy(&vResP[vnIndices[i]], vSegPila.data(), sizeof myflo * vSegPila.size());
+            memcpy(&vResP[vnIndices.at(i)], vSegPila.data(), sizeof myflo * vSegPila.size());
     }
     catch (...)
     {
-        //MessageBoxA(NULL, "Index is out of range. Programm continued running", "Error!", MB_ICONWARNING | MB_OK);
+        err = ERR_Exception;
     }
 
     try
     {
-        if (vSegPila.size() >= vnIndices[0])
-            memcpy(&vResP[0], &vSegPila[vSegPila.size() - vnIndices[0]], sizeof myflo * vnIndices[0]);
+        if (vSegPila.size() >= vnIndices.at(0))
+            memcpy(&vResP[0], &vSegPila.at(vSegPila.size() - vnIndices.at(0)), sizeof myflo * vnIndices.at(0));
         else
         {
-            memcpy(&vResP[vnIndices[0] - vSegPila.size()], vSegPila.data(), sizeof myflo * vSegPila.size());
-            memcpy(&vResP[0], &vSegPila[vSegPila.size() - (vnIndices[0] - vSegPila.size())], sizeof myflo * (vnIndices[0] - vSegPila.size()));
+            memcpy(&vResP[vnIndices.at(0) - vSegPila.size()], vSegPila.data(), sizeof myflo * vSegPila.size());
+            memcpy(&vResP[0], &vSegPila.at(vSegPila.size() - (vnIndices.at(0) - vSegPila.size())), sizeof myflo * (vnIndices.at(0) - vSegPila.size()));
         }
     }
     catch (...)
     {
-        //MessageBoxA(NULL, "Index is out of range. Programm continued running", "Error!", MB_ICONWARNING | MB_OK);
+        err = ERR_Exception;
     }
 
-    try
+    if (vSegPila.size() >= (arrSsize - vnIndices.back()))
+        memcpy(&vResP[vnIndices.back()], vSegPila.data(), sizeof myflo * (arrSsize - vnIndices.back()));
+    else
     {
-        if (vSegPila.size() >= (arrSsize - vnIndices.back()))
-            memcpy(&vResP[vnIndices.back()], vSegPila.data(), sizeof myflo * (arrSsize - vnIndices.back()));
-        else
-        {
-            memcpy(&vResP[vnIndices.back()], vSegPila.data(), sizeof myflo * vSegPila.size());
-            memcpy(&vResP[vnIndices.back() + vSegPila.size()], vSegPila.data(), sizeof myflo * (arrSsize - vnIndices.back() + vSegPila.size()));
-        }
-    }
-    catch (...)
-    {
-        //MessageBoxA(NULL, "Index is out of range. Programm continued running", "Error!", MB_ICONWARNING | MB_OK);
+        memcpy(&vResP[vnIndices.back()], vSegPila.data(), sizeof myflo * vSegPila.size());
+        memcpy(&vResP[vnIndices.back() + vSegPila.size()], vSegPila.data(), sizeof myflo * (arrSsize - vnIndices.back() + vSegPila.size()));
     }
 
-    try
-    {
-        for (int i = 1; i < arrSsize - 1; ++i)
-            if (vResP[i] == 0) 
-                vResP[i] = vResP[i - 1];
-    }
-    catch (...)
-    {
-        //MessageBoxA(NULL, "Index is out of range. Programm continued running", "Error!", MB_ICONWARNING | MB_OK);
-    }
-
+    for (int i = 1; i < arrSsize - 1; ++i)
+        if (vResP[i] == 0) 
+            vResP[i] = vResP[i - 1];
+    
 Error:
     return err;
 }

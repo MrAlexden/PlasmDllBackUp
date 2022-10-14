@@ -88,6 +88,9 @@ string ERR_GetErrorDescription(int err)
     case ERR_IdxOutOfRange:
         return "Index is out of range. Programm continued running";
         break;
+    case ERR_Exception:
+        return "An exception been occured while running, script did not stoped working";
+        break;
     default:
         return "No Error";
         break;
