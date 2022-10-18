@@ -81,7 +81,7 @@ float_mat::float_mat(const float_vect& v)
 //////////////////////
 
 //! permute() orders the rows of A to match the integers in the index array.
-void permute(float_mat& A, int_vect& idx)
+inline void permute(float_mat& A, int_vect& idx)
 {
     int_vect i(idx.size());
     int j, k;
@@ -116,7 +116,7 @@ void permute(float_mat& A, int_vect& idx)
  * scaling information in the vector scale. The map of swapped indices is
  * recorded in swp. The return value is +1 or -1 depending on whether the
  * number of row swaps was even or odd respectively. */
-static int partial_pivot(float_mat& A, const size_t row, const size_t col,
+inline static int partial_pivot(float_mat& A, const size_t row, const size_t col,
     float_vect& scale, int_vect& idx, myflo tol)
 {
     if (tol <= 0.0)
@@ -157,7 +157,7 @@ static int partial_pivot(float_mat& A, const size_t row, const size_t col,
  * assumed to be 1.  Note that the lower triangular elements are never
  * checked, so this function is valid to use after a LU-decomposition in
  * place.  A is not modified, and the solution, b, is returned in a. */
-static void lu_backsubst(float_mat & A, float_mat & a, bool diag = false)
+inline static void lu_backsubst(float_mat & A, float_mat & a, bool diag = false)
 {
     int r, c, k;
 
@@ -182,7 +182,7 @@ static void lu_backsubst(float_mat & A, float_mat & a, bool diag = false)
  * assumed to be 1.  Note that the upper triangular elements are never
  * checked, so this function is valid to use after a LU-decomposition in
  * place.  A is not modified, and the solution, b, is returned in a. */
-static void lu_forwsubst(float_mat & A, float_mat & a, bool diag = true)
+inline static void lu_forwsubst(float_mat & A, float_mat & a, bool diag = true)
 {
     int r, k, c;
     for (r = 0; r < A.nr_rows(); ++r) {
@@ -206,7 +206,7 @@ static void lu_forwsubst(float_mat & A, float_mat & a, bool diag = true)
  * depending on whether the number of row swaps was even or odd
  * respectively.  idx must be preinitialized to a valid set of indices
  * (e.g., {1,2, ... ,A.nr_rows()}). */
-static int lu_factorize(float_mat & A, int_vect & idx, myflo tol = TOL)
+inline static int lu_factorize(float_mat & A, int_vect & idx, myflo tol = TOL)
 {
     if (tol <= 0.0)
         tol = TOL;
@@ -253,7 +253,7 @@ static int lu_factorize(float_mat & A, int_vect & idx, myflo tol = TOL)
 /*! \brief Solve a system of linear equations.
  * Solves the inhomogeneous matrix problem with lu-decomposition. Note that
  * inversion may be accomplished by setting a to the identity_matrix. */
-void lin_solve(const float_mat & A, const float_mat & a, float_mat & b)
+inline void lin_solve(const float_mat & A, const float_mat & a, float_mat & b)
 {
     int i, j;
     myflo tol = TOL;
@@ -280,7 +280,7 @@ void lin_solve(const float_mat & A, const float_mat & a, float_mat & b)
     lu_backsubst(B, b);       // solve the backward problem
     return;
 }
-static float_mat lin_solve(const float_mat& A, const float_mat& a, myflo tol = TOL)
+inline static float_mat lin_solve(const float_mat& A, const float_mat& a, myflo tol = TOL)
 {
     float_mat B(A);
     float_mat b(a);
@@ -302,7 +302,7 @@ static float_mat lin_solve(const float_mat& A, const float_mat& a, myflo tol = T
 ///////////////////////
 
 //! Returns the inverse of a matrix using LU-decomposition.
-void invert(float_mat & A, float_mat & res)
+inline void invert(float_mat & A, float_mat & res)
 {
     const int n = A.size();
     float_mat E(n, n, 0.0);
@@ -317,7 +317,7 @@ void invert(float_mat & A, float_mat & res)
 
     return;
 }
-static float_mat invert(const float_mat& A)
+inline static float_mat invert(const float_mat& A)
 {
     const int n = A.size();
     float_mat E(n, n, 0.0);
@@ -332,7 +332,7 @@ static float_mat invert(const float_mat& A)
 }
 
 //! returns the transposed matrix.
-void transpose(float_mat & a, float_mat & res)
+inline void transpose(float_mat & a, float_mat & res)
 {
     int i, j;
 
@@ -347,7 +347,7 @@ void transpose(float_mat & a, float_mat & res)
     }
     return;
 }
-static float_mat transpose(const float_mat& a)
+inline static float_mat transpose(const float_mat& a)
 {
     float_mat res(a.nr_cols(), a.nr_rows());
     int i, j;
@@ -361,7 +361,7 @@ static float_mat transpose(const float_mat& a)
 }
 
 //! matrix multiplication.
-float_mat operator *(const float_mat & a, const float_mat & b)
+inline float_mat operator *(const float_mat & a, const float_mat & b)
 {
     float_mat res(a.nr_rows(), b.nr_cols());
     if (a.nr_cols() != b.nr_rows()) {
@@ -383,7 +383,7 @@ float_mat operator *(const float_mat & a, const float_mat & b)
     return res;
 }
 
-void matrixmult(float_mat & a, float_mat & b, float_mat & res)
+inline void matrixmult(float_mat & a, float_mat & b, float_mat & res)
 {
     int i, j, k;
 
@@ -412,7 +412,7 @@ void matrixmult(float_mat & a, float_mat & b, float_mat & res)
 }
 
 //! calculate savitzky golay coefficients.
-void sg_coeff(float_mat & c, vector <myflo> & res, const size_t window, const size_t deg, float_mat & A)
+inline void sg_coeff(float_mat & c, vector <myflo> & res, const size_t window, const size_t deg, float_mat & A)
 {
     res.resize(window);
 

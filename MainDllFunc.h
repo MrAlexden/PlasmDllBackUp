@@ -4,9 +4,20 @@
 
 #define TOL 10E-30 /* smallest value allowed in cholesky_decomp() */
 #define Pi 3.14159265
-#define ef_koef 5 /* коэффициент эффективности, если == 1 то метод обрабатывает все точки, 
+#define ef_koef 10 /* коэффициент эффективности, если == 1 то метод обрабатывает все точки, 
                 если == 2 каждую вторую (в два раза быстре, но точность меньше) и тд */
+// ef_koef используется в **SubFuncs** **Lev-Marq**
 #define ERR(f) if (err = (f), err < 0) goto Error;
+
+//#ifdef __APPLE__
+//# include <OpenCL/opencl.h>      // для компьютеров на MacOsX
+//#else
+//# include <CL/cl.h>              // для компьютеров на Win\Linux указывайте путь к файлу cl.h 
+//#endif
+//#ifndef __cl_clang_function_pointers
+//#error "Missing __cl_clang_function_pointers define"
+//#endif
+//#pragma OPENCL EXTENSION __cl_clang_function_pointers : enable
 
 typedef float myflo;
 
@@ -44,16 +55,16 @@ vector <myflo> linear_fit(vector <myflo>&, vector <myflo>&); // from Lev-Marq.cp
 void vectorElementsProduct(vector <myflo>&, vector <myflo>&, vector <myflo>&); // from PeakFinder.cpp
 
 /* multiply the given scalar on given vector */
-void vectormult(vector <myflo>&, int); // from PeakFinder.cpp
-void vectormult(vector <myflo>&, myflo); // from PeakFinder.cpp
-void vectormult(vector <int>&, int); // from PeakFinder.cpp
-void vectormult(vector <int>&, myflo); // from PeakFinder.cpp
+void vectormult(vector <myflo>&, int);      // from PeakFinder.cpp
+void vectormult(vector <myflo>&, myflo);    // from PeakFinder.cpp
+void vectormult(vector <int>&, int);        // from PeakFinder.cpp
+void vectormult(vector <int>&, myflo);      // from PeakFinder.cpp
 
 /* divide the given vector on given scalar */
-void vectordiv(vector <myflo>&, int); // from PeakFinder.cpp
-void vectordiv(vector <myflo>&, myflo); // from PeakFinder.cpp
-void vectordiv(vector <int>&, int); // from PeakFinder.cpp
-void vectordiv(vector <int>&, myflo); // from PeakFinder.cpp
+void vectordiv(vector <myflo>&, int);       // from PeakFinder.cpp
+void vectordiv(vector <myflo>&, myflo);     // from PeakFinder.cpp
+void vectordiv(vector <int>&, int);         // from PeakFinder.cpp
+void vectordiv(vector <int>&, myflo);       // from PeakFinder.cpp
 
 void diff(_In_ vector <myflo>& in,
           _Out_ vector <myflo>& out,
@@ -112,12 +123,12 @@ public:
 /* calculate partial derivative of given func in particular point */
 myflo partial_derivative(myflo, vector <myflo>&, myflo(*fx)(myflo, vector <myflo>&), int numofparam); // from Lev-Marq.cpp
 
-void levmarq(vector <myflo>&,		        // independent data
-    vector <myflo>&,				        // dependent data
-    vector <myflo>&,			            // vector of parameters we are searching for
-    vector <bool>&,				            // vector of param's fixed status 
-    unsigned int,				            // number of max iterations this method does
-    myflo (*fx)(myflo, vector <myflo>&));   // the function that the data will be approximated by
+void levmarq(vector <myflo>&,		                // independent data
+             vector <myflo>&,				        // dependent data
+             vector <myflo>&,			            // vector of parameters we are searching for
+             vector <bool>&,				        // vector of param's fixed status 
+             unsigned int,				            // number of max iterations this method does
+             myflo (*fx)(myflo, vector <myflo>&));  // the function that the data will be approximated by
 
 int find_signal_and_make_pila(vector <myflo> &, vector <myflo> &, vector <myflo> &, vector <int> &); // from SubFuncs.cpp
 
@@ -131,17 +142,17 @@ int make_one_segment(_In_ int,                      // diagnostics type (zond::0
                      _Out_ vector <myflo>&,			// vector to be filled with the filtration
                      _Out_ vector <myflo>&);		// additional coeffs/results vector
 
-extern "C" __declspec(dllexport) int Zond(_In_ vector <myflo> Pila,                // входной одномерный массив пилы
-                                          _In_ vector <myflo> Signal,              // входной одномерный массив сигнала
-                                          _In_ vector <myflo> AdditionalData,      // дополнительные данные по импульсу
+extern "C" __declspec(dllexport) int Zond(_In_ vector <myflo> & Pila,                // входной одномерный массив пилы
+                                          _In_ vector <myflo> & Signal,              // входной одномерный массив сигнала
+                                          _In_ vector <myflo> & AdditionalData,      // дополнительные данные по импульсу
                                           _Out_ Plasma_proc_result & fdata);
-extern "C" __declspec(dllexport) int Setka(_In_ vector <myflo> Pila,               // входной одномерный массив пилы
-                                           _In_ vector <myflo> Signal,             // входной одномерный массив сигнала
-                                           _In_ vector <myflo> AdditionalData,     // дополнительные данные по импульсу
+extern "C" __declspec(dllexport) int Setka(_In_ vector <myflo> & Pila,               // входной одномерный массив пилы
+                                           _In_ vector <myflo> & Signal,             // входной одномерный массив сигнала
+                                           _In_ vector <myflo> & AdditionalData,     // дополнительные данные по импульсу
                                            _Out_ Plasma_proc_result & fdata);
-extern "C" __declspec(dllexport) int Cilinder(_In_ vector <myflo> Pila,            // входной одномерный массив пилы
-                                              _In_ vector <myflo> Signal,          // входной одномерный массив сигнала
-                                              _In_ vector <myflo> AdditionalData,  // дополнительные данные по импульсу
+extern "C" __declspec(dllexport) int Cilinder(_In_ vector <myflo> & Pila,            // входной одномерный массив пилы
+                                              _In_ vector <myflo> & Signal,          // входной одномерный массив сигнала
+                                              _In_ vector <myflo> & AdditionalData,  // дополнительные данные по импульсу
                                               _Out_ Plasma_proc_result & fdata);
 
 bool is_invalid(myflo val); // from SubFuncs.cpp
@@ -169,7 +180,9 @@ typedef enum {
     ERR_NoSegs = -6214,             // No segments found, check if signal is noise or not
     ERR_BadDiagNum = -6215,         // Diagnostics number must be > 0 and < 2
     ERR_IdxOutOfRange = -6216,      // Index is out of range. Programm continued running
-    ERR_Exception = -6217           // An exception been occured whule running, script did not stopt working
+    ERR_Exception = -6217,          // An exception been occured whule running, script did not stopt working
+    ERR_BadStEndTime = -6218        // Error!: start time must be less then end time and total time, more than 0\n\
+                                    end time must be less then total time, more then 0
 };
 
 extern "C" __declspec(dllexport) string ERR_GetErrorDescription(int);

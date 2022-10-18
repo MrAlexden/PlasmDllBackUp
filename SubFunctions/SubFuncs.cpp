@@ -7,7 +7,7 @@ int NumPointsOfOriginalPila = 0,
 myflo AverageSignal = 0,
 	  koeff_MaxMin = 1.5;
 
-myflo vSum(vector <myflo> & v)
+inline myflo vSum(vector <myflo> & v)
 {
 	myflo sum = 0.0;
 	for (int i = 0; i < v.size(); ++i)
@@ -38,7 +38,7 @@ myflo vSum(vector <myflo> & v)
 */
 /////////////////// УСЛОВИЕ ОЧИСТКИ ОТ ШУМА ///////////////////
 
-int find_i_nach(vector <myflo>& vSignal, vector <myflo>& mnL_mxL_mnR_mxR, vector <int>& vnIndices)
+inline int find_i_nach(vector <myflo>& vSignal, vector <myflo>& mnL_mxL_mnR_mxR, vector <int>& vnIndices)
 {
 	myflo otsech = (leftP >= rightP) ? leftP : rightP;
 	otsech = (otsech < 0.05) ? 0.05 : otsech;
@@ -73,7 +73,7 @@ int find_i_nach(vector <myflo>& vSignal, vector <myflo>& mnL_mxL_mnR_mxR, vector
 	return 0;
 }
 
-int find_i_konec(vector <myflo>& vSignal, vector <myflo>& mnL_mxL_mnR_mxR, vector <int>& vnIndices)
+inline int find_i_konec(vector <myflo>& vSignal, vector <myflo>& mnL_mxL_mnR_mxR, vector <int>& vnIndices)
 {
 	myflo otsech = (leftP >= rightP) ? leftP : rightP;
 	otsech = (otsech < 0.05) ? 0.05 : otsech;
@@ -108,7 +108,7 @@ int find_i_konec(vector <myflo>& vSignal, vector <myflo>& mnL_mxL_mnR_mxR, vecto
 	return 0;
 }
 
-void noise_vecs(int k, vector <myflo>& vLnoise, vector <myflo>& vRnoise, vector <myflo>& vSignal, vector <int>& vnIndices)
+inline void noise_vecs(int k, vector <myflo>& vLnoise, vector <myflo>& vRnoise, vector <myflo>& vSignal, vector <int>& vnIndices)
 {
 	myflo otsech = (leftP >= rightP) ? leftP : rightP;
 	otsech = (otsech < 0.05) ? 0.05 : otsech;
@@ -162,7 +162,7 @@ void noise_vecs(int k, vector <myflo>& vLnoise, vector <myflo>& vRnoise, vector 
 	AverageSignal = (avL + avR) / (vLnoise.size() + vRnoise.size());
 }
 
-void MinMaxNoise(vector <myflo>& vLnoise, vector <myflo>& vRnoise, vector <myflo>& mnL_mxL_mnR_mxR)
+inline void MinMaxNoise(vector <myflo>& vLnoise, vector <myflo>& vRnoise, vector <myflo>& mnL_mxL_mnR_mxR)
 {
 	myflo mnL = *min_element(vLnoise.begin(), vLnoise.end()),
 		mxL = *max_element(vLnoise.begin(), vLnoise.end()),
@@ -205,7 +205,7 @@ void MinMaxNoise(vector <myflo>& vLnoise, vector <myflo>& vRnoise, vector <myflo
 	////////////////////////////////////// Определяем средний уровень шума //////////////////////////////////////
 }
 
-void fit_linear_pila(vector <myflo>& vPila, int ind_st_of_pil, vector <myflo>& vSegPila)
+inline void fit_linear_pila(vector <myflo>& vPila, int ind_st_of_pil, vector <myflo>& vSegPila)
 {
 	int i = 0, j = 0, ind_st, ind_end;
 	ind_st = (leftP >= 0.2) ? ind_st_of_pil + leftP * NumPointsOfOriginalPila : ind_st_of_pil + 0.2 * NumPointsOfOriginalPila;
@@ -222,9 +222,19 @@ void fit_linear_pila(vector <myflo>& vPila, int ind_st_of_pil, vector <myflo>& v
 		vSegPila[i] = vSegPila[i - 1] + delta;
 }
 
-void convert_time_to_pts(int v_tok_size)
+inline int convert_time_to_pts(int v_tok_size)
 {
+	if (st_time_end_time[0] == st_time_end_time[1])
+		return 1;
+
 	myflo tot_time = (myflo)v_tok_size / one_segment_width / freqP;
+
+	if (st_time_end_time[0] < 0
+		|| st_time_end_time[0] > tot_time
+		|| st_time_end_time[0] > st_time_end_time[1]
+		|| st_time_end_time[1] < 0
+		|| st_time_end_time[1] > tot_time)
+		return ERR_BadStEndTime;
 
 	myflo st_ot_tot = st_time_end_time[0] / tot_time;
 	myflo end_ot_tot = st_time_end_time[1] / tot_time;
@@ -234,6 +244,8 @@ void convert_time_to_pts(int v_tok_size)
 		i_nach = v_tok_size * st_ot_tot;
 		i_konec = v_tok_size * end_ot_tot;
 	}
+
+	return 0;
 }
 
 int find_signal_and_make_pila(_In_ vector <myflo> & vPila,
@@ -297,11 +309,11 @@ int find_signal_and_make_pila(_In_ vector <myflo> & vPila,
 
 	/* приводим индексы начал отрезков к одной фазе с током */
 	if (vPila.size() != vSignal.size())
-		vectordiv(vnIndices, (myflo)vPila.size() / vSignal.size());
+		vectordiv(vnIndices, (int)(vPila.size() / vSignal.size()));
 	/* удаляем один элемент с конца (на всякий случай) и проверяем превышение крайнего индекса */
 	vnIndices.pop_back();
 	if (vnIndices[vnIndices.size() - 1] > vSignal.size()) 
-		vectormult(vnIndices, (myflo)vPila.size() / vSignal.size());
+		vectormult(vnIndices, (int)(vPila.size() / vSignal.size()));
 
 	/* ВАЖНО!!!!!!!!!!!
 	Мой метод предполагает, что либо в конце сигнала, либо в начале есть немного шума(чтобы взять его за образец и искать сигнал относительно него)
@@ -327,13 +339,13 @@ int find_signal_and_make_pila(_In_ vector <myflo> & vPila,
 	MinMaxNoise(vLnoise, vRnoise, mnL_mxL_mnR_mxR);
 
 	/* если пользователь сам выбрал диапазон обработки -> не зайдем в цикл while */
-	bool istr = false;
-	if (st_time_end_time[0] >= 0 && st_time_end_time[1] >= 0 && st_time_end_time[0] < st_time_end_time[1])
-		convert_time_to_pts(vSignal.size());
-	else istr = true;
+	int temp = convert_time_to_pts(vSignal.size());
+	bool dowhile = true;
+	if (temp < 0) err = temp;
+	if (temp == 0) dowhile = false;
 
 	/* ОСНОВНОЙ ЦИКЛ ПОИСКА СИГНАЛА (ОЧИСТКИ ОТ ШУМА) */
-	while (segments_amount == 0 && istr)
+	while (segments_amount == 0 && dowhile)
 	{
 		k++;
 		if (k > 5)
@@ -394,7 +406,7 @@ int find_signal_and_make_pila(_In_ vector <myflo> & vPila,
 	}
 
 	/* проверка на случай если найдено слишком много отрезков, например сигнал - шум, а не полезный ток */
-	if (abs(i_konec - i_nach) / one_segment_width >= (int)(0.8 * vSignal.size() / (one_segment_width)))
+	if (dowhile && ( abs(i_konec - i_nach) / one_segment_width >= (int)(0.8 * vSignal.size() / (one_segment_width)) ))
 	{
 		//MessageBoxA(NULL, "Too many segments. Probably the signal is noise", "Error!", MB_ICONWARNING | MB_OK);
 		return ERR_TooManySegs;
@@ -432,7 +444,7 @@ int find_signal_and_make_pila(_In_ vector <myflo> & vPila,
 	return err;
 }
 
-double metod_hord(myflo x0, myflo x1, vector <myflo>& vParams, myflo(*fx)(myflo, vector <myflo>&))
+inline myflo metod_hord(myflo x0, myflo x1, vector <myflo>& vParams, myflo(*fx)(myflo, vector <myflo>&))
 {
 	myflo x_cashe = 2 * x1;
 	int n = 0;
@@ -450,7 +462,7 @@ double metod_hord(myflo x0, myflo x1, vector <myflo>& vParams, myflo(*fx)(myflo,
 	return x1;
 }
 
-myflo metod_Newton(myflo x0, vector <myflo>& vParams, myflo(*fx)(myflo, vector <myflo>&))
+inline myflo metod_Newton(myflo x0, vector <myflo>& vParams, myflo(*fx)(myflo, vector <myflo>&))
 {
 	myflo x1 = 0.0, x_cashe = 2 * x0;
 	int n = 0;
@@ -468,10 +480,9 @@ myflo metod_Newton(myflo x0, vector <myflo>& vParams, myflo(*fx)(myflo, vector <
 	return x1;
 }
 
-myflo dens(vector <myflo> & vPila, vector <myflo> & vParams)
+inline myflo dens(vector <myflo> & vPila, vector <myflo> & vParams)
 {
-	myflo x = metod_Newton(vPila[vPila.size() - 1], vParams, fx_STEP), ans = 0.0;
-	double M = 0.0;
+	myflo x = metod_Newton(vPila[vPila.size() - 1], vParams, fx_STEP), ans = 0.0, M = 0.0;
 	
 	if (is_invalid(x) || !x)
 	{
@@ -491,10 +502,12 @@ myflo dens(vector <myflo> & vPila, vector <myflo> & vParams)
 	case 1:
 		M = M_Ar;
 		break;
+	default:
+		__assume(0);
 	}
 
-	return (double)ans * (10E-6) / (0.52026 * S * (1.602 * 10E-19) * sqrt((1.380649 * 10E-23) * (double)vParams[3] * 11604.51812 / M)); //моя формула
-	//return (double)ans * (10E-6) / (S * (1.602 * 10E-19) * sqrt(2 * (double)vParams[3] * (1.602 * 10E-19) / M)); //формула сергея
+	return (myflo)ans * (10E-6) / (0.52026 * S * (1.602 * 10E-19) * sqrt((1.380649 * 10E-23) * (myflo)vParams[3] * 11604.51812 / M)); //моя формула
+	//return (myflo)ans * (10E-6) / (S * (1.602 * 10E-19) * sqrt(2 * (myflo)vParams[3] * (1.602 * 10E-19) / M)); //формула сергея
 }
 
 int make_one_segment(_In_ int diagnostics,					 // diagnostics type (zond::0|setka::1|cilind::2)
@@ -694,6 +707,8 @@ int make_one_segment(_In_ int diagnostics,					 // diagnostics type (zond::0|set
 
 			break;
 		}
+		default:
+			__assume(0);
 	}
 
 	return 0;

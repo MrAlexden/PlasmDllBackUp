@@ -1,8 +1,8 @@
 #include "Zond.h"
 
-int Zond(_In_ vector <myflo> vPila, 
-	     _In_ vector <myflo> vSignal, 
-	     _In_ vector <myflo> AdditionalData,
+int Zond(_In_ vector <myflo> & vPila,
+	     _In_ vector <myflo> & vSignal, 
+	     _In_ vector <myflo> & AdditionalData,
 	     _Out_ Plasma_proc_result & fdata)
 {
 	if (vPila.size() == 0
@@ -11,29 +11,17 @@ int Zond(_In_ vector <myflo> vPila,
 		|| vSignal.empty()
 		|| AdditionalData.size() == 0
 		|| AdditionalData.empty())
-	{
-		//MessageBoxA(NULL, "Corrupted input vectors", "Error!", MB_ICONWARNING | MB_OK);
 		return ERR_BadInputVecs;
-	}
 	if (AdditionalData[0] == 0 || is_invalid(AdditionalData[0]) ||
 		(int)AdditionalData[7] == 0 || is_invalid(AdditionalData[7]) ||
 		(int)AdditionalData[8] == 0 || is_invalid(AdditionalData[8]) ||
 		(int)AdditionalData[9] == 0 || is_invalid(AdditionalData[9]) ||
 		(int)AdditionalData[11] == 0 || is_invalid(AdditionalData[11]))
-	{
-		//MessageBoxA(NULL, "Input data error, some values equals 0", "Error!", MB_ICONWARNING | MB_OK);
 		return ERR_ZeroInputVals;
-	}
 	if (AdditionalData[3] >= 0.5 || AdditionalData[3] < 0.0)
-	{
-		//MessageBoxA(NULL, "Ñut-off points on the left value must be > 0.0 and < 0.5", "Error!", MB_ICONWARNING | MB_OK);
 		return ERR_BadCutOffLeft;
-	}
 	if (AdditionalData[4] >= 0.5 || AdditionalData[4] < 0.0)
-	{
-		//MessageBoxA(NULL, "Ñut-off points on the right value must be > 0.0 and < 0.5", "Error!", MB_ICONWARNING | MB_OK);
 		return ERR_BadCutOffRight;
-	}
 
 	vector <myflo> vSegPila;
 	vector <int> vStartSegIndxs;
@@ -66,10 +54,7 @@ int Zond(_In_ vector <myflo> vPila,
 		|| is_invalid(vPila.at(vPila.size() - 1))
 		|| is_invalid(vSignal.at(0))
 		|| is_invalid(vSignal.at(vSignal.size() - 1)))
-	{
-		//MessageBoxA(NULL, "Error after Pila|Signal factorizing", "Error!", MB_ICONWARNING | MB_OK);
 		return ERR_BadFactorizing;
-	}
 
 	ERR(find_signal_and_make_pila(vPila, vSignal, vSegPila, vStartSegIndxs));
 	numSegments = vStartSegIndxs.size();
@@ -80,10 +65,7 @@ int Zond(_In_ vector <myflo> vPila,
 		|| is_invalid(vSegPila.at(vSegPila.size() - 1))
 		|| is_invalid(vStartSegIndxs.at(0))
 		|| is_invalid(vStartSegIndxs.at(vStartSegIndxs.size() - 1)))
-	{
-		//MessageBoxA(NULL, "Error after noise extracting", "Error!", MB_ICONWARNING | MB_OK);
 		return ERR_BadNoise;
-	}
 
 	fdata.SetSegmentsNumber(numSegments);
 	fdata.SetSegmentsSize(vSegPila.size());
@@ -94,6 +76,7 @@ int Zond(_In_ vector <myflo> vPila,
 #pragma omp parallel for schedule(static, 1) 
 	for (int segnum = 0; segnum < numSegments; ++segnum)
 	{
+//#pragma omp critical
 		vector <myflo> vY, vres, vfilt, vcoeffs = { filtS , linfitP };
 
 		vY.assign(vSignal.begin() + vStartSegIndxs.at(segnum) + one_segment_width * leftP,

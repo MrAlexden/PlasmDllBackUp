@@ -1,6 +1,6 @@
 #include "PeakFinder.h"
 
-void diff(vector <myflo>& in, vector <myflo>& out, int k)
+inline void diff(vector <myflo>& in, vector <myflo>& out, int k)
 {
 	out.resize(in.size());
 
@@ -9,7 +9,7 @@ void diff(vector <myflo>& in, vector <myflo>& out, int k)
 	out[out.size() - 1] = out[out.size() - 2];
 }
 
-void vectorElementsProduct(vector <myflo>& a, vector <myflo>& b, vector <myflo>& out)
+inline void vectorElementsProduct(vector <myflo>& a, vector <myflo>& b, vector <myflo>& out)
 {
 	out.resize(a.size());
 
@@ -17,14 +17,14 @@ void vectorElementsProduct(vector <myflo>& a, vector <myflo>& b, vector <myflo>&
 		out[i] = a[i] * b[i];
 }
 
-void findIndicesLessThan(vector <myflo>& in, myflo threshold, vector <int>& indices)
+inline void findIndicesLessThan(vector <myflo>& in, myflo threshold, vector <int>& indices)
 {
 	for (int i = 0; i < in.size(); ++i)
 		if (in[i] < threshold)
 			indices.push_back(i + 1);
 }
 
-void selectElementsFromIndices(vector <myflo>& in, vector <int>& indices, vector <myflo>& out)
+inline void selectElementsFromIndices(vector <myflo>& in, vector <int>& indices, vector <myflo>& out)
 {
 	out.resize(indices.size());
 
@@ -32,7 +32,7 @@ void selectElementsFromIndices(vector <myflo>& in, vector <int>& indices, vector
 		out.at(i) = in.at(indices.at(i));
 }
 
-void selectElementsFromIndices(vector <int>& in, vector <int>& indices, vector <int>& out)
+inline void selectElementsFromIndices(vector <int>& in, vector <int>& indices, vector <int>& out)
 {
 	out.resize(indices.size());
 
@@ -40,7 +40,7 @@ void selectElementsFromIndices(vector <int>& in, vector <int>& indices, vector <
 		out.at(i) = in.at(indices.at(i));
 }
 
-void signVector(vector <myflo>& in, vector<int>& out)
+inline void signVector(vector <myflo>& in, vector<int>& out)
 {
 	out.resize(in.size());
 

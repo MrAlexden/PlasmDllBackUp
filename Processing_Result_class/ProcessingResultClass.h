@@ -9,7 +9,7 @@
 using namespace std;
 
 #ifndef WIN32_LEAN_AND_MEAN
-typedef double myflo;
+typedef float myflo;
 #endif
 
 class Plasma_proc_result
