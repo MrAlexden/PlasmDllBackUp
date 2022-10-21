@@ -40,35 +40,45 @@ using namespace std;         // for std::
 
 ////////////////////////////////////////////// GLOBAL FUNCTIONS //////////////////////////////////////////////
 /*===================================== GAUSS =====================================*/
-myflo fx_GAUSS(myflo, vector <myflo>&); // from MainDllFunc.cpp
+myflo fx_GAUSS(myflo, const vector <myflo> &); // from MainDllFunc.cpp
 
 /*===================================== STEP =====================================*/
-myflo fx_STEP(myflo, vector <myflo>&); // from MainDllFunc.cpp
+myflo fx_STEP(myflo, const vector <myflo> &); // from MainDllFunc.cpp
 
 /*===================================== LINE =====================================*/
-myflo fx_LINE(myflo, vector <myflo>&); // from MainDllFunc.cpp
+myflo fx_LINE(myflo, const vector <myflo> &); // from MainDllFunc.cpp
 
 /* make linear approximation of given data, returns vector(2) with A and B */
-vector <myflo> linear_fit(vector <myflo>&, vector <myflo>&); // from Lev-Marq.cpp
+vector <myflo> linear_fit(_In_ const vector <myflo> &,
+                          _In_ const vector <myflo> &);  // from Lev-Marq.cpp
 
 /* multiply first and second vector, third elemnt is the result */
-void vectorElementsProduct(vector <myflo>&, vector <myflo>&, vector <myflo>&); // from PeakFinder.cpp
+inline void vectorElementsProduct(_In_ const vector <myflo> &,
+                                  _In_ const vector <myflo> &,
+                                  _Out_ vector <myflo> &); // from PeakFinder.cpp
 
 /* multiply the given scalar on given vector */
-void vectormult(vector <myflo>&, int);      // from PeakFinder.cpp
-void vectormult(vector <myflo>&, myflo);    // from PeakFinder.cpp
-void vectormult(vector <int>&, int);        // from PeakFinder.cpp
-void vectormult(vector <int>&, myflo);      // from PeakFinder.cpp
+template <typename v, typename s>
+inline void vectormult(_Inout_ vector <v> &in, _In_ s scalar)
+{
+#pragma omp parallel for schedule(static, 1) 
+    for (int i = 0; i < in.size(); ++i)
+        in[i] *= scalar;
+};
 
 /* divide the given vector on given scalar */
-void vectordiv(vector <myflo>&, int);       // from PeakFinder.cpp
-void vectordiv(vector <myflo>&, myflo);     // from PeakFinder.cpp
-void vectordiv(vector <int>&, int);         // from PeakFinder.cpp
-void vectordiv(vector <int>&, myflo);       // from PeakFinder.cpp
+template <typename v, typename s>
+inline void vectordiv(_Inout_ vector <v> & in, _In_ s scalar)
+{
+    if (scalar == 0) return;
+#pragma omp parallel for schedule(static, 1) 
+    for (int i = 0; i < in.size(); ++i)
+        in[i] /= scalar;
+};
 
-void diff(_In_ vector <myflo>& in,
-          _Out_ vector <myflo>& out,
-          _In_ int k); // если -1 - то переворачивает функцию, если 1 - оставляет
+void diff(_In_ const vector <myflo> &,
+          _Out_ vector <myflo> &,
+          _In_opt_ int);  // если -1 - то переворачивает функцию, если 1 - оставляет
 
 namespace PeakFinder {
     const myflo EPS = 2.2204e-16f;
@@ -81,8 +91,11 @@ namespace PeakFinder {
         Output
         peakInds: Indices of peaks in x0
     */
-    int findPeaks(vector <myflo>& x0, vector <int>& peakInds, bool includeEndpoints = true, int extrema = 1); // from PeakFinder.cpp
-}
+    int findPeaks(_In_ const vector <myflo>&,
+                  _Out_ vector <int>&,
+                  _In_opt_ bool = true,
+                  _In_opt_ int = 1);    // from PeakFinder.cpp
+};
 
 class Matrix { // from matrix.cpp
 private:
@@ -121,44 +134,53 @@ public:
 };
 
 /* calculate partial derivative of given func in particular point */
-myflo partial_derivative(myflo, vector <myflo>&, myflo(*fx)(myflo, vector <myflo>&), int numofparam); // from Lev-Marq.cpp
+myflo partial_derivative(_In_ myflo,
+                         _In_ const vector <myflo> &,
+                         _In_ myflo(*)(myflo, const vector <myflo> &),
+                         _In_ int);     // from Lev-Marq.cpp
 
-void levmarq(vector <myflo>&,		                // independent data
-             vector <myflo>&,				        // dependent data
-             vector <myflo>&,			            // vector of parameters we are searching for
-             vector <bool>&,				        // vector of param's fixed status 
-             unsigned int,				            // number of max iterations this method does
-             myflo (*fx)(myflo, vector <myflo>&));  // the function that the data will be approximated by
+void levmarq(_In_ const vector <myflo> &,					 // independent data
+             _In_ const vector <myflo> &,					 // dependent data
+             _Inout_ vector <myflo> &,					     // vector of parameters we are searching for
+             _In_ vector <bool> &,						     // vector of param's fixed status 
+             _In_ unsigned int,							     // number of max iterations this method does
+             _In_ myflo(*)(myflo, const vector <myflo> &));  // the function that the data will be approximated by
 
-int find_signal_and_make_pila(vector <myflo> &, vector <myflo> &, vector <myflo> &, vector <int> &); // from SubFuncs.cpp
+int find_signal_and_make_pila(_In_ const vector <myflo> &,
+                              _In_ const vector <myflo> &,
+                              _Out_ vector <myflo> &,
+                              _Out_ vector <int> &);    // from SubFuncs.cpp
 
 /* savitzky golay smoothing */
-void sg_smooth(vector <myflo>&, vector <myflo>&, const int, const int); // from Savitsky-Golay.cpp
+void sg_smooth(_In_ const vector <myflo> &,
+               _Out_ vector <myflo> &,
+               _In_ const int,
+               _In_ int);  // from Savitsky-Golay.cpp
 
-int make_one_segment(_In_ int,                      // diagnostics type (zond::0|setka::1|cilind::2)
-                     _In_  vector <myflo>&,			// X data
-                     _In_  vector <myflo>&,			// Y data
-                     _Out_ vector <myflo>&,			// vector to be filled with the result
-                     _Out_ vector <myflo>&,			// vector to be filled with the filtration
-                     _Out_ vector <myflo>&);		// additional coeffs/results vector
+int make_one_segment(_In_ int,					     // diagnostics type (zond::0|setka::1|cilind::2)
+                     _In_ const vector <myflo> &,	 // X data
+                     _In_ vector <myflo> &,			 // Y data
+                     _Out_ vector <myflo> &,		 // vector to be filled with the result
+                     _Out_ vector <myflo> &,		 // vector to be filled with the filtration
+                     _Inout_ vector <myflo> &);		 // additional coeffs/results vector
 
-extern "C" __declspec(dllexport) int Zond(_In_ vector <myflo> & Pila,                // входной одномерный массив пилы
-                                          _In_ vector <myflo> & Signal,              // входной одномерный массив сигнала
-                                          _In_ vector <myflo> & AdditionalData,      // дополнительные данные по импульсу
-                                          _Out_ Plasma_proc_result & fdata);
-extern "C" __declspec(dllexport) int Setka(_In_ vector <myflo> & Pila,               // входной одномерный массив пилы
-                                           _In_ vector <myflo> & Signal,             // входной одномерный массив сигнала
-                                           _In_ vector <myflo> & AdditionalData,     // дополнительные данные по импульсу
-                                           _Out_ Plasma_proc_result & fdata);
-extern "C" __declspec(dllexport) int Cilinder(_In_ vector <myflo> & Pila,            // входной одномерный массив пилы
-                                              _In_ vector <myflo> & Signal,          // входной одномерный массив сигнала
-                                              _In_ vector <myflo> & AdditionalData,  // дополнительные данные по импульсу
-                                              _Out_ Plasma_proc_result & fdata);
+extern "C" __declspec(dllexport) int Zond(_In_ vector <myflo> & Pila,                      // входной одномерный массив пилы
+                                          _In_ vector <myflo> & Signal,                    // входной одномерный массив сигнала
+                                          _In_ const vector <myflo> & AdditionalData,      // дополнительные данные по импульсу
+                                          _Out_ Plasma_proc_result & fdata);               // выходной класс с результатом обработки
+extern "C" __declspec(dllexport) int Setka(_In_ vector <myflo> & Pila,                     // входной одномерный массив пилы
+                                           _In_ vector <myflo> & Signal,                   // входной одномерный массив сигнала
+                                           _In_ const vector <myflo> & AdditionalData,     // дополнительные данные по импульсу
+                                           _Out_ Plasma_proc_result & fdata);              // выходной класс с результатом обработки
+extern "C" __declspec(dllexport) int Cilinder(_In_ vector <myflo> & Pila,                  // входной одномерный массив пилы
+                                              _In_ vector <myflo> & Signal,                // входной одномерный массив сигнала
+                                              _In_ const vector <myflo> & AdditionalData,  // дополнительные данные по импульсу
+                                              _Out_ Plasma_proc_result & fdata);           // выходной класс с результатом обработки
 
 bool is_invalid(myflo val); // from SubFuncs.cpp
 bool is_invalid(int val);   // from SubFuncs.cpp
 
-bool is_signalpeakslookingdown(vector <myflo>& v); // from SubFuncs.cpp
+bool is_signalpeakslookingdown(_In_ const vector <myflo> & v); // from SubFuncs.cpp
 
 // Error codes
 typedef enum {

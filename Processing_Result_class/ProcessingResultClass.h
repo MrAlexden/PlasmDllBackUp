@@ -23,6 +23,15 @@ public:
 	{
 	}
 
+	~Plasma_proc_result()
+	{
+		vPila.clear();
+		mOriginalData.clear();
+		mFeltrationData.clear();
+		mApproximatedData.clear();
+		mParametersData.clear();
+	}
+
 	Plasma_proc_result(int Number_Of_Segments, int Size_Of_Segment, int Number_Of_Parameters)
 	{
 		NumberOfSegments = Number_Of_Segments;
@@ -84,42 +93,42 @@ public:
 		mParametersData[i] = v;
 	}
 
-	vector < myflo > & Get_vPila()
+	vector < myflo > & const Get_vPila()
 	{
 		return vPila;
 	}
 
-	vector < vector <myflo> > & Get_mOriginalData()
+	vector < vector <myflo> > & const Get_mOriginalData()
 	{
 		return mOriginalData;
 	}
 
-	vector < vector <myflo> > & Get_mFeltrationData()
+	vector < vector <myflo> > & const Get_mFeltrationData()
 	{
 		return mFeltrationData;
 	}
 
-	vector < vector <myflo> > & Get_mApproximatedData()
+	vector < vector <myflo> > & const Get_mApproximatedData()
 	{
 		return mApproximatedData;
 	}
 
-	vector < vector <myflo> > & Get_mParametersData()
+	vector < vector <myflo> > & const Get_mParametersData()
 	{
 		return mParametersData;
 	}
 
-	int Get_NumberOfSegments()
+	int Get_NumberOfSegments() const
 	{
 		return NumberOfSegments;
 	}
 
-	int Get_SizeOfSegment()
+	int Get_SizeOfSegment() const
 	{
 		return SizeOfSegment;
 	}
 
-	int Get_NumberOfParameters()
+	int Get_NumberOfParameters() const
 	{
 		return NumberOfParameters;
 	}

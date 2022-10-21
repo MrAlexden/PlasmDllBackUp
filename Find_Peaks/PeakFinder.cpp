@@ -1,7 +1,10 @@
 #include "PeakFinder.h"
 
-inline void diff(vector <myflo>& in, vector <myflo>& out, int k)
+inline void diff(_In_ const vector <myflo> & in,
+				 _Out_ vector <myflo> & out, 
+				 _In_opt_ int k)
 {
+	if (k == NULL) k = 1;
 	out.resize(in.size());
 
 	for (int i = 1; i < in.size(); ++i)
@@ -9,7 +12,9 @@ inline void diff(vector <myflo>& in, vector <myflo>& out, int k)
 	out[out.size() - 1] = out[out.size() - 2];
 }
 
-inline void vectorElementsProduct(vector <myflo>& a, vector <myflo>& b, vector <myflo>& out)
+inline void vectorElementsProduct(_In_ const vector <myflo> & a, 
+								  _In_ const vector <myflo> & b, 
+								  _Out_ vector <myflo> & out)
 {
 	out.resize(a.size());
 
@@ -17,14 +22,14 @@ inline void vectorElementsProduct(vector <myflo>& a, vector <myflo>& b, vector <
 		out[i] = a[i] * b[i];
 }
 
-inline void findIndicesLessThan(vector <myflo>& in, myflo threshold, vector <int>& indices)
+inline void findIndicesLessThan(const vector <myflo> & in, myflo threshold, vector <int> & indices)
 {
 	for (int i = 0; i < in.size(); ++i)
 		if (in[i] < threshold)
 			indices.push_back(i + 1);
 }
 
-inline void selectElementsFromIndices(vector <myflo>& in, vector <int>& indices, vector <myflo>& out)
+inline void selectElementsFromIndices(const vector <myflo> & in, const vector <int> & indices, vector <myflo> & out)
 {
 	out.resize(indices.size());
 
@@ -32,7 +37,7 @@ inline void selectElementsFromIndices(vector <myflo>& in, vector <int>& indices,
 		out.at(i) = in.at(indices.at(i));
 }
 
-inline void selectElementsFromIndices(vector <int>& in, vector <int>& indices, vector <int>& out)
+inline void selectElementsFromIndices(const vector <int> & in, const vector <int> & indices, vector <int> & out)
 {
 	out.resize(indices.size());
 
@@ -40,7 +45,7 @@ inline void selectElementsFromIndices(vector <int>& in, vector <int>& indices, v
 		out.at(i) = in.at(indices.at(i));
 }
 
-inline void signVector(vector <myflo>& in, vector<int>& out)
+inline void signVector(const vector <myflo> & in, vector<int> & out)
 {
 	out.resize(in.size());
 
@@ -55,66 +60,23 @@ inline void signVector(vector <myflo>& in, vector<int>& out)
 	}
 }
 
-void vectormult(vector <myflo>& in, int scalar)
+int PeakFinder::findPeaks(_In_ const vector <myflo> & in,
+						  _Out_ vector <int> & peakInds,
+						  _In_opt_ bool includeEndpoints, 
+						  _In_opt_ int extrema)
 {
-#pragma omp parallel for schedule(static, 1) 
-	for (int i = 0; i < in.size(); ++i)
-		in[i] *= scalar;
-}
-void vectormult(vector <myflo>& in, myflo scalar)
-{
-#pragma omp parallel for schedule(static, 1) 
-	for (int i = 0; i < in.size(); ++i)
-		in[i] *= scalar;
-}
-void vectormult(vector <int>& in, int scalar)
-{
-#pragma omp parallel for schedule(static, 1) 
-	for (int i = 0; i < in.size(); ++i)
-		in[i] *= scalar;
-}
-void vectormult(vector <int>& in, myflo scalar)
-{
-#pragma omp parallel for schedule(static, 1) 
-	for (int i = 0; i < in.size(); ++i)
-		in[i] *= scalar;
-}
+	if (includeEndpoints == NULL) includeEndpoints = false;
+	if (extrema == NULL) extrema = 1;
+	vector <myflo> x0 = in;
 
-void vectordiv(vector <myflo>& in, int scalar)
-{
-#pragma omp parallel for schedule(static, 1) 
-	for (int i = 0; i < in.size(); ++i)
-		in[i] /= scalar;
-}
-void vectordiv(vector <myflo>& in, myflo scalar)
-{
-#pragma omp parallel for schedule(static, 1) 
-	for (int i = 0; i < in.size(); ++i)
-		in[i] /= scalar;
-}
-void vectordiv(vector <int>& in, int scalar)
-{
-#pragma omp parallel for schedule(static, 1) 
-	for (int i = 0; i < in.size(); ++i)
-		in[i] /= scalar;
-}
-void vectordiv(vector <int>& in, myflo scalar)
-{
-#pragma omp parallel for schedule(static, 1) 
-	for (int i = 0; i < in.size(); ++i)
-		in[i] /= scalar;
-}
-
-int PeakFinder::findPeaks(vector <myflo> & x0, vector <int> & peakInds, bool includeEndpoints, int extrema)
-{
 	int minIdx = distance(x0.begin(), min_element(x0.begin(), x0.end()));
 	int maxIdx = distance(x0.begin(), max_element(x0.begin(), x0.end()));
 
 	myflo sel = (x0[maxIdx] - x0[minIdx]) / 4.0;
 	int len0 = x0.size(), err = 0;
 
-	if (extrema == -1) 
-		vectormult(x0, extrema);
+	if (extrema == -1)
+		vectormult<myflo, int>(x0, extrema);
 
 	vector <myflo> dx;
 	diff(x0, dx, 1);

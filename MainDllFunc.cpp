@@ -74,17 +74,19 @@ extern "C" __declspec(dllexport) int MainWrapper(_In_ int diagnostics,          
     {
         err = ERR_Exception;
     }
+
+    delete fdata;
     
 Error:
     return err;
 }
 
-extern "C" __declspec(dllexport) int FindSignalWrapper(_In_ myflo * arrPila,           // 1д массив с данными пилы
-                                                       _In_ myflo * arrSignal,         // 1д массив с данными сигнала
-                                                       _In_ myflo * AdditionalData,    // 1д дополнительная информация об импульсе (!размер 14!)
-                                                       _Out_ int & DIM1,               // выходное значение (количество строк в матрице (количество отрезков))
-                                                       _Out_ int & DIM2,               // выходное значение (количество столбиков в матрице (количество точек на отрезк))
-                                                       _Out_ myflo * vResP)            // возвращяемый 1д массив с одним сегментом пилы (X для построения графика)
+extern "C" __declspec(dllexport) int FindSignalWrapper(_In_ myflo * arrPila,                 // 1д массив с данными пилы
+                                                       _In_ myflo * arrSignal,               // 1д массив с данными сигнала
+                                                       _In_ myflo * AdditionalData,          // 1д дополнительная информация об импульсе (!размер 14!)
+                                                       _Out_ int & DIM1,                     // выходное значение (количество строк в матрице (количество отрезков))
+                                                       _Out_ int & DIM2,                     // выходное значение (количество столбиков в матрице (количество точек на отрезк))
+                                                       _Out_ myflo * vResP)                  // возвращяемый 1д массив с одним сегментом пилы (X для построения графика)
 {
     if (arrPila == nullptr ||
         arrSignal == nullptr ||
@@ -123,9 +125,9 @@ extern "C" __declspec(dllexport) int FindSignalWrapper(_In_ myflo * arrPila,    
     vector <int> vStartSegIndxs;
 
     /* домножаем пилу на коэффициент усиления */
-    vectormult(vPila, coefPila);
+    vectormult<myflo, int>(vPila, coefPila);
     /* переворачиваем ток чтобы смотрел вверх(если нужно), и делим на сопротивление */
-    vectordiv(vSignal, resistance);
+    vectordiv<myflo, int>(vSignal, resistance);
 
     if (is_invalid(vPila[0])
         || is_invalid(vPila[vPila.size() - 1])
@@ -164,6 +166,7 @@ extern "C" __declspec(dllexport) int SetUpPila(_In_ myflo * arrPila,           /
                                                _In_ int arrSsize,              // размер сигнала
                                                _Out_ myflo * vResP)            // возвращяемый 1д массив с пилой для построения графика
 {
+    
     if (arrPila == nullptr ||
         arrSignal == nullptr ||
         vResP == nullptr)
@@ -184,12 +187,12 @@ extern "C" __declspec(dllexport) int SetUpPila(_In_ myflo * arrPila,           /
 
     int err = 0;
 
-    vector <myflo> vPila(arrPila, arrPila + arrPsize);
+    const vector <myflo> vPila(arrPila, arrPila + arrPsize);
     vector <myflo> vSignal(arrSignal, arrSignal + arrSsize);
     vector <myflo> vSegPila;
     vector <int> vStartSegIndxs;
     vector <int> vnIndices;
-
+    
     ERR(find_signal_and_make_pila(vPila, vSignal, vSegPila, vStartSegIndxs));
 
     if (vStartSegIndxs.size() == 0
@@ -209,8 +212,8 @@ extern "C" __declspec(dllexport) int SetUpPila(_In_ myflo * arrPila,           /
         return ERR_TooFewSegs;
     }
     if (vPila.size() != vSignal.size())
-        vectordiv(vnIndices, (myflo)vPila.size() / vSignal.size());
-    
+        (vPila.size() > vSignal.size()) ? vectordiv<int, int>(vnIndices, (int)(vPila.size() / vSignal.size())) : vectormult<int, int>(vnIndices, (int)(vSignal.size() / vPila.size()));
+       
     try
     {
         for (int i = 0; i < vnIndices.size() - 1; ++i)
@@ -247,7 +250,7 @@ extern "C" __declspec(dllexport) int SetUpPila(_In_ myflo * arrPila,           /
     for (int i = 1; i < arrSsize - 1; ++i)
         if (vResP[i] == 0) 
             vResP[i] = vResP[i - 1];
-    
+
 Error:
     return err;
 }

@@ -1,7 +1,10 @@
 #include "Lev-Marq.h"
 
 /* calculate the error function (chi-squared) */
-inline myflo error_func(vector <myflo>& vec_X, vector <myflo>& vec_Y, vector <myflo>& vParams, myflo(*fx)(myflo, vector <myflo>&))
+inline myflo error_func(_In_ const vector <myflo>& vec_X, 
+						_In_ const vector <myflo>& vec_Y, 
+						_In_ const vector <myflo>& vParams, 
+						_In_ myflo(*fx)(myflo, const vector <myflo>&))
 {
 	myflo res, e = 0;
 	for (int x = 0 + (ef_koef - 1); x < vec_Y.size() - (ef_koef - 1); x += ef_koef)
@@ -15,7 +18,9 @@ inline myflo error_func(vector <myflo>& vec_X, vector <myflo>& vec_Y, vector <my
 /* solve the equation Ax=b for a symmetric positive-definite matrix A,
    using the Cholesky decomposition A=LL^T.  The matrix L is passed in "ch".
    Elements above the diagonal are ignored. */
-inline void solve_axb_cholesky(Matrix& ch, vector <myflo>& delta, vector <myflo>& drvtv)
+inline void solve_axb_cholesky(_In_ Matrix& ch, 
+							   _Out_ vector <myflo>& delta, 
+							   _In_ const vector <myflo>& drvtv)
 {
 	int i, j, npar = ch.getCols();
 	myflo sum;
@@ -45,7 +50,8 @@ inline void solve_axb_cholesky(Matrix& ch, vector <myflo>& delta, vector <myflo>
    its (lower-triangular) Cholesky factor in "ch".  Elements above the
    diagonal are neither used nor modified.  The same array may be passed
    as both ch and Hessian, in which case the decomposition is performed in place. */
-inline bool cholesky_decomp(Matrix& ch, Matrix& Hessian)
+inline bool cholesky_decomp(_Inout_ Matrix& ch, 
+							_In_ Matrix& Hessian)
 {
 	int i, j, k, npar = ch.getCols();
 	myflo sum;
@@ -71,7 +77,10 @@ inline bool cholesky_decomp(Matrix& ch, Matrix& Hessian)
 }
 
 /* calculate partial derivative of given func in particular point */
-myflo partial_derivative(myflo x, vector <myflo>& vParams, myflo(*fx)(myflo, vector <myflo>&), int numofparam)
+myflo partial_derivative(_In_ myflo x, 
+						 _In_ const vector <myflo> & vParams, 
+						 _In_ myflo(*fx)(myflo, const vector <myflo> &), 
+						 _In_ int numofparam)
 {
 	myflo h = 0.01, curfx = fx(x, vParams);
 	vector <myflo> newvParams = vParams;
@@ -85,7 +94,8 @@ myflo partial_derivative(myflo x, vector <myflo>& vParams, myflo(*fx)(myflo, vec
 }
 
 /* make linear approximation of given data */
-vector <myflo> linear_fit(vector <myflo>& vec_X, vector <myflo>& vec_Y)
+vector <myflo> linear_fit(_In_ const vector <myflo> & vec_X, 
+						  _In_ const vector <myflo>& vec_Y)
 {
 	vector <myflo> vParams = { 0, 0 };
 	vector <bool> vFixed = { false, false };
@@ -95,12 +105,12 @@ vector <myflo> linear_fit(vector <myflo>& vec_X, vector <myflo>& vec_Y)
 	return vParams;
 }
 
-void levmarq(vector <myflo> & vec_X,		// independent data
-		vector <myflo> & vec_Y,					// dependent data
-		vector <myflo> & vParams,				// vector of parameters we are searching for
-		vector <bool> & vFixed,					// vector of param's fixed status 
-		unsigned int niter,						// number of max iterations this method does
-		myflo (*fx)(myflo, vector <myflo>&))    // the function that the data will be approximated by
+void levmarq(_In_ const vector <myflo> & vec_X,					// independent data
+			 _In_ const vector <myflo> & vec_Y,					// dependent data
+			 _Inout_ vector <myflo> & vParams,					// vector of parameters we are searching for
+			 _In_ vector <bool> & vFixed,						// vector of param's fixed status 
+			 _In_ unsigned int niter,							// number of max iterations this method does
+			 _In_ myflo (*fx)(myflo, const vector <myflo> &))	// the function that the data will be approximated by
 {
 	int x, i, j, it, npar = 0;
 	myflo lambda = 0.01, up = 10, down = 1 / up, mult, err = 0, newerr = 0, derr = 0, target_derr = TOL;

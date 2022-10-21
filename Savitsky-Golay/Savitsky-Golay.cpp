@@ -81,7 +81,7 @@ float_mat::float_mat(const float_vect& v)
 //////////////////////
 
 //! permute() orders the rows of A to match the integers in the index array.
-inline void permute(float_mat& A, int_vect& idx)
+inline void permute(_Inout_ float_mat & A, _In_ const int_vect& idx)
 {
     int_vect i(idx.size());
     int j, k;
@@ -116,11 +116,13 @@ inline void permute(float_mat& A, int_vect& idx)
  * scaling information in the vector scale. The map of swapped indices is
  * recorded in swp. The return value is +1 or -1 depending on whether the
  * number of row swaps was even or odd respectively. */
-inline static int partial_pivot(float_mat& A, const size_t row, const size_t col,
-    float_vect& scale, int_vect& idx, myflo tol)
+inline static int partial_pivot(_In_ const float_mat & A, 
+                                _In_ const size_t row,
+                                _In_ const size_t col,
+                                _In_ const float_vect & scale,
+                                _In_ int_vect & idx)
 {
-    if (tol <= 0.0)
-        tol = TOL;
+    myflo tol = TOL;
 
     int swapNum = 1;
 
@@ -157,7 +159,9 @@ inline static int partial_pivot(float_mat& A, const size_t row, const size_t col
  * assumed to be 1.  Note that the lower triangular elements are never
  * checked, so this function is valid to use after a LU-decomposition in
  * place.  A is not modified, and the solution, b, is returned in a. */
-inline static void lu_backsubst(float_mat & A, float_mat & a, bool diag = false)
+inline static void lu_backsubst(_In_ const float_mat & A, 
+                                _Out_ float_mat & a, 
+                                _In_ bool diag = false)
 {
     int r, c, k;
 
@@ -182,7 +186,9 @@ inline static void lu_backsubst(float_mat & A, float_mat & a, bool diag = false)
  * assumed to be 1.  Note that the upper triangular elements are never
  * checked, so this function is valid to use after a LU-decomposition in
  * place.  A is not modified, and the solution, b, is returned in a. */
-inline static void lu_forwsubst(float_mat & A, float_mat & a, bool diag = true)
+inline static void lu_forwsubst(_In_ const float_mat & A, 
+                                _Out_ float_mat & a, 
+                                _In_ bool diag = true)
 {
     int r, k, c;
     for (r = 0; r < A.nr_rows(); ++r) {
@@ -206,10 +212,10 @@ inline static void lu_forwsubst(float_mat & A, float_mat & a, bool diag = true)
  * depending on whether the number of row swaps was even or odd
  * respectively.  idx must be preinitialized to a valid set of indices
  * (e.g., {1,2, ... ,A.nr_rows()}). */
-inline static int lu_factorize(float_mat & A, int_vect & idx, myflo tol = TOL)
+inline static int lu_factorize(_Inout_ float_mat & A,
+                               _In_ int_vect & idx)
 {
-    if (tol <= 0.0)
-        tol = TOL;
+    myflo tol = TOL;
 
     if ((A.nr_rows() == 0) || (A.nr_rows() != A.nr_cols())) {
         //sgs_error("lu_factorize(): cannot handle empty "
@@ -236,7 +242,7 @@ inline static int lu_factorize(float_mat & A, int_vect & idx, myflo tol = TOL)
     int swapNum = 1;
     int c, r;
     for (c = 0; c < A.nr_cols(); ++c) {            // loop over columns
-        swapNum *= partial_pivot(A, c, c, scale, idx, tol); // bring pivot to diagonal
+        swapNum *= partial_pivot(A, c, c, scale, idx); // bring pivot to diagonal
         for (r = 0; r < A.nr_rows(); ++r) {      //  loop over rows
             int lim = (r < c) ? r : c;
             for (j = 0; j < lim; ++j) {
@@ -253,7 +259,9 @@ inline static int lu_factorize(float_mat & A, int_vect & idx, myflo tol = TOL)
 /*! \brief Solve a system of linear equations.
  * Solves the inhomogeneous matrix problem with lu-decomposition. Note that
  * inversion may be accomplished by setting a to the identity_matrix. */
-inline void lin_solve(const float_mat & A, const float_mat & a, float_mat & b)
+inline void lin_solve(_In_ const float_mat & A, 
+                      _In_ const float_mat & a, 
+                      _Out_ float_mat & b)
 {
     int i, j;
     myflo tol = TOL;
@@ -274,35 +282,36 @@ inline void lin_solve(const float_mat & A, const float_mat & a, float_mat & b)
     for (j = 0; j < B.nr_rows(); ++j) {
         idx[j] = j;  // init row swap label array
     }
-    lu_factorize(B, idx, tol); // get the lu-decomp.
+    lu_factorize(B, idx); // get the lu-decomp.
     permute(b, idx);          // sort the inhomogeneity to match the lu-decomp
     lu_forwsubst(B, b);       // solve the forward problem
     lu_backsubst(B, b);       // solve the backward problem
     return;
 }
-inline static float_mat lin_solve(const float_mat& A, const float_mat& a, myflo tol = TOL)
-{
-    float_mat B(A);
-    float_mat b(a);
-    int_vect idx(B.nr_rows());
-    int j;
-
-    for (j = 0; j < B.nr_rows(); ++j) {
-        idx[j] = j;  // init row swap label array
-    }
-    lu_factorize(B, idx, tol); // get the lu-decomp.
-    permute(b, idx);          // sort the inhomogeneity to match the lu-decomp
-    lu_forwsubst(B, b);       // solve the forward problem
-    lu_backsubst(B, b);       // solve the backward problem
-    return b;
-}
+//inline static float_mat lin_solve(const float_mat& A, const float_mat& a, myflo tol = TOL)
+//{
+//    float_mat B(A);
+//    float_mat b(a);
+//    int_vect idx(B.nr_rows());
+//    int j;
+//
+//    for (j = 0; j < B.nr_rows(); ++j) {
+//        idx[j] = j;  // init row swap label array
+//    }
+//    lu_factorize(B, idx, tol); // get the lu-decomp.
+//    permute(b, idx);          // sort the inhomogeneity to match the lu-decomp
+//    lu_forwsubst(B, b);       // solve the forward problem
+//    lu_backsubst(B, b);       // solve the backward problem
+//    return b;
+//}
 
 ///////////////////////
 // related functions //
 ///////////////////////
 
 //! Returns the inverse of a matrix using LU-decomposition.
-inline void invert(float_mat & A, float_mat & res)
+inline void invert(_In_ const float_mat & A, 
+                   _Out_ float_mat & res)
 {
     const int n = A.size();
     float_mat E(n, n, 0.0);
@@ -317,22 +326,23 @@ inline void invert(float_mat & A, float_mat & res)
 
     return;
 }
-inline static float_mat invert(const float_mat& A)
-{
-    const int n = A.size();
-    float_mat E(n, n, 0.0);
-    float_mat B(A);
-    int i;
-
-    for (i = 0; i < n; ++i) {
-        E[i][i] = 1.0;
-    }
-
-    return lin_solve(B, E);
-}
+//inline static float_mat invert(const float_mat& A)
+//{
+//    const int n = A.size();
+//    float_mat E(n, n, 0.0);
+//    float_mat B(A);
+//    int i;
+//
+//    for (i = 0; i < n; ++i) {
+//        E[i][i] = 1.0;
+//    }
+//
+//    return lin_solve(B, E);
+//}
 
 //! returns the transposed matrix.
-inline void transpose(float_mat & a, float_mat & res)
+inline void transpose(_In_ const float_mat & a, 
+                      _Out_ float_mat & res)
 {
     int i, j;
 
@@ -347,18 +357,18 @@ inline void transpose(float_mat & a, float_mat & res)
     }
     return;
 }
-inline static float_mat transpose(const float_mat& a)
-{
-    float_mat res(a.nr_cols(), a.nr_rows());
-    int i, j;
-
-    for (i = 0; i < a.nr_rows(); ++i) {
-        for (j = 0; j < a.nr_cols(); ++j) {
-            res[j][i] = a[i][j];
-        }
-    }
-    return res;
-}
+//inline static float_mat transpose(const float_mat& a)
+//{
+//    float_mat res(a.nr_cols(), a.nr_rows());
+//    int i, j;
+//
+//    for (i = 0; i < a.nr_rows(); ++i) {
+//        for (j = 0; j < a.nr_cols(); ++j) {
+//            res[j][i] = a[i][j];
+//        }
+//    }
+//    return res;
+//}
 
 //! matrix multiplication.
 inline float_mat operator *(const float_mat & a, const float_mat & b)
@@ -383,7 +393,9 @@ inline float_mat operator *(const float_mat & a, const float_mat & b)
     return res;
 }
 
-inline void matrixmult(float_mat & a, float_mat & b, float_mat & res)
+inline void matrixmult(_In_ const float_mat & a, 
+                       _In_ const float_mat & b, 
+                       _Out_ float_mat & res)
 {
     int i, j, k;
 
@@ -412,7 +424,11 @@ inline void matrixmult(float_mat & a, float_mat & b, float_mat & res)
 }
 
 //! calculate savitzky golay coefficients.
-inline void sg_coeff(float_mat & c, vector <myflo> & res, const size_t window, const size_t deg, float_mat & A)
+inline void sg_coeff(_In_ const float_mat & c, 
+                     _Out_ vector <myflo> & res, 
+                     _In_ const size_t window,
+                     _In_ const size_t deg,
+                     _In_ const float_mat & A)
 {
     res.resize(window);
 
@@ -434,7 +450,10 @@ inline void sg_coeff(float_mat & c, vector <myflo> & res, const size_t window, c
  * vector of size 2w+1, e.g. for w=2 b=(0,0,1,0,0). evaluating the polynome
  * yields the sg-coefficients.  at the border non symmectric vectors b are
  * used. */
-void sg_smooth(vector <myflo>& vorig, vector <myflo>& res, const int width, int deg)
+void sg_smooth(_In_ const vector <myflo>& vorig,
+               _Out_ vector <myflo>& res,
+               _In_ const int width,
+               _In_ int deg)
 {
     int i, j, k;
 

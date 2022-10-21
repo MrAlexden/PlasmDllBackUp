@@ -7,7 +7,7 @@ int NumPointsOfOriginalPila = 0,
 myflo AverageSignal = 0,
 	  koeff_MaxMin = 1.5;
 
-inline myflo vSum(vector <myflo> & v)
+inline myflo vSum(const vector <myflo> & v)
 {
 	myflo sum = 0.0;
 	for (int i = 0; i < v.size(); ++i)
@@ -38,7 +38,7 @@ inline myflo vSum(vector <myflo> & v)
 */
 /////////////////// УСЛОВИЕ ОЧИСТКИ ОТ ШУМА ///////////////////
 
-inline int find_i_nach(vector <myflo>& vSignal, vector <myflo>& mnL_mxL_mnR_mxR, vector <int>& vnIndices)
+inline int find_i_nach(const vector <myflo> & vSignal, const vector <myflo> & mnL_mxL_mnR_mxR, const vector <int> & vnIndices)
 {
 	myflo otsech = (leftP >= rightP) ? leftP : rightP;
 	otsech = (otsech < 0.05) ? 0.05 : otsech;
@@ -73,7 +73,7 @@ inline int find_i_nach(vector <myflo>& vSignal, vector <myflo>& mnL_mxL_mnR_mxR,
 	return 0;
 }
 
-inline int find_i_konec(vector <myflo>& vSignal, vector <myflo>& mnL_mxL_mnR_mxR, vector <int>& vnIndices)
+inline int find_i_konec(const vector <myflo> & vSignal, const vector <myflo> & mnL_mxL_mnR_mxR, const vector <int> & vnIndices)
 {
 	myflo otsech = (leftP >= rightP) ? leftP : rightP;
 	otsech = (otsech < 0.05) ? 0.05 : otsech;
@@ -108,7 +108,7 @@ inline int find_i_konec(vector <myflo>& vSignal, vector <myflo>& mnL_mxL_mnR_mxR
 	return 0;
 }
 
-inline void noise_vecs(int k, vector <myflo>& vLnoise, vector <myflo>& vRnoise, vector <myflo>& vSignal, vector <int>& vnIndices)
+inline void noise_vecs(int k, vector <myflo> & vLnoise, vector <myflo> & vRnoise, const vector <myflo> & vSignal, const vector <int> & vnIndices)
 {
 	myflo otsech = (leftP >= rightP) ? leftP : rightP;
 	otsech = (otsech < 0.05) ? 0.05 : otsech;
@@ -162,7 +162,7 @@ inline void noise_vecs(int k, vector <myflo>& vLnoise, vector <myflo>& vRnoise, 
 	AverageSignal = (avL + avR) / (vLnoise.size() + vRnoise.size());
 }
 
-inline void MinMaxNoise(vector <myflo>& vLnoise, vector <myflo>& vRnoise, vector <myflo>& mnL_mxL_mnR_mxR)
+inline void MinMaxNoise(const vector <myflo> & vLnoise, const vector <myflo> & vRnoise, vector <myflo> & mnL_mxL_mnR_mxR)
 {
 	myflo mnL = *min_element(vLnoise.begin(), vLnoise.end()),
 		mxL = *max_element(vLnoise.begin(), vLnoise.end()),
@@ -205,7 +205,9 @@ inline void MinMaxNoise(vector <myflo>& vLnoise, vector <myflo>& vRnoise, vector
 	////////////////////////////////////// Определяем средний уровень шума //////////////////////////////////////
 }
 
-inline void fit_linear_pila(vector <myflo>& vPila, int ind_st_of_pil, vector <myflo>& vSegPila)
+inline void fit_linear_pila(_In_ const vector <myflo> & vPila, 
+							_In_ int ind_st_of_pil, 
+							_Out_ vector <myflo> & vSegPila)
 {
 	int i = 0, j = 0, ind_st, ind_end;
 	ind_st = (leftP >= 0.2) ? ind_st_of_pil + leftP * NumPointsOfOriginalPila : ind_st_of_pil + 0.2 * NumPointsOfOriginalPila;
@@ -248,8 +250,8 @@ inline int convert_time_to_pts(int v_tok_size)
 	return 0;
 }
 
-int find_signal_and_make_pila(_In_ vector <myflo> & vPila,
-							  _In_ vector <myflo> & vSignal, 
+int find_signal_and_make_pila(_In_ const vector <myflo> & vPila,
+							  _In_ const vector <myflo> & vSignal,
 							  _Out_ vector <myflo> & vSegPila,
 							  _Out_ vector <int> & vStartSegIndxs)
 {
@@ -309,11 +311,11 @@ int find_signal_and_make_pila(_In_ vector <myflo> & vPila,
 
 	/* приводим индексы начал отрезков к одной фазе с током */
 	if (vPila.size() != vSignal.size())
-		vectordiv(vnIndices, (int)(vPila.size() / vSignal.size()));
+		(vPila.size() > vSignal.size()) ? vectordiv<int, int>(vnIndices, (int)(vPila.size() / vSignal.size())) : vectormult<int, int>(vnIndices, (int)(vSignal.size() / vPila.size()));
 	/* удаляем один элемент с конца (на всякий случай) и проверяем превышение крайнего индекса */
 	vnIndices.pop_back();
-	if (vnIndices[vnIndices.size() - 1] > vSignal.size()) 
-		vectormult(vnIndices, (int)(vPila.size() / vSignal.size()));
+	if (vnIndices[vnIndices.size() - 1] > vSignal.size())
+		vectormult<int, int>(vnIndices, (int)(vPila.size() / vSignal.size()));
 
 	/* ВАЖНО!!!!!!!!!!!
 	Мой метод предполагает, что либо в конце сигнала, либо в начале есть немного шума(чтобы взять его за образец и искать сигнал относительно него)
@@ -444,7 +446,7 @@ int find_signal_and_make_pila(_In_ vector <myflo> & vPila,
 	return err;
 }
 
-inline myflo metod_hord(myflo x0, myflo x1, vector <myflo>& vParams, myflo(*fx)(myflo, vector <myflo>&))
+inline myflo metod_hord(myflo x0, myflo x1, const vector <myflo> & vParams, myflo(*fx)(myflo, const vector <myflo> &))
 {
 	myflo x_cashe = 2 * x1;
 	int n = 0;
@@ -462,7 +464,7 @@ inline myflo metod_hord(myflo x0, myflo x1, vector <myflo>& vParams, myflo(*fx)(
 	return x1;
 }
 
-inline myflo metod_Newton(myflo x0, vector <myflo>& vParams, myflo(*fx)(myflo, vector <myflo>&))
+inline myflo metod_Newton(myflo x0, const vector <myflo> & vParams, myflo(*fx)(myflo, const vector <myflo> &))
 {
 	myflo x1 = 0.0, x_cashe = 2 * x0;
 	int n = 0;
@@ -480,7 +482,7 @@ inline myflo metod_Newton(myflo x0, vector <myflo>& vParams, myflo(*fx)(myflo, v
 	return x1;
 }
 
-inline myflo dens(vector <myflo> & vPila, vector <myflo> & vParams)
+inline myflo dens(const vector <myflo> & vPila, const vector <myflo> & vParams)
 {
 	myflo x = metod_Newton(vPila[vPila.size() - 1], vParams, fx_STEP), ans = 0.0, M = 0.0;
 	
@@ -511,11 +513,11 @@ inline myflo dens(vector <myflo> & vPila, vector <myflo> & vParams)
 }
 
 int make_one_segment(_In_ int diagnostics,					 // diagnostics type (zond::0|setka::1|cilind::2)
-					 _In_  vector <myflo> & vPila,			 // X data
-					 _In_  vector <myflo> & vSignal,		 // Y data
+					 _In_ const vector <myflo> & vPila,		 // X data
+					 _In_ vector <myflo> & vSignal,			 // Y data
 					 _Out_ vector <myflo> & vres,			 // vector to be filled with the result
 					 _Out_ vector <myflo> & vfilt,			 // vector to be filled with the filtration
-					 _Out_ vector <myflo> & vcoeffs)		 // additional coeffs/results vector
+					 _Inout_ vector <myflo> & vcoeffs)		 // additional coeffs/results vector
 {
 	myflo filtS = vcoeffs[0],
 		linfitP = vcoeffs[1];
@@ -735,7 +737,7 @@ bool is_invalid(int val)
 	return false;
 }
 
-bool is_signalpeakslookingdown(vector <myflo>& v)
+bool is_signalpeakslookingdown(_In_ const vector <myflo> & v)
 {
 	myflo min = *min_element(v.begin(), v.end()), 
 		  max = *max_element(v.begin(), v.end()),

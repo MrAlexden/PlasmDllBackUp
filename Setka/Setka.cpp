@@ -2,7 +2,7 @@
 
 int Setka(_In_ vector <myflo> & vPila,
 		  _In_ vector <myflo> & vSignal,
-		  _In_ vector <myflo> & AdditionalData,
+		  _In_ const vector <myflo> & AdditionalData,
 		  _Out_ Plasma_proc_result & fdata)
 {
 	if (vPila.size() == 0
@@ -45,9 +45,9 @@ int Setka(_In_ vector <myflo> & vPila,
 	Num_iter = (int)AdditionalData[11];				// количество итераций аппроксимации(сильно влияет на скорость работы программы)
 
 	/* домножаем пилу на коэффициент усиления */
-	vectormult(vPila, coefPila);
+	vectormult<myflo, int>(vPila, coefPila);
 	/* переворачиваем ток чтобы смотрел вверх(если нужно), и делим на сопротивление */
-	vectordiv(vSignal, resistance);
+	vectordiv<myflo, int>(vSignal, resistance);
 
 	if (is_invalid(vPila.at(0))
 		|| is_invalid(vPila.at(vPila.size() - 1))
