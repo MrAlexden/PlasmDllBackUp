@@ -1,9 +1,9 @@
 #include "Zond.h"
 
 int Zond(_In_ vector <myflo> & vPila,
-	     _In_ vector <myflo> & vSignal, 
-	     _In_ const vector <myflo> & AdditionalData,
-	     _Out_ Plasma_proc_result & fdata)
+		 _In_ vector <myflo> & vSignal, 
+		 _In_ const vector <myflo> & AdditionalData,
+		 _Out_ Plasma_proc_result & fdata)
 {
 	if (vPila.size() == 0
 		|| vPila.empty()

@@ -38,7 +38,9 @@ inline myflo vSum(const vector <myflo> & v)
 */
 /////////////////// ”—ÀŒ¬»≈ Œ◊»—“ » Œ“ ÿ”Ã¿ ///////////////////
 
-inline int find_i_nach(const vector <myflo> & vSignal, const vector <myflo> & mnL_mxL_mnR_mxR, const vector <int> & vnIndices)
+inline int find_i_nach(_In_ const vector <myflo> & vSignal, 
+					   _In_ const vector <myflo> & mnL_mxL_mnR_mxR,
+					   _In_ const vector <int> & vnIndices)
 {
 	myflo otsech = (leftP >= rightP) ? leftP : rightP;
 	otsech = (otsech < 0.05) ? 0.05 : otsech;
@@ -73,7 +75,9 @@ inline int find_i_nach(const vector <myflo> & vSignal, const vector <myflo> & mn
 	return 0;
 }
 
-inline int find_i_konec(const vector <myflo> & vSignal, const vector <myflo> & mnL_mxL_mnR_mxR, const vector <int> & vnIndices)
+inline int find_i_konec(_In_ const vector <myflo> & vSignal,
+						_In_ const vector <myflo> & mnL_mxL_mnR_mxR,
+						_In_ const vector <int> & vnIndices)
 {
 	myflo otsech = (leftP >= rightP) ? leftP : rightP;
 	otsech = (otsech < 0.05) ? 0.05 : otsech;
@@ -108,7 +112,11 @@ inline int find_i_konec(const vector <myflo> & vSignal, const vector <myflo> & m
 	return 0;
 }
 
-inline void noise_vecs(int k, vector <myflo> & vLnoise, vector <myflo> & vRnoise, const vector <myflo> & vSignal, const vector <int> & vnIndices)
+inline void noise_vecs(_In_ int k,
+					   _Out_ vector <myflo> & vLnoise, 
+					   _Out_ vector <myflo> & vRnoise, 
+					   _In_ const vector <myflo> & vSignal,
+					   _In_ const vector <int> & vnIndices)
 {
 	myflo otsech = (leftP >= rightP) ? leftP : rightP;
 	otsech = (otsech < 0.05) ? 0.05 : otsech;
@@ -162,7 +170,9 @@ inline void noise_vecs(int k, vector <myflo> & vLnoise, vector <myflo> & vRnoise
 	AverageSignal = (avL + avR) / (vLnoise.size() + vRnoise.size());
 }
 
-inline void MinMaxNoise(const vector <myflo> & vLnoise, const vector <myflo> & vRnoise, vector <myflo> & mnL_mxL_mnR_mxR)
+inline void MinMaxNoise(_In_ const vector <myflo> & vLnoise,
+						_In_ const vector <myflo> & vRnoise,
+						_Out_ vector <myflo> & mnL_mxL_mnR_mxR)
 {
 	myflo mnL = *min_element(vLnoise.begin(), vLnoise.end()),
 		mxL = *max_element(vLnoise.begin(), vLnoise.end()),
@@ -224,7 +234,7 @@ inline void fit_linear_pila(_In_ const vector <myflo> & vPila,
 		vSegPila[i] = vSegPila[i - 1] + delta;
 }
 
-inline int convert_time_to_pts(int v_tok_size)
+inline int convert_time_to_pts(_In_ int v_tok_size)
 {
 	if (st_time_end_time[0] == st_time_end_time[1])
 		return 1;
@@ -446,7 +456,10 @@ int find_signal_and_make_pila(_In_ const vector <myflo> & vPila,
 	return err;
 }
 
-inline myflo metod_hord(myflo x0, myflo x1, const vector <myflo> & vParams, myflo(*fx)(myflo, const vector <myflo> &))
+inline myflo metod_hord(_In_ myflo x0,
+						_In_ myflo x1,
+						_In_ const vector <myflo> & vParams,
+						_In_ myflo(*fx)(myflo, const vector <myflo> &))
 {
 	myflo x_cashe = 2 * x1;
 	int n = 0;
@@ -464,7 +477,9 @@ inline myflo metod_hord(myflo x0, myflo x1, const vector <myflo> & vParams, myfl
 	return x1;
 }
 
-inline myflo metod_Newton(myflo x0, const vector <myflo> & vParams, myflo(*fx)(myflo, const vector <myflo> &))
+inline myflo metod_Newton(_In_ myflo x0,
+						  _In_ const vector <myflo> & vParams,
+						  _In_ myflo(*fx)(myflo, const vector <myflo> &))
 {
 	myflo x1 = 0.0, x_cashe = 2 * x0;
 	int n = 0;
@@ -482,7 +497,8 @@ inline myflo metod_Newton(myflo x0, const vector <myflo> & vParams, myflo(*fx)(m
 	return x1;
 }
 
-inline myflo dens(const vector <myflo> & vPila, const vector <myflo> & vParams)
+inline myflo dens(_In_ const vector <myflo> & vPila,
+				  _In_ const vector <myflo> & vParams)
 {
 	myflo x = metod_Newton(vPila[vPila.size() - 1], vParams, fx_STEP), ans = 0.0, M = 0.0;
 	

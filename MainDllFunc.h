@@ -5,8 +5,9 @@
 #define TOL 10E-30 /* smallest value allowed in cholesky_decomp() */
 #define Pi 3.14159265
 #define ef_koef 10 /* коэффициент эффективности, если == 1 то метод обрабатывает все точки, 
-                если == 2 каждую вторую (в два раза быстре, но точность меньше) и тд */
-// ef_koef используется в **SubFuncs** **Lev-Marq**
+                если == 2 каждую вторую (в два раза быстре, но точность меньше) и тд \
+                ef_koef используется в **SubFuncs** **Lev-Marq** */
+
 #define ERR(f) if (err = (f), err < 0) goto Error;
 
 //#ifdef __APPLE__
