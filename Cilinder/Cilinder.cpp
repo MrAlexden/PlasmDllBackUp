@@ -75,7 +75,7 @@ int Cilinder(_In_ vector <myflo> & vPila,
 
 	fdata.SetPila(vSegPila);
 
-#pragma omp parallel for schedule(static, 1) 
+//#pragma omp parallel for schedule(static, 1) 
 	for (int segnum = 0; segnum < numSegments; ++segnum)
 	{
 		vector <myflo> vY, vres, vfilt, vcoeffs = { filtS , linfitP };

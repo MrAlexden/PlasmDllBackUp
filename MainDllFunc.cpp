@@ -57,6 +57,8 @@ extern "C" __declspec(dllexport) int MainWrapper(_In_ int diagnostics,          
     case 2: // Cilinder|Magnit
         ERR(Cilinder(vPila, vSignal, vAdd, *fdata)); // вызов обработчика цилиндра|магнита
         break;
+    default:
+        __assume(0);
     }
     
     d1 = fdata->Get_NumberOfSegments(), d2 = fdata->Get_SizeOfSegment(), d3 = fdata->Get_NumberOfParameters();
@@ -76,7 +78,7 @@ extern "C" __declspec(dllexport) int MainWrapper(_In_ int diagnostics,          
     }
 
     delete fdata;
-    
+
 Error:
     return err;
 }

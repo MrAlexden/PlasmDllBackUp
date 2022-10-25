@@ -22,22 +22,19 @@ inline void vectorElementsProduct(_In_ const vector <myflo> & a,
 		out[i] = a[i] * b[i];
 }
 
-inline void findIndicesLessThan(const vector <myflo> & in, myflo threshold, vector <int> & indices)
+inline void findIndicesLessThan(_In_ const vector <myflo> & in, 
+								_In_ myflo threshold, 
+								_Out_ vector <int> & indices)
 {
 	for (int i = 0; i < in.size(); ++i)
 		if (in[i] < threshold)
 			indices.push_back(i + 1);
 }
 
-inline void selectElementsFromIndices(const vector <myflo> & in, const vector <int> & indices, vector <myflo> & out)
-{
-	out.resize(indices.size());
-
-	for (int i = 0; i < indices.size(); ++i)
-		out.at(i) = in.at(indices.at(i));
-}
-
-inline void selectElementsFromIndices(const vector <int> & in, const vector <int> & indices, vector <int> & out)
+template <typename T>
+inline static void selectElementsFromIndices(_In_ const vector <T> & in, 
+											 _In_ const vector <int> & indices, 
+											 _Out_ vector <T> & out)
 {
 	out.resize(indices.size());
 
@@ -72,7 +69,7 @@ int PeakFinder::findPeaks(_In_ const vector <myflo> & in,
 	int minIdx = distance(x0.begin(), min_element(x0.begin(), x0.end()));
 	int maxIdx = distance(x0.begin(), max_element(x0.begin(), x0.end()));
 
-	myflo sel = (x0[maxIdx] - x0[minIdx]) / 4.0;
+	myflo sel = (x0[maxIdx] - x0[minIdx]) / 4.0f;
 	int len0 = x0.size(), err = 0;
 
 	if (extrema == -1)
@@ -166,7 +163,7 @@ int PeakFinder::findPeaks(_In_ const vector <myflo> & in,
 			ii = 1;
 
 		//Preallocate max number of maxima
-		myflo maxPeaks = ceil((myflo)len / 2.0);
+		myflo maxPeaks = ceil((myflo)len / 2.0f);
 		vector<int> peakLoc(maxPeaks, 0);
 		vector <myflo> peakMag(maxPeaks, 0.0);
 		int cInd = 1;

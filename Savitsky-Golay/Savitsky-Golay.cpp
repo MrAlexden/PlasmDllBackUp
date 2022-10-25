@@ -405,11 +405,11 @@ inline void matrixmult(_In_ const float_mat & a,
     }
 
     res.resize(a.nr_rows());
-#pragma omp parallel for schedule(static, 1)
+//#pragma omp parallel for schedule(static, 1)
     for (i = 0; i < res.size(); ++i)
     {
         res[i].resize(b.nr_cols());
-#pragma omp parallel for schedule(static, 1)
+//#pragma omp parallel for schedule(static, 1)
         for (j = 0; j < res[i].size(); ++j)
         {
             myflo sum(0.0);
@@ -432,7 +432,7 @@ inline void sg_coeff(_In_ const float_mat & c,
 {
     res.resize(window);
 
-#pragma omp parallel for schedule(static, 1) 
+//#pragma omp parallel for schedule(static, 1) 
     for (int i = 0; i < window; ++i) {
         res[i] = c[0][0];
         for (int j = 1; j <= deg; ++j) {
@@ -467,7 +467,7 @@ void sg_smooth(_In_ const vector <myflo>& vorig,
 
     vector <myflo> v(vorig.size() + window);
     const int endidxv = v.size() - 1;
-#pragma omp parallel for schedule(static, 1) private (i)
+//#pragma omp parallel for schedule(static, 1) private (i)
     for (i = 0; i < width; ++i)
     {
         v[i] = vorig[width - i];
@@ -479,7 +479,7 @@ void sg_smooth(_In_ const vector <myflo>& vorig,
     if (deg <= 0) {
         // handle border cases first because we need different coefficients
         for (i = 0; i < width; ++i) {
-            const myflo scale = 1.0 / myflo(i + 1);
+            const myflo scale = 1.0f / myflo(i + 1);
             const float_vect c1(width, scale);
             for (j = 0; j <= i; ++j) {
                 res[i] += c1[j] * v[j];
@@ -488,7 +488,7 @@ void sg_smooth(_In_ const vector <myflo>& vorig,
         }
 
         // now loop over rest of data. reusing the "symmetric" coefficients.
-        const myflo scale = 1.0 / myflo(window);
+        const myflo scale = 1.0f / myflo(window);
         const  float_vect c2(window, scale);
 
         for (i = 0; i <= (v.size() - window); ++i) {
@@ -504,7 +504,7 @@ void sg_smooth(_In_ const vector <myflo>& vorig,
     float_mat A(rows, cols);
 
     // generate input matrix for least squares fit
-#pragma omp parallel for schedule(static, 1) private (i, j)
+//#pragma omp parallel for schedule(static, 1) private (i, j)
     for (i = 0; i < rows; ++i)
     {
         for (j = 0; j < cols; ++j)

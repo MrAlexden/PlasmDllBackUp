@@ -5,15 +5,14 @@ int freqP = 50,
 	one_segment_width = 0,
 	fuel = 0;
 
-myflo leftP = 0.05,
-	  rightP = 0.05,
-	  linfitP = 0.5,
-	  filtS = 0.0,
-	  st_time_end_time[2] = { -1, -1 },
-	  S = 3.141592 * 0.0005 * 0.005 + 3.141592 * 0.0005 * 0.0005 / 4;
-
-double M_He = 6.6464731 * 10E-27 - 9.10938356 * 10E-31,
-	   M_Ar = 6.6335209 * 10E-26 - 9.10938356 * 10E-31;
+myflo leftP = 0.05f,
+	  rightP = 0.05f,
+	  linfitP = 0.5f,
+	  filtS = 0.0f,
+	  st_time_end_time[2] = { -1.0f, -1.0f },
+	  S = 3.141592f * 0.0005f * 0.005f + Pi * 0.0005f * 0.0005f / 4,
+      M_He = 6.6464731f * 10E-27f - 9.10938356f * 10E-31f,
+	  M_Ar = 6.6335209f * 10E-26f - 9.10938356f * 10E-31f;
 
 /*===================================== GAUSS =====================================*/
 myflo fx_GAUSS(myflo x, const vector <myflo> & vParams)

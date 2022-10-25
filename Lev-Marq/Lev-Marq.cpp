@@ -26,7 +26,7 @@ inline void solve_axb_cholesky(_In_ Matrix& ch,
 	myflo sum;
 
 	/* solve (ch)*y = drvtv for y (where delta[] is used to store y) */
-#pragma omp parallel for schedule(static, 1) 
+//#pragma omp parallel for schedule(static, 1) 
 	for (i = 0; i < npar; ++i)
 	{
 		sum = 0;
@@ -36,7 +36,7 @@ inline void solve_axb_cholesky(_In_ Matrix& ch,
 	}
 
 	/* solve (ch)^T*delta = y for delta (where delta[] is used to store both y and delta) */
-#pragma omp parallel for schedule(static, 1) 
+//#pragma omp parallel for schedule(static, 1) 
 	for (i = npar - 1; i >= 0; --i)
 	{
 		sum = 0;
@@ -82,7 +82,7 @@ myflo partial_derivative(_In_ myflo x,
 						 _In_ myflo(*fx)(myflo, const vector <myflo> &), 
 						 _In_ int numofparam)
 {
-	myflo h = 0.01, curfx = fx(x, vParams);
+	myflo h = 0.01f, curfx = fx(x, vParams);
 	vector <myflo> newvParams = vParams;
 
 	if (numofparam == -1)
@@ -97,7 +97,7 @@ myflo partial_derivative(_In_ myflo x,
 vector <myflo> linear_fit(_In_ const vector <myflo> & vec_X, 
 						  _In_ const vector <myflo>& vec_Y)
 {
-	vector <myflo> vParams = { 0, 0 };
+	vector <myflo> vParams = { 0.0f, 0.0f };
 	vector <bool> vFixed = { false, false };
 
 	levmarq(vec_X, vec_Y, vParams, vFixed, Num_iter, fx_LINE);
@@ -113,7 +113,7 @@ void levmarq(_In_ const vector <myflo> & vec_X,					// independent data
 			 _In_ myflo (*fx)(myflo, const vector <myflo> &))	// the function that the data will be approximated by
 {
 	int x, i, j, it, npar = 0;
-	myflo lambda = 0.01, up = 10, down = 1 / up, mult, err = 0, newerr = 0, derr = 0, target_derr = TOL;
+	myflo lambda = 0.01f, up = 10, down = 1 / up, mult, err = 0, newerr = 0, derr = 0, target_derr = TOL;
 
 	/* check for input mistakes */
 	if (vFixed.empty())
@@ -127,7 +127,7 @@ void levmarq(_In_ const vector <myflo> & vec_X,					// independent data
 	{
 		for (i = 0; i < vFixed.size(); ++i)
 			if (vFixed[i] == false)
-				npar++;
+				++npar;
 	}
 	else return;
 
@@ -159,7 +159,7 @@ void levmarq(_In_ const vector <myflo> & vec_X,					// independent data
 				if (vFixed[i] == false)
 				{
 					grad[j] = partial_derivative(vec_X[x], vParams, fx, i);
-					j++;
+					++j;
 				}
 			}
 
@@ -193,7 +193,7 @@ void levmarq(_In_ const vector <myflo> & vec_X,					// independent data
 					if (vFixed[i] == false)
 					{
 						newvParams[i] = vParams[i] + delta[j];
-						j++;
+						++j;
 					}
 				}
 
@@ -206,7 +206,7 @@ void levmarq(_In_ const vector <myflo> & vec_X,					// independent data
 			{
 				mult = (1 + lambda * up) / (1 + lambda);
 				lambda *= up;
-				it++;
+				++it;
 			}
 		}
 

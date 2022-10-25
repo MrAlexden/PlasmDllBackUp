@@ -2,8 +2,8 @@
 
 #define WIN32_LEAN_AND_MEAN // Исключите редко используемые компоненты из заголовков Windows
 
-#define TOL 10E-30 /* smallest value allowed in cholesky_decomp() */
-#define Pi 3.14159265
+#define TOL 10E-30f /* smallest value allowed in cholesky_decomp() */
+#define Pi 3.14159265f
 #define ef_koef 10 /* коэффициент эффективности, если == 1 то метод обрабатывает все точки, 
                 если == 2 каждую вторую (в два раза быстре, но точность меньше) и тд \
                 ef_koef используется в **SubFuncs** **Lev-Marq** */
@@ -62,7 +62,7 @@ inline void vectorElementsProduct(_In_ const vector <myflo> &,
 template <typename v, typename s>
 inline void vectormult(_Inout_ vector <v> &in, _In_ s scalar)
 {
-#pragma omp parallel for schedule(static, 1) 
+//#pragma omp parallel for schedule(static, 1) 
     for (int i = 0; i < in.size(); ++i)
         in[i] *= scalar;
 };
@@ -72,7 +72,7 @@ template <typename v, typename s>
 inline void vectordiv(_Inout_ vector <v> & in, _In_ s scalar)
 {
     if (scalar == 0) return;
-#pragma omp parallel for schedule(static, 1) 
+//#pragma omp parallel for schedule(static, 1) 
     for (int i = 0; i < in.size(); ++i)
         in[i] /= scalar;
 };
@@ -177,9 +177,17 @@ extern "C" __declspec(dllexport) int Cilinder(_In_ vector <myflo> & Pila,       
                                               _In_ vector <myflo> & Signal,                // входной одномерный массив сигнала
                                               _In_ const vector <myflo> & AdditionalData,  // дополнительные данные по импульсу
                                               _Out_ Plasma_proc_result & fdata);           // выходной класс с результатом обработки
+template <typename T>
+bool is_invalid(T val)
+{
+    if (val == NAN ||
+        val == INFINITY ||
+        val == -INFINITY ||
+        val != val)
+        return true;
 
-bool is_invalid(myflo val); // from SubFuncs.cpp
-bool is_invalid(int val);   // from SubFuncs.cpp
+    return false;
+};
 
 bool is_signalpeakslookingdown(_In_ const vector <myflo> & v); // from SubFuncs.cpp
 
@@ -208,7 +216,7 @@ typedef enum {
                                     end time must be less then total time, more then 0
 };
 
-extern "C" __declspec(dllexport) string ERR_GetErrorDescription(int);
+extern "C" __declspec(dllexport) string ERR_GetErrorDescription(int);    // from GlobalVarsInit.cpp
 ////////////////////////////////////////////// GLOBAL FUNCTIONS //////////////////////////////////////////////
 
 
@@ -224,7 +232,7 @@ extern myflo leftP,
              linfitP,
              filtS,
              st_time_end_time[2],
-             S;
-extern double M_Ar,
-              M_He;
+             S,
+             M_Ar,
+             M_He;
 ////////////////////////////////////////////// GLOBAL VARIABLES //////////////////////////////////////////////
