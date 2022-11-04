@@ -25,8 +25,7 @@ inline void solve_axb_cholesky(_In_ Matrix& ch,
 	int i, j, npar = ch.getCols();
 	myflo sum;
 
-	/* solve (ch)*y = drvtv for y (where delta[] is used to store y) */
-//#pragma omp parallel for schedule(static, 1) 
+	/* solve (ch)*y = drvtv for y (where delta[] is used to store y) */ 
 	for (i = 0; i < npar; ++i)
 	{
 		sum = 0;
@@ -36,7 +35,6 @@ inline void solve_axb_cholesky(_In_ Matrix& ch,
 	}
 
 	/* solve (ch)^T*delta = y for delta (where delta[] is used to store both y and delta) */
-//#pragma omp parallel for schedule(static, 1) 
 	for (i = npar - 1; i >= 0; --i)
 	{
 		sum = 0;

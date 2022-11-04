@@ -7,14 +7,6 @@ int NumPointsOfOriginalPila = 0,
 myflo AverageSignal = 0,
 	  koeff_MaxMin = 1.5;
 
-inline myflo vSum(const vector <myflo> & v)
-{
-	myflo sum = 0.0;
-	for (int i = 0; i < v.size(); ++i)
-		sum += v[i];
-	return sum;
-}
-
 /////////////////// УСЛОВИЕ ОЧИСТКИ ОТ ШУМА ///////////////////
 /*
 Точка начала сигнала должна обладать значением, либо большим максимума всего шума (mnL_mxL_mnR_mxR[5]), либо меньшим минимума всего шума (mnL_mxL_mnR_mxR[4])
@@ -38,28 +30,24 @@ inline myflo vSum(const vector <myflo> & v)
 */
 /////////////////// УСЛОВИЕ ОЧИСТКИ ОТ ШУМА ///////////////////
 
-inline int find_i_nach(_In_ const vector <myflo> & vSignal, 
-					   _In_ const vector <myflo> & mnL_mxL_mnR_mxR,
-					   _In_ const vector <int> & vnIndices)
+static inline int find_i_nach(_In_ const vector <myflo> & vSignal, 
+							  _In_ const vector <myflo> & mnL_mxL_mnR_mxR,
+							  _In_ const vector <int> & vnIndices)
 {
-	myflo otsech = (leftP >= rightP) ? leftP : rightP;
-	otsech = (otsech < 0.05f) ? 0.05f : otsech;
-	int nach_ignored_gap = vnIndices[0] + (1 - otsech) * one_segment_width,
-		konec_ignored_gap = vnIndices[0] + (1 + otsech) * one_segment_width;
+	/*myflo otsech = (leftP >= rightP) ? leftP : rightP;
+	otsech = (otsech < 0.05f) ? 0.05f : otsech;*/
+	int nach_ignored_gap = vnIndices[0] + (1 - rightP) * one_segment_width,
+		konec_ignored_gap = vnIndices[0] + (1 + leftP) * one_segment_width;
 
-	/*
-	Шагаю не по 1, а по 2, так обработка в 2 раза быстрее(очевидно), а точность не теряется
-	ТАКЖЕ ВАЖНО, ЧТО НАЧИНАЮ ИДТИ НЕМНОГО ОТСТУПЯ ОТ ВСПЛЕСКА (vnIndices[0] + one_segment_width*otsech)
-	*/
-	for (int i = vnIndices[0] + one_segment_width * otsech, k = 0; i < vnIndices[vnIndices.size() - 1]; i += ef_koef)
+	for (int i = vnIndices[0] + one_segment_width * leftP, k = 0; i < vnIndices[vnIndices.size() - 1]; i += ef_koef)
 	{
 		if ((i < nach_ignored_gap) || (i > konec_ignored_gap))
 		{
 			if (i > konec_ignored_gap)
 			{
 				++k;
-				nach_ignored_gap = vnIndices[k] + (1 - otsech) * one_segment_width;
-				konec_ignored_gap = vnIndices[k] + (1 + otsech) * one_segment_width;
+				nach_ignored_gap = vnIndices[k] + (1 - rightP) * one_segment_width;
+				konec_ignored_gap = vnIndices[k] + (1 + leftP) * one_segment_width;
 			}
 
 			if ((vSignal[i] < mnL_mxL_mnR_mxR[4] || vSignal[i] > mnL_mxL_mnR_mxR[5])
@@ -75,28 +63,24 @@ inline int find_i_nach(_In_ const vector <myflo> & vSignal,
 	return 0;
 }
 
-inline int find_i_konec(_In_ const vector <myflo> & vSignal,
-						_In_ const vector <myflo> & mnL_mxL_mnR_mxR,
-						_In_ const vector <int> & vnIndices)
+static inline int find_i_konec(_In_ const vector <myflo> & vSignal,
+							   _In_ const vector <myflo> & mnL_mxL_mnR_mxR,
+							   _In_ const vector <int> & vnIndices)
 {
-	myflo otsech = (leftP >= rightP) ? leftP : rightP;
-	otsech = (otsech < 0.05f) ? 0.05f : otsech;
-	int nach_ignored_gap = vnIndices[vnIndices.size() - 1] - (1 - otsech) * one_segment_width,
-		konec_ignored_gap = vnIndices[vnIndices.size() - 1] - (1 + otsech) * one_segment_width;
+	/*myflo otsech = (leftP >= rightP) ? leftP : rightP;
+	otsech = (otsech < 0.05f) ? 0.05f : otsech;*/
+	int nach_ignored_gap = vnIndices[vnIndices.size() - 1] - (1 - rightP) * one_segment_width,
+		konec_ignored_gap = vnIndices[vnIndices.size() - 1] - (1 + leftP) * one_segment_width;
 
-	/*
-	Шагаю не по 1, а по 2, так обработка в 2 раза быстрее(очевидно), а точность не теряется
-	ТАКЖЕ ВАЖНО, ЧТО НАЧИНАЮ ИДТИ НЕМНОГО ОТСТУПЯ ОТ ВСПЛЕСКА (vnIndices[vnIndices.GetSize()-1] - one_segment_width*otsech)
-	*/
-	for (int i = vnIndices[vnIndices.size() - 1] - one_segment_width * otsech, counter = 0, k = 0; i > vnIndices[0]; i -= ef_koef)
+	for (int i = vnIndices[vnIndices.size() - 1] - one_segment_width * rightP, counter = 0, k = 0; i > vnIndices[0]; i -= ef_koef)
 	{
 		if ((i > nach_ignored_gap) || (i < konec_ignored_gap))
 		{
 			if (i < konec_ignored_gap)
 			{
 				++k;
-				nach_ignored_gap = vnIndices[vnIndices.size() - 1 - k] - (1 - otsech) * one_segment_width;
-				konec_ignored_gap = vnIndices[vnIndices.size() - 1 - k] - (1 + otsech) * one_segment_width;
+				nach_ignored_gap = vnIndices[vnIndices.size() - 1 - k] - (1 - rightP) * one_segment_width;
+				konec_ignored_gap = vnIndices[vnIndices.size() - 1 - k] - (1 + leftP) * one_segment_width;
 			}
 
 			if ((vSignal[i] < mnL_mxL_mnR_mxR[4] || vSignal[i] > mnL_mxL_mnR_mxR[5])
@@ -112,31 +96,31 @@ inline int find_i_konec(_In_ const vector <myflo> & vSignal,
 	return 0;
 }
 
-inline void noise_vecs(_In_ int k,
-					   _Out_ vector <myflo> & vLnoise, 
-					   _Out_ vector <myflo> & vRnoise, 
-					   _In_ const vector <myflo> & vSignal,
-					   _In_ const vector <int> & vnIndices)
+static inline void noise_vecs(_In_ int k,
+							  _Out_ vector <myflo> & vLnoise, 
+							  _Out_ vector <myflo> & vRnoise, 
+							  _In_ const vector <myflo> & vSignal,
+							  _In_ const vector <int> & vnIndices)
 {
-	myflo otsech = (leftP >= rightP) ? leftP : rightP;
-	otsech = (otsech < 0.05f) ? 0.05f : otsech;
+	/*myflo otsech = (leftP >= rightP) ? leftP : rightP;
+	otsech = (otsech < 0.05f) ? 0.05f : otsech;*/
 	int i = 0, j = 0, n = 0, nach_ignored_gap = 0, konec_ignored_gap = 0;
-
-	i = vnIndices[k] - one_segment_width * (1 - otsech);
+	
+	i = vnIndices[k] - one_segment_width * (1 - rightP);
 	if (i < 0) i = ef_koef;
 
-	nach_ignored_gap = vnIndices[k] - otsech * one_segment_width;
-	konec_ignored_gap = vnIndices[k] + otsech * one_segment_width;
+	nach_ignored_gap = vnIndices[k] - rightP * one_segment_width;
+	konec_ignored_gap = vnIndices[k] + leftP * one_segment_width;
 
-	for (j = 0; j < vLnoise.size(); i += ef_koef)
+	for (j = 0; j < vLnoise.size() && i < vSignal.size() - ef_koef; i += ef_koef)
 	{
-		if ((i < nach_ignored_gap) || (i > konec_ignored_gap))
+		if (i < nach_ignored_gap || i > konec_ignored_gap)
 		{
 			if (i > konec_ignored_gap)
 			{
 				++k;
-				nach_ignored_gap = vnIndices[k] - otsech * one_segment_width;
-				konec_ignored_gap = vnIndices[k] + otsech * one_segment_width;
+				nach_ignored_gap = vnIndices[k] - rightP * one_segment_width;
+				konec_ignored_gap = vnIndices[k] + leftP * one_segment_width;
 			}
 
 			for (n = 0; n < ef_koef && j < vLnoise.size(); ++n, ++j)
@@ -144,21 +128,21 @@ inline void noise_vecs(_In_ int k,
 		}
 	}
 
-	i = vnIndices[vnIndices.size() - 1 - k] + one_segment_width * (1 - otsech);
+	i = vnIndices[vnIndices.size() - 1 - k] + one_segment_width * (1 - leftP);
 	if (i > vSignal.size() - 1) i = vSignal.size() - 1 - ef_koef;
 
-	nach_ignored_gap = vnIndices[vnIndices.size() - 1 - k] + otsech * one_segment_width;
-	konec_ignored_gap = vnIndices[vnIndices.size() - 1 - k] - otsech * one_segment_width;
+	nach_ignored_gap = vnIndices[vnIndices.size() - 1 - k] + rightP * one_segment_width;
+	konec_ignored_gap = vnIndices[vnIndices.size() - 1 - k] - leftP * one_segment_width;
 
-	for (j = 0; j < vRnoise.size(); i -= ef_koef)
+	for (j = 0; j < vRnoise.size() && i > ef_koef; i -= ef_koef)
 	{
-		if ((i > nach_ignored_gap) || (i < konec_ignored_gap))
+		if (i > nach_ignored_gap || i < konec_ignored_gap)
 		{
 			if (i < konec_ignored_gap)
 			{
 				++k;
-				nach_ignored_gap = vnIndices[vnIndices.size() - 1 - k] + otsech * one_segment_width;
-				konec_ignored_gap = vnIndices[vnIndices.size() - 1 - k] - otsech * one_segment_width;
+				nach_ignored_gap = vnIndices[vnIndices.size() - 1 - k] + rightP * one_segment_width;
+				konec_ignored_gap = vnIndices[vnIndices.size() - 1 - k] - leftP * one_segment_width;
 			}
 
 			for (n = 0; n < ef_koef && j < vRnoise.size(); ++n, ++j)
@@ -170,9 +154,9 @@ inline void noise_vecs(_In_ int k,
 	AverageSignal = (avL + avR) / (vLnoise.size() + vRnoise.size());
 }
 
-inline void MinMaxNoise(_In_ const vector <myflo> & vLnoise,
-						_In_ const vector <myflo> & vRnoise,
-						_Out_ vector <myflo> & mnL_mxL_mnR_mxR)
+static inline void MinMaxNoise(_In_ const vector <myflo> & vLnoise,
+							   _In_ const vector <myflo> & vRnoise,
+							   _Out_ vector <myflo> & mnL_mxL_mnR_mxR)
 {
 	myflo mnL = *min_element(vLnoise.begin(), vLnoise.end()),
 		mxL = *max_element(vLnoise.begin(), vLnoise.end()),
@@ -234,7 +218,7 @@ inline void fit_linear_pila(_In_ const vector <myflo> & vPila,
 		vSegPila[i] = vSegPila[i - 1] + delta;
 }
 
-inline int convert_time_to_pts(_In_ int v_tok_size)
+static inline int convert_time_to_pts(_In_ int v_tok_size)
 {
 	if (st_time_end_time[0] == st_time_end_time[1])
 		return 1;
@@ -256,6 +240,73 @@ inline int convert_time_to_pts(_In_ int v_tok_size)
 		i_nach = v_tok_size * st_ot_tot;
 		i_konec = v_tok_size * end_ot_tot;
 	}
+
+	return 0;
+}
+
+inline int easy_find_peaks(_In_ const vector <myflo> & v,	// input data in which peaks are serched
+						   _In_ const unsigned int step,	// the approximate length by which the peaks are distant 
+						   _In_ const int min_max,			// 1 - max, -1 - min
+						   _Out_ vector <int> & vnIndices)	// output vector with indexes
+{
+	if (min_max < -1 || min_max > 1 || min_max == 0)
+		return -1;
+
+#define iterator vector <myflo>::iterator
+	function<iterator(iterator, iterator)> minormax;
+
+	if (min_max == 1)
+	{
+		minormax = [](iterator begin, iterator end)
+		{
+			return max_element(begin, end);
+		};
+	}
+
+	if (min_max == -1)
+	{
+		minormax = [](iterator begin, iterator end)
+		{
+			return min_element(begin, end);
+		};
+	}
+#undef iterator
+
+	vector <myflo> container;
+	list <int> l;
+	int k = 0;
+
+	for (auto i = v.begin(), j = v.begin(); i - v.begin() < v.size() - 2 * step; i += step + (j - container.begin()))
+	{
+		container.assign(i, i + step);
+		j = minormax(container.begin(), container.end());
+		l.push_back((i - v.begin()) + (j - container.begin()));
+	}
+
+	vnIndices.assign(l.begin(), l.end());
+
+	return 0;
+}
+
+static inline int match_pila_and_signal(_In_ const vector <myflo> & vPila,
+										_In_ const vector <myflo> & vSignal,
+										_Inout_ vector <int> & vnPilaPeaks)
+{
+	/* нужен держатель чтобы сделать индексы int с плавающей точкой, для точного приведения фазы */
+	vector <myflo> IndHandler(vnPilaPeaks.begin(), vnPilaPeaks.end()); 
+	if (vPila.size() != vSignal.size())
+		(vPila.size() > vSignal.size()) ? vectordiv(IndHandler, (vPila.size() / vSignal.size())) : vectormult(IndHandler, (vSignal.size() / vPila.size()));
+
+	/*проверяем превышение крайнего индекса*/
+	if (IndHandler[IndHandler.size() - 1] > vSignal.size())
+		IndHandler.pop_back();
+
+	/* возвращаем данные в основной вектор типа int */
+	vnPilaPeaks.assign(IndHandler.begin(), IndHandler.end());
+
+	/* окончательное приведение, во избежании небольшой погрешности */
+	//vector <int> vnSignalPeaks;
+	//easy_find_peaks(vSignal, one_segment_width * 0.9, -1, vnSignalPeaks);
 
 	return 0;
 }
@@ -291,10 +342,8 @@ int find_signal_and_make_pila(_In_ const vector <myflo> & vPila,
 		NumPointsOfOriginalPila = abs(vnIndices[2] - vnIndices[1]) + 100 - todel;
 
 	/* определяем длину участка сигнала */
-	if (vPila.size() != vSignal.size())
-		one_segment_width = NumPointsOfOriginalPila * ((myflo)vSignal.size() / vPila.size());
-	else
-		one_segment_width = NumPointsOfOriginalPila;
+	one_segment_width = (vPila.size() != vSignal.size()) ? NumPointsOfOriginalPila * ((myflo)vSignal.size() / vPila.size()) :
+		NumPointsOfOriginalPila;
 
 	/* проверка ошибок */
 	if (one_segment_width == 0 
@@ -311,12 +360,7 @@ int find_signal_and_make_pila(_In_ const vector <myflo> & vPila,
 		return ERR_BadLinearPila;
 
 	/* приводим индексы начал отрезков к одной фазе с током */
-	if (vPila.size() != vSignal.size())
-		(vPila.size() > vSignal.size()) ? vectordiv<int, int>(vnIndices, (int)(vPila.size() / vSignal.size())) : vectormult<int, int>(vnIndices, (int)(vSignal.size() / vPila.size()));
-	/* удаляем один элемент с конца (на всякий случай) и проверяем превышение крайнего индекса */
-	vnIndices.pop_back();
-	if (vnIndices[vnIndices.size() - 1] > vSignal.size())
-		vectormult<int, int>(vnIndices, (int)(vPila.size() / vSignal.size()));
+	match_pila_and_signal(vPila, vSignal, vnIndices);
 
 	/* ВАЖНО!!!!!!!!!!!
 	Мой метод предполагает, что либо в конце сигнала, либо в начале есть немного шума(чтобы взять его за образец и искать сигнал относительно него)
@@ -384,7 +428,7 @@ int find_signal_and_make_pila(_In_ const vector <myflo> & vPila,
 			i_konec = 0;
 		}
 		/* если количество всех отрезков больше 0.8 от потенциально максимального, то их слишком много -> пересчитываем (нужно уменьшить количество) */
-		if (segments_amount >= (int)(0.9f * vSignal.size() / one_segment_width))
+		if (segments_amount >= (int)(0.8f * vSignal.size() / one_segment_width))
 		{
 			/* увеличиваем коэффициенты чтобы повысить пороги отбора отрезков */
 			koeff_MaxMin += 0.3f;
@@ -406,16 +450,13 @@ int find_signal_and_make_pila(_In_ const vector <myflo> & vPila,
 	if (dowhile && ( abs(i_konec - i_nach) / one_segment_width >= (int)(0.9f * vSignal.size() / (one_segment_width)) ))
 		return ERR_TooManySegs;
 
-	/* ВАЖНО! ЗАДАЕМ РАЗМЕРА ВЕКТОРА НАЧАЛ ОТРЕЗКОВ */
-	vStartSegIndxs.resize(abs(i_konec - i_nach) / one_segment_width);
-
 	/* записываем индексы начал отрезков с учетом начала и конца сигнала */
-	for (i = 0, j = 0; j < vStartSegIndxs.size() && i < vnIndices.size(); ++i)
+	for (i = 0; i < vnIndices.size(); ++i)
 	{
-		if (vnIndices[i] > i_nach && vnIndices[i] < i_konec)
+		if (vnIndices[i] > i_nach)
 		{
-			vStartSegIndxs[j] = vnIndices[i];
-			++j;
+			vStartSegIndxs.assign(vnIndices.begin() + i, vnIndices.begin() + i + abs(i_konec - i_nach) / one_segment_width);
+			break;
 		}
 	}
 
@@ -440,18 +481,12 @@ inline myflo metod_hord(_In_ myflo x0,
 						_In_ const vector <myflo> & vParams,
 						_In_ myflo(*fx)(myflo, const vector <myflo> &))
 {
-	myflo x_cashe = 2 * x1;
 	int n = 0;
-	while (abs(x1 - x0) > 10E-10)
+	while (abs(x1 - x0) > 10E-10 && n < 100)
 	{
 		x0 = x1 - (x1 - x0) * fx(x1, vParams) / (fx(x1, vParams) - fx(x0, vParams));
 		x1 = x0 - (x0 - x1) * fx(x0, vParams) / (fx(x0, vParams) - fx(x1, vParams));
 		++n;
-		if (x1 > x_cashe || x0 > x_cashe || n > 500)
-		{
-			x1 = x_cashe;
-			break;
-		}
 	}
 	return x1;
 }
@@ -460,37 +495,37 @@ inline myflo metod_Newton(_In_ myflo x0,
 						  _In_ const vector <myflo> & vParams,
 						  _In_ myflo(*fx)(myflo, const vector <myflo> &))
 {
-	myflo x1 = 0.0, x_cashe = 2 * x0;
+	myflo x1 = 0.0;
 	int n = 0;
-	while (abs(x1 - x0) > TOL)
+	while (abs(x1 - x0) > 10E-10 && n < 100)
 	{
 		x1 = x0 - fx(x0, vParams) / partial_derivative(x0, vParams, fx, -1);
 		x0 = x1 - fx(x1, vParams) / partial_derivative(x1, vParams, fx, -1);
 		++n;
-		if (x1 > x_cashe || x0 > x_cashe || n > 500)
-		{
-			x1 = x_cashe;
-			break;
-		}
 	}
 	return x1;
 }
 
-inline myflo dens(_In_ const vector <myflo> & vPila,
-				  _In_ const vector <myflo> & vParams)
+inline myflo find_floating_potential(_In_ const vector <myflo> & vPila,
+									 _In_ const vector <myflo> & vParams)
 {
-	myflo x = metod_Newton(vPila[vPila.size() - 1], vParams, fx_STEP), ans = 0.0f, M = 0.0f;
-	
+	myflo x = metod_Newton(vPila[vPila.size() - 1], vParams, fx_STEP);
+
 	if (is_invalid(x) || !x)
 	{
 		x = metod_hord(vPila[0], vPila[vPila.size() - 1], vParams, fx_STEP);
 		if (is_invalid(x) || !x)
 			x = vPila[vPila.size() - 1];
 	}
-	ans = abs(vParams[0] + vParams[1] * x);
-	if (is_invalid(ans) || !ans)
-		ans = vParams[0];
 
+	return x;
+}
+
+inline myflo find_density(_In_ const myflo ion_current,
+						  _In_ const myflo temperature)
+{
+	myflo M = 0.0f;
+	
 	switch (fuel)
 	{
 	case 0:
@@ -503,11 +538,35 @@ inline myflo dens(_In_ const vector <myflo> & vPila,
 		__assume(0);
 	}
 
-	return (myflo)ans * (10E-6f) / (0.52026f * S * (1.602f * 10E-19f) * sqrt((1.380649f * 10E-23f) * (myflo)vParams[3] * 11604.51812f / M)); //моя формула
-	//return (myflo)ans * (10E-6) / (S * (1.602 * 10E-19) * sqrt(2 * (myflo)vParams[3] * (1.602 * 10E-19) / M)); //формула сергея
+	return ion_current * (10E-6f) / (0.52026f * S * (1.602f * 10E-19f) * sqrt((1.380649f * 10E-23f) * temperature * 11604.51812f / M)); //моя формула
+	//return ion_current * (10E-6f) / (S * (1.602f * 10E-19f) * sqrt(2 * temperature * (1.602f * 10E-19f) / M)); //формула сергея
 }
 
-int make_one_segment(_In_ int diagnostics,					 // diagnostics type (zond::0|setka::1|cilind::2)
+inline myflo find_ion_current(_In_ const myflo A,
+							  _In_ const myflo B,
+							  _In_ const myflo x)
+{
+	myflo ic = abs(A + B * x);
+
+	if (is_invalid(ic) || !ic)
+		ic = A;
+
+	return ic;
+}
+
+template <typename T>
+inline int take_data_around_the_edges(_In_ const unsigned int size,
+									  _In_ const vector <T> & vIN,
+									  _Out_ vector <T> & vL,
+									  _Out_ vector <T> & vR)
+{
+	vL.assign(vIN.begin(), vIN.begin() + size);
+	vR.assign(vIN.end() - size, vIN.end());
+
+	return 0;
+}
+
+int make_one_segment(_In_ const int diagnostics,					 // diagnostics type (zond::0|setka::1|cilind::2)
 					 _In_ const vector <myflo> & vPila,		 // X data
 					 _In_ vector <myflo> & vSignal,			 // Y data
 					 _Out_ vector <myflo> & vres,			 // vector to be filled with the result
@@ -560,7 +619,7 @@ int make_one_segment(_In_ int diagnostics,					 // diagnostics type (zond::0|set
 			}
 
 			vParams[2] = -vParams[0];
-			vParams[3] = 10;
+			vParams[3] = 15;
 
 			if (linfitP != 0)
 			{
@@ -599,14 +658,15 @@ int make_one_segment(_In_ int diagnostics,					 // diagnostics type (zond::0|set
 					vParams[3] = 10;
 			}
 
-			vcoeffs = vParams;
-
 			/* записываем в vres */
-//#pragma omp parallel for schedule(static, 1) 
 			for (i = 0; i < vPila.size(); ++i)
 				vres[i] = fx_STEP(vPila[i], vParams);
 
-			vcoeffs.push_back(dens(vPila, vParams));
+			vcoeffs.resize(4);
+			vcoeffs[0] = find_floating_potential(vPila, vParams);					// Floating potential
+			vcoeffs[1] = find_ion_current(vParams[0], vParams[1], vcoeffs[0]);		// Saturate ion current
+			vcoeffs[2] = vParams[3];												// Temperature
+			vcoeffs[3] = find_density(vcoeffs[1], vcoeffs[2]);						// Density ne
 
 			break;
 		}
@@ -633,24 +693,31 @@ int make_one_segment(_In_ int diagnostics,					 // diagnostics type (zond::0|set
 			/* фильтруем производную */
 			sg_smooth(vSignal, vres, vPila.size() * (filtS / 2), (5/*OriginLab poly order*/ - 1));
 
-			vParams[0] = 0;																						// y0 - offset
-			vParams[1] = vPila[ distance( vSignal.begin(), max_element( vSignal.begin(), vSignal.end() ) ) ];	// xc - center
-			vParams[2] = abs(vPila[vPila.size() - 1] - vPila[0]) / 10;											// w - width
-			vParams[3] = 1;																						// A - area
+			/* берем ветора с краев аппроксимируемых данных чтобы потом найти по ним y0 */
+			vector <myflo> vL, vR;
+			take_data_around_the_edges(vres.size() / 10, vres, vL, vR);
+
+																											/* среднее между средним с краев */
+			vParams[0] = (vSum(vL) / vL.size() + vSum(vR) / vR.size()) * 0.5;								// y0 - offset
+																											/* значение X максимума */
+			vParams[1] = vPila[max_element(vres.begin(), vres.end()) - vres.begin()];						// xc - center
+																											/* вся ширина пилы делить на 10 */
+			vParams[2] = abs(vPila[vPila.size() - 1] - vPila[0]) / 10;										// w - width
+																											/* выражено из формулы yc = y0 + A / (w * sqrt(Pi / 2)) */
+			vParams[3] = (*max_element(vres.begin(), vres.end()) - vParams[0]) * (vParams[2] * 1.25331414);	// A - area
 
 			/* аппроксимируем производную Гауссом */
-			levmarq(vPila, vres, vParams, vFixed, Num_iter * 2, fx_GAUSS);
+			levmarq(vPila, vres, vParams, vFixed, Num_iter/* * 2*/, fx_GAUSS);
+
+			/* записываем в vres */
+			for (i = 0; i < vPila.size(); ++i)
+				vres[i] = fx_GAUSS(vPila[i], vParams);
 
 			vcoeffs.resize(4);
 			vcoeffs[0] = vParams[0] + vParams[3] / (vParams[2] * 1.25331414/*sqrt(Pi / 2)*/);	// Max Value
 			vcoeffs[1] = vParams[2];															// Temp
 			vcoeffs[2] = vParams[1];															// Peak Voltage
 			vcoeffs[3] = /*sqrt(log(4))*/1.17741001 * vParams[2];								// Energy
-
-			/* записываем в vres */
-//#pragma omp parallel for schedule(static, 1) 
-			for (i = 0; i < vPila.size(); ++i)
-				vres[i] = fx_GAUSS(vPila[i], vParams);
 
 			break;
 		}
@@ -674,24 +741,31 @@ int make_one_segment(_In_ int diagnostics,					 // diagnostics type (zond::0|set
 				vSignal = vfilt;
 			}
 
-			vParams[0] = 0;																				   // y0 - offset
-			vParams[1] = vPila[distance(vSignal.begin(), max_element(vSignal.begin(), vSignal.end()))];	   // xc - center
-			vParams[2] = abs(vPila[vPila.size() - 1] - vPila[0]) / 10;									   // w - width
-			vParams[3] = 1;																				   // A - area
+			/* берем ветора с краев аппроксимируемых данных чтобы потом найти по ним y0 */
+			vector <myflo> vL, vR;
+			take_data_around_the_edges(vSignal.size() / 10, vSignal, vL, vR);
+
+																													/* среднее между средним с краев */
+			vParams[0] = (vSum(vL) / vL.size() + vSum(vR) / vR.size()) * 0.5;										// y0 - offset
+																													/* значение X максимума */
+			vParams[1] = vPila[max_element(vSignal.begin(), vSignal.end()) - vSignal.begin()];						// xc - center
+																													/* вся ширина пилы делить на 10 */
+			vParams[2] = abs(vPila[vPila.size() - 1] - vPila[0]) / 10;												// w - width
+																													/* выражено из формулы yc = y0 + A / (w * sqrt(Pi / 2)) */
+			vParams[3] = (*max_element(vSignal.begin(), vSignal.end()) - vParams[0]) * (vParams[2] * 1.25331414);	// A - area
 
 			/* аппроксимируем производную Гауссом */
-			levmarq(vPila, vSignal, vParams, vFixed, Num_iter * 2, fx_GAUSS);
+			levmarq(vPila, vSignal, vParams, vFixed, Num_iter/* * 2*/, fx_GAUSS);
+
+			/* записываем в vres */
+			for (i = 0; i < vPila.size(); ++i)
+				vres[i] = fx_GAUSS(vPila[i], vParams);
 
 			vcoeffs.resize(4);
 			vcoeffs[0] = vParams[0] + vParams[3] / (vParams[2] * 1.25331414/*sqrt(Pi / 2)*/);	// Max Value
 			vcoeffs[1] = vParams[2];															// Temp
 			vcoeffs[2] = vParams[1];															// Peak Voltage
-			vcoeffs[3] = /*sqrt(log(4))*/1.17741001 * vParams[2];												// Energy
-
-			/* записываем в vres */
-//#pragma omp parallel for schedule(static, 1) 
-			for (i = 0; i < vPila.size(); ++i)
-				vres[i] = fx_GAUSS(vPila[i], vParams);
+			vcoeffs[3] = /*sqrt(log(4))*/1.17741001 * vParams[2];								// Energy
 
 			break;
 		}
@@ -700,18 +774,4 @@ int make_one_segment(_In_ int diagnostics,					 // diagnostics type (zond::0|set
 	}
 
 	return 0;
-}
-
-bool is_signalpeakslookingdown(_In_ const vector <myflo>& v)
-{
-	myflo min = *min_element(v.begin(), v.end()),
-		max = *max_element(v.begin(), v.end()),
-		vsum = vSum(v),
-		vavg;
-	vavg = vsum / v.size();
-
-	if (abs(vavg - max) >= abs(vavg - min))
-		return false;
-	else
-		return true;
 }

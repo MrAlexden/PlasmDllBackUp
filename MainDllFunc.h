@@ -30,13 +30,15 @@ typedef float myflo;
 #include <vector>       // for vector
 #include <tuple>        // for tuple
 #include <algorithm>    // for min_element|max_element
-#include <omp.h>        // for multithreading
-//#define _SILENCE_AMP_DEPRECATION_WARNINGS // for GPU multithreading
-//#include <amp.h>                          // for GPU multithreading
+//#include <omp.h>        // for multithreading
+#include <thread>       // for multithreading
+#include <list>         // for list
+#include <functional>   // for function
+
+//#include <functional>     // for function
 
 #include "Processing_Result_class/ProcessingResultClass.h"
 
-//using namespace concurrency; // for GPU multithreading
 using namespace std;         // for std::
 
 ////////////////////////////////////////////// GLOBAL FUNCTIONS //////////////////////////////////////////////
@@ -61,8 +63,7 @@ inline void vectorElementsProduct(_In_ const vector <myflo> &,
 /* multiply the given scalar on given vector */
 template <typename v, typename s>
 inline void vectormult(_Inout_ vector <v> &in, _In_ s scalar)
-{
-//#pragma omp parallel for schedule(static, 1) 
+{ 
     for (int i = 0; i < in.size(); ++i)
         in[i] *= scalar;
 };
@@ -72,7 +73,7 @@ template <typename v, typename s>
 inline void vectordiv(_Inout_ vector <v> & in, _In_ s scalar)
 {
     if (scalar == 0) return;
-//#pragma omp parallel for schedule(static, 1) 
+
     for (int i = 0; i < in.size(); ++i)
         in[i] /= scalar;
 };
@@ -189,7 +190,29 @@ bool is_invalid(T val)
     return false;
 };
 
-bool is_signalpeakslookingdown(_In_ const vector <myflo> & v); // from SubFuncs.cpp
+template <typename T>
+inline T vSum(const vector <T>& v)
+{
+    T sum = 0;
+    for (const auto it : v)
+        sum += it;
+    return sum;
+};
+
+template <typename T>
+bool is_signalpeakslookingdown(_In_ const vector <T>& v)
+{
+    T min = *min_element(v.begin(), v.end()),
+      max = *max_element(v.begin(), v.end()),
+      vsum = vSum(v),
+      vavg;
+    vavg = vsum / v.size();
+
+    if (abs(vavg - max) >= abs(vavg - min))
+        return false;
+    else
+        return true;
+};
 
 // Error codes
 typedef enum {
@@ -197,8 +220,8 @@ typedef enum {
     ERR_NoError = 0,                // No error
     ERR_BadInputVecs = -6201,       // Corrupted input vectors
     ERR_ZeroInputVals = -6202,      // Input data error, some values equals 0
-    ERR_BadCutOffLeft = -6203,      // Ñut-off points on the left value must be > 0.0 and < 0.5
-    ERR_BadCutOffRight = -6204,     // Ñut-off points on the right value must be > 0.0 and < 0.5
+    ERR_BadCutOff = -6203,          // Ñut-off points must be less than 0.9 in total and more than 0 each
+    ERR_BadLinFit = -6204,          // The length of linear fit must be less than 0.9
     ERR_BadFactorizing = -6205,     // Error after Pila|Signal factorizing
     ERR_BadNoise = -6206,           // Error after noise extracting
     ERR_BadSegInput = -6207,        // Input segment's values error while segmend approximating

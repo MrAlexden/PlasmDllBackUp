@@ -1,9 +1,9 @@
-#include "Cilinder.h"
+#include "Zond.h"
 
-int Cilinder(_In_ vector <myflo> & vPila,
-			 _In_ vector <myflo> & vSignal,
-			 _In_ const vector <myflo> & AdditionalData,
-			 _Out_ Plasma_proc_result & fdata)
+int Zond(_In_ vector <myflo> & vPila,
+		 _In_ vector <myflo> & vSignal, 
+		 _In_ const vector <myflo> & AdditionalData,
+		 _Out_ Plasma_proc_result & fdata)
 {
 	if (vPila.size() == 0
 		|| vPila.empty()
@@ -12,15 +12,16 @@ int Cilinder(_In_ vector <myflo> & vPila,
 		|| AdditionalData.size() == 0
 		|| AdditionalData.empty())
 		return ERR_BadInputVecs;
-	if ((int)AdditionalData[7] == 0 || is_invalid(AdditionalData[7]) ||
+	if (AdditionalData[0] == 0 || is_invalid(AdditionalData[0]) ||
+		(int)AdditionalData[7] == 0 || is_invalid(AdditionalData[7]) ||
 		(int)AdditionalData[8] == 0 || is_invalid(AdditionalData[8]) ||
 		(int)AdditionalData[9] == 0 || is_invalid(AdditionalData[9]) ||
 		(int)AdditionalData[11] == 0 || is_invalid(AdditionalData[11]))
 		return ERR_ZeroInputVals;
-	if (AdditionalData[3] + AdditionalData[4] > 0.9
-		|| AdditionalData[3] < 0.0
-		|| AdditionalData[4] < 0.0)
-		return ERR_BadCutOff;
+	if (AdditionalData[3] >= 0.5 || AdditionalData[3] < 0.0)
+		return ERR_BadCutOffLeft;
+	if (AdditionalData[4] >= 0.5 || AdditionalData[4] < 0.0)
+		return ERR_BadCutOffRight;
 
 	vector <myflo> vSegPila;
 	vector <int> vStartSegIndxs;
@@ -28,18 +29,18 @@ int Cilinder(_In_ vector <myflo> & vPila,
 	int	numSegments = 0,	// количество отрезков в импульсе
 		resistance = 0,
 		coefPila = 0,
-		dimension = 5,		// количество столбиков parameters
+		dimension = 6,		// количество столбиков parameters
 		err = 0;
 
-	S = 0.0;										// площадь поверхности зонда
+	S = AdditionalData[0];						    // площадь поверхности зонда
 	st_time_end_time[0] = AdditionalData[1];		// время начала обработки (если этот параметр не выбран: -1)
 	st_time_end_time[1] = AdditionalData[2];		// время конца обработки (если этот параметр не выбран: -1)
 	leftP = AdditionalData[3];					    // часть точек отсечки слева
 	rightP = AdditionalData[4];					    // часть точек отсечки справа
-	linfitP = 0.0;									// часть точек линейно аппроксимации
+	linfitP = AdditionalData[5];					// часть точек линейно аппроксимации
 	filtS = AdditionalData[6];					    // часть точек фильтрации сигнала
 	freqP = (int)AdditionalData[7];					// частота пилы
-	resistance = 1/*(int)AdditionalData[8]*/;		// сопротивление на цилиндре|магните (1 тк не учитываем сопротивление)
+	resistance = (int)AdditionalData[8];			// сопротивление на зонде
 	coefPila = (int)AdditionalData[9];				// коэффициент усиления пилы
 	fuel = (int)AdditionalData[10];					// рабочее вещество (He::0|Ar::1)
 	Num_iter = (int)AdditionalData[11];				// количество итераций аппроксимации(сильно влияет на скорость работы программы)
@@ -48,8 +49,7 @@ int Cilinder(_In_ vector <myflo> & vPila,
 	thread T1(vectormult<myflo, int>, ref(vPila), coefPila);
 	//vectormult(vPila, coefPila);
 	/* переворачиваем ток чтобы смотрел вверх(если нужно), и делим на сопротивление */
-	resistance = is_signalpeakslookingdown(vSignal) ? -resistance : resistance;
-	thread T2(vectordiv<myflo, int>, ref(vSignal), resistance);
+	thread T2(vectordiv<myflo, int>, ref(vSignal), -resistance);
 	//vectordiv(vSignal, resistance);
 
 	T1.join();
@@ -77,7 +77,8 @@ int Cilinder(_In_ vector <myflo> & vPila,
 	fdata.SetParamsNumber(dimension);
 
 	fdata.SetPila(vSegPila);
-
+	
+//#pragma omp parallel for
 	for (int segnum = 0; segnum < numSegments; ++segnum)
 	{
 		vector <myflo> vY, vres, vfilt, vcoeffs = { filtS , linfitP };
@@ -87,7 +88,7 @@ int Cilinder(_In_ vector <myflo> & vPila,
 
 		fdata.SetOriginSegment(vY, segnum);
 
-		if (make_one_segment(2, vSegPila, vY, vres, vfilt, vcoeffs) < 0)
+		if (make_one_segment(0, vSegPila, vY, vres, vfilt, vcoeffs) < 0)
 			continue;
 
 		vcoeffs.insert(vcoeffs.begin(), vStartSegIndxs.at(segnum) * (1.0 / (one_segment_width * freqP)));

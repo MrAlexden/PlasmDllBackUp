@@ -405,11 +405,9 @@ inline void matrixmult(_In_ const float_mat & a,
     }
 
     res.resize(a.nr_rows());
-//#pragma omp parallel for schedule(static, 1)
     for (i = 0; i < res.size(); ++i)
     {
         res[i].resize(b.nr_cols());
-//#pragma omp parallel for schedule(static, 1)
         for (j = 0; j < res[i].size(); ++j)
         {
             myflo sum(0.0);
@@ -431,8 +429,6 @@ inline void sg_coeff(_In_ const float_mat & c,
                      _In_ const float_mat & A)
 {
     res.resize(window);
-
-//#pragma omp parallel for schedule(static, 1) 
     for (int i = 0; i < window; ++i) {
         res[i] = c[0][0];
         for (int j = 1; j <= deg; ++j) {
@@ -467,7 +463,7 @@ void sg_smooth(_In_ const vector <myflo>& vorig,
 
     vector <myflo> v(vorig.size() + window);
     const int endidxv = v.size() - 1;
-//#pragma omp parallel for schedule(static, 1) private (i)
+
     for (i = 0; i < width; ++i)
     {
         v[i] = vorig[width - i];
@@ -504,7 +500,6 @@ void sg_smooth(_In_ const vector <myflo>& vorig,
     float_mat A(rows, cols);
 
     // generate input matrix for least squares fit
-//#pragma omp parallel for schedule(static, 1) private (i, j)
     for (i = 0; i < rows; ++i)
     {
         for (j = 0; j < cols; ++j)

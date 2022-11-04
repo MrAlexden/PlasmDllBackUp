@@ -17,10 +17,10 @@ int Setka(_In_ vector <myflo> & vPila,
 		(int)AdditionalData[9] == 0 || is_invalid(AdditionalData[9]) ||
 		(int)AdditionalData[11] == 0 || is_invalid(AdditionalData[11]))
 		return ERR_ZeroInputVals;
-	if (AdditionalData[3] >= 0.5 || AdditionalData[3] < 0.0)
-		return ERR_BadCutOffLeft;
-	if (AdditionalData[4] >= 0.5 || AdditionalData[4] < 0.0)
-		return ERR_BadCutOffRight;
+	if (AdditionalData[3] + AdditionalData[4] > 0.9
+		|| AdditionalData[3] < 0.0
+		|| AdditionalData[4] < 0.0)
+		return ERR_BadCutOff;
 
 	vector <myflo> vSegPila;
 	vector <int> vStartSegIndxs;
@@ -45,9 +45,14 @@ int Setka(_In_ vector <myflo> & vPila,
 	Num_iter = (int)AdditionalData[11];				// количество итераций аппроксимации(сильно влияет на скорость работы программы)
 
 	/* домножаем пилу на коэффициент усиления */
-	vectormult<myflo, int>(vPila, coefPila);
+	thread T1(vectormult<myflo, int>, ref(vPila), coefPila);
+	//vectormult(vPila, coefPila);
 	/* переворачиваем ток чтобы смотрел вверх(если нужно), и делим на сопротивление */
-	vectordiv<myflo, int>(vSignal, resistance);
+	thread T2(vectordiv<myflo, int>, ref(vSignal), resistance);
+	//vectordiv(vSignal, resistance);
+
+	T1.join();
+	T2.join();
 
 	if (is_invalid(vPila.at(0))
 		|| is_invalid(vPila.at(vPila.size() - 1))
@@ -72,7 +77,6 @@ int Setka(_In_ vector <myflo> & vPila,
 
 	fdata.SetPila(vSegPila);
 
-//#pragma omp parallel for schedule(static, 1) 
 	for (int segnum = 0; segnum < numSegments; ++segnum)
 	{
 		vector <myflo> vY, vres, vfilt, vcoeffs = { filtS , linfitP };

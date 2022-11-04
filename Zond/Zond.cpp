@@ -18,10 +18,12 @@ int Zond(_In_ vector <myflo> & vPila,
 		(int)AdditionalData[9] == 0 || is_invalid(AdditionalData[9]) ||
 		(int)AdditionalData[11] == 0 || is_invalid(AdditionalData[11]))
 		return ERR_ZeroInputVals;
-	if (AdditionalData[3] >= 0.5 || AdditionalData[3] < 0.0)
-		return ERR_BadCutOffLeft;
-	if (AdditionalData[4] >= 0.5 || AdditionalData[4] < 0.0)
-		return ERR_BadCutOffRight;
+	if (AdditionalData[3] + AdditionalData[4] > 0.9
+		|| AdditionalData[3] < 0.0
+		|| AdditionalData[4] < 0.0)
+		return ERR_BadCutOff;
+	if (AdditionalData[5] < 0 || AdditionalData[5] > 0.9)
+		return ERR_BadLinFit;
 
 	vector <myflo> vSegPila;
 	vector <int> vStartSegIndxs;
@@ -29,7 +31,7 @@ int Zond(_In_ vector <myflo> & vPila,
 	int	numSegments = 0,	// количество отрезков в импульсе
 		resistance = 0,
 		coefPila = 0,
-		dimension = 6,		// количество столбиков parameters
+		dimension = 5,		// количество столбиков parameters
 		err = 0;
 
 	S = AdditionalData[0];						    // площадь поверхности зонда
@@ -46,9 +48,14 @@ int Zond(_In_ vector <myflo> & vPila,
 	Num_iter = (int)AdditionalData[11];				// количество итераций аппроксимации(сильно влияет на скорость работы программы)
 
 	/* домножаем пилу на коэффициент усиления */
-	vectormult<myflo, int>(vPila, coefPila);
+	thread T1(vectormult<myflo, int>, ref(vPila), coefPila);
+	//vectormult(vPila, coefPila);
 	/* переворачиваем ток чтобы смотрел вверх(если нужно), и делим на сопротивление */
-	vectordiv<myflo, int>(vSignal, -resistance);
+	thread T2(vectordiv<myflo, int>, ref(vSignal), -resistance);
+	//vectordiv(vSignal, resistance);
+
+	T1.join();
+	T2.join();
 
 	if (is_invalid(vPila.at(0))
 		|| is_invalid(vPila.at(vPila.size() - 1))
@@ -58,6 +65,12 @@ int Zond(_In_ vector <myflo> & vPila,
 
 	ERR(find_signal_and_make_pila(vPila, vSignal, vSegPila, vStartSegIndxs));
 	numSegments = vStartSegIndxs.size();
+
+	{/* ВРЕМЕННЫЙ КОСТЫЛЬ */
+		vector <myflo> IndHandler(vStartSegIndxs.begin(), vStartSegIndxs.end());
+		vectormult(IndHandler, 1.001f);
+		vStartSegIndxs.assign(IndHandler.begin(), IndHandler.end());
+	}/* ВРЕМЕННЫЙ КОСТЫЛЬ */
 
 	if (vStartSegIndxs.size() == 0
 		|| vStartSegIndxs.empty()
@@ -73,10 +86,8 @@ int Zond(_In_ vector <myflo> & vPila,
 
 	fdata.SetPila(vSegPila);
 	
-//#pragma omp parallel for schedule(static, 1) 
 	for (int segnum = 0; segnum < numSegments; ++segnum)
 	{
-//#pragma omp critical
 		vector <myflo> vY, vres, vfilt, vcoeffs = { filtS , linfitP };
 
 		vY.assign(vSignal.begin() + vStartSegIndxs.at(segnum) + one_segment_width * leftP,

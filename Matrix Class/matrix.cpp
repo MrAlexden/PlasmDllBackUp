@@ -280,8 +280,8 @@ tuple<Matrix, myflo, int> Matrix::powerIter(unsigned rowNum, myflo tolerance){
             }
         }
         if (j >= 5e5) {
-            cout << "Oops, that was a nasty complex number wasn't it?" << endl;
-            cout << "ERROR! Returning code black, code black!";
+            //cout << "Oops, that was a nasty complex number wasn't it?" << endl;
+            //cout << "ERROR! Returning code black, code black!";
             errorCode = -1;
             return make_tuple(X,0.0,errorCode);
         }

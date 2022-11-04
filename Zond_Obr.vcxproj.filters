@@ -71,5 +71,13 @@
     <Filter Include="Исходные файлы">
       <UniqueIdentifier>{5ab9cf3c-349b-4cab-9669-a5f6e981e3a2}</UniqueIdentifier>
     </Filter>
+    <Filter Include="Файлы ресурсов">
+      <UniqueIdentifier>{6f4f3f27-4086-4624-a8da-1929fbe03637}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="cpp.hint">
+      <Filter>Файлы ресурсов</Filter>
+    </None>
   </ItemGroup>
 </Project>

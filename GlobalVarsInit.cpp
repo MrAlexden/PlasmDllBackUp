@@ -45,11 +45,11 @@ string ERR_GetErrorDescription(int err)
     case ERR_ZeroInputVals:
         return "Input data error, some values equals 0";
         break;
-    case ERR_BadCutOffLeft:
-        return "Ñut-off points on the left value must be > 0.0 and < 0.5";
+    case ERR_BadCutOff:
+        return "Ñut-off points must be less than 0.9 in total and more than 0 each";
         break;
-    case ERR_BadCutOffRight:
-        return "Ñut-off points on the right value must be > 0.0 and < 0.5";
+    case ERR_BadLinFit:
+        return "The length of linear fit must be less than 0.9";
         break;
     case ERR_BadFactorizing:
         return "Error after Pila|Signal factorizing";
