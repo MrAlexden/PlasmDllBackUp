@@ -446,8 +446,8 @@ inline void sg_coeff(_In_ const float_mat & c,
  * vector of size 2w+1, e.g. for w=2 b=(0,0,1,0,0). evaluating the polynome
  * yields the sg-coefficients.  at the border non symmectric vectors b are
  * used. */
-void sg_smooth(_In_ const vector <myflo>& vorig,
-               _Out_ vector <myflo>& res,
+void sg_smooth(_In_ const vector <myflo> & vorig,
+               _Out_ vector <myflo> & res,
                _In_ const int width,
                _In_ int deg)
 {
@@ -515,24 +515,6 @@ void sg_smooth(_In_ const vector <myflo>& vorig,
     matrixmult(AT, A, ATA_mult);
     invert(ATA_mult, ATA_inv);
     matrixmult(ATA_inv, AT, Ar);
-
-    //handle border cases first because we need different coefficients
-    //for (i = 0; i < width; ++i) 
-    //{
-    //    float_mat mc(0, 0, 0.0), b1(window, 1, 0.0);
-    //    b1[i][0] = 1.0;
-    //    vector <myflo> c1;
-
-    //    matrixmult(Ar, b1, mc);
-
-    //    sg_coeff(mc, c1, window, deg, A);
-
-    //    for (j = 0; j < c1.size(); ++j) 
-    //    {
-    //        res[i] += c1[j] * v[j];
-    //        res[endidx - i] += c1[j] * v[endidx - j];
-    //    }
-    //}
 
     // now loop over rest of data. reusing the "symmetric" coefficients.
     float_mat b2(window, 1, 0.0), mc(0, 0, 0.0), ATbT_mult(0, 0, 0.0);

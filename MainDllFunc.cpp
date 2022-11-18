@@ -46,7 +46,7 @@ extern "C" __declspec(dllexport) int MainWrapper(_In_ int diagnostics,          
         vector <myflo> vSignal(arrSignal, arrSignal + arrSsize);
         vector <myflo> vAdd(AdditionalData, AdditionalData + 14);
 
-        Plasma_proc_result* fdata = new Plasma_proc_result;
+        Plasma_proc_result <myflo> * fdata = new Plasma_proc_result <myflo>;
 
         switch (diagnostics)
         {
@@ -165,7 +165,8 @@ Error:
     return err;
 }
 
-extern "C" __declspec(dllexport) int SetUpPila(_In_ myflo * arrPila,           // 1д массив с данными пилы
+extern "C" __declspec(dllexport) int SetUpPila(_In_ int diagnostics,           // diagnostics type (zond::0|setka::1|cilind::2)
+                                               _In_ myflo * arrPila,           // 1д массив с данными пилы
                                                _In_ myflo * arrSignal,         // 1д массив с данными сигнала
                                                _In_ int arrPsize,              // размер пилы
                                                _In_ int arrSsize,              // размер сигнала
@@ -215,12 +216,15 @@ extern "C" __declspec(dllexport) int SetUpPila(_In_ myflo * arrPila,           /
             (vPila.size() > vSignal.size()) ? vectordiv(IndHandler, (vPila.size() / vSignal.size())) : vectormult(IndHandler, (vSignal.size() / vPila.size()));
         /* возвращаем данные в основной вектор типа int */
         vnIndices.assign(IndHandler.begin(), IndHandler.end());
-        
-        //{/* ВРЕМЕННЫЙ КОСТЫЛЬ */
-        //    IndHandler.assign(vnIndices.begin(), vnIndices.end());
-        //    vectormult(IndHandler, 1.001f);
-        //    vnIndices.assign(IndHandler.begin(), IndHandler.end());
-        //}/* ВРЕМЕННЫЙ КОСТЫЛЬ */
+
+        /* ВРЕМЕННЫЙ КОСТЫЛЬ */
+        if (diagnostics == 0 || diagnostics == 1)
+        {
+            IndHandler.assign(vnIndices.begin(), vnIndices.end());
+            vectormult(IndHandler, 1.001f);
+            vnIndices.assign(IndHandler.begin(), IndHandler.end());
+        }
+        /* ВРЕМЕННЫЙ КОСТЫЛЬ */
 
         try
         {
@@ -275,6 +279,253 @@ extern "C" __declspec(dllexport) int SetUpPila(_In_ myflo * arrPila,           /
             if (vResP[i] == 0 || vResP[i] < vless || vResP[i] > vmore)
                 vResP[i] = vResP[i - 1];
 
+    }/*************************************************************************************************************/
+
+Error:
+    return err;
+}
+
+extern "C" __declspec(dllexport) int OriginAll(_In_ int diagnostics,               // diagnostics type (zond::0|setka::1|cilind::2)
+                                               _In_ double* arrPila,               // 1д массив с данными пилы
+                                               _In_ double* arrSignal,             // 1д массив с данными сигнала
+                                               _In_ double* AdditionalData,        // 1д дополнительная информация об импульсе (!размер 14!)
+                                               _Out_ double* OriginalData,         // возвращаемый 1д массив с разделенными на отрезки оригинальными данными
+                                               _Out_ double* ResultData,           // возвращяемый 1д массив с результатом обработки
+                                               _Out_ double* FiltedData,           // возвращяемый 1д массив с отфильтрованными данными (если эта функция выбрана)
+                                               _Out_ double* Parameters)           // возвращаемый 1д массив с параметрами резултата обработки (температура, плотность и тд))
+{
+    int err = 0;
+
+    if (arrPila == nullptr ||
+        arrSignal == nullptr ||
+        AdditionalData == nullptr ||
+        OriginalData == nullptr ||
+        ResultData == nullptr ||
+        FiltedData == nullptr ||
+        Parameters == nullptr)
+        ERR(ERR_BadInputVecs);
+    if (AdditionalData[0] == 0 ||
+        AdditionalData[7] == 0 ||
+        AdditionalData[8] == 0 ||
+        AdditionalData[9] == 0 ||
+        AdditionalData[11] == 0 ||
+        AdditionalData[12] <= 1 ||
+        AdditionalData[13] <= 1)
+        ERR(ERR_ZeroInputVals);
+    if (diagnostics < 0 ||
+        diagnostics > 2)
+        ERR(ERR_BadDiagNum);
+    if (AdditionalData[3] + AdditionalData[4] > 0.9
+        || AdditionalData[3] < 0.0
+        || AdditionalData[4] < 0.0)
+        ERR(ERR_BadCutOff);
+    if (AdditionalData[5] < 0 || AdditionalData[5] > 0.9)
+        ERR(ERR_BadLinFit);
+
+    {/*********************************** засовываю в блок чтобы goto не ругался **********************************/
+        int arrPsize = (int)AdditionalData[12];				// размер входного массива пилы
+        int arrSsize = (int)AdditionalData[13];				// размер входного массива сигнала
+        int d1, d2, d3;
+
+        vector <double> vPila(arrPila, arrPila + arrPsize);
+        vector <double> vSignal(arrSignal, arrSignal + arrSsize);
+        vector <double> vAdd(AdditionalData, AdditionalData + 14);
+
+        vector <myflo> vP(vPila.begin(), vPila.end());
+        vector <myflo> vS(vSignal.begin(), vSignal.end());
+        vector <myflo> vA(vAdd.begin(), vAdd.end());
+
+        Plasma_proc_result <myflo> * fdata = new Plasma_proc_result <myflo>;
+
+        switch (diagnostics)
+        {
+        case 0: // Zond
+            ERR(Zond(vP, vS, vA, *fdata)); // вызов обработчика зонда
+            break;
+        case 1: // Setka
+            ERR(Setka(vP, vS, vA, *fdata)); // вызов обработчика сетки
+            break;
+        case 2: // Cilinder|Magnit
+            ERR(Cilinder(vP, vS, vA, *fdata)); // вызов обработчика цилиндра|магнита
+            break;
+        default:
+            __assume(0);
+        }
+
+        d1 = fdata->Get_NumberOfSegments(), d2 = fdata->Get_SizeOfSegment(), d3 = fdata->Get_NumberOfParameters();
+        try
+        {
+            vector <double> v;
+            for (int i = 0, j = 0, k = 0; i < d1; ++i, j += d2, k += d3)
+            {
+                v.assign(fdata->Get_mOriginalData().at(i).begin(), fdata->Get_mOriginalData().at(i).end());
+                memcpy(&OriginalData[j], v.data(), sizeof(double) * d2);
+                v.assign(fdata->Get_mFeltrationData().at(i).begin(), fdata->Get_mFeltrationData().at(i).end());
+                memcpy(&FiltedData[j], v.data(), sizeof (double) * d2);
+                v.assign(fdata->Get_mApproximatedData().at(i).begin(), fdata->Get_mApproximatedData().at(i).end());
+                memcpy(&ResultData[j], v.data(), sizeof (double) * d2);
+                v.assign(fdata->Get_mParametersData().at(i).begin(), fdata->Get_mParametersData().at(i).end());
+                memcpy(&Parameters[k], v.data(), sizeof (double) * d3);
+            }
+        }
+        catch (...)
+        {
+            err = ERR_Exception;
+        }
+
+        delete fdata;
+    }/*************************************************************************************************************/
+
+Error:
+    return err;
+}
+
+extern "C" __declspec(dllexport) int OriginFindSignal(_In_ int diagnostics,                 // diagnostics type (zond::0|setka::1|cilind::2)
+                                                      _In_ double* arrPila,                 // 1д массив с данными пилы
+                                                      _In_ double* arrSignal,               // 1д массив с данными сигнала
+                                                      _In_ double* AdditionalData,          // 1д дополнительная информация об импульсе (!размер 14!)
+                                                      _Out_ int& DIM1,                      // выходное значение (количество строк в матрице (количество отрезков))
+                                                      _Out_ int& DIM2,                      // выходное значение (количество столбиков в матрице (количество точек на отрезк))
+                                                      _Out_ double* vResP,                  // возвращяемый 1д массив с одним сегментом пилы (X для построения графика)
+                                                      _Out_ int* vSsI)                      // возвращаемы 1д массив с индексами начал сегментов
+{
+    int err = 0;
+
+    if (arrPila == nullptr ||
+        arrSignal == nullptr ||
+        AdditionalData == nullptr)
+        ERR(ERR_BadInputVecs);
+    if (AdditionalData[0] == 0 ||
+        AdditionalData[7] == 0 ||
+        AdditionalData[8] == 0 ||
+        AdditionalData[9] == 0 ||
+        AdditionalData[11] == 0 ||
+        AdditionalData[12] <= 1 ||
+        AdditionalData[13] <= 1)
+        ERR(ERR_ZeroInputVals);
+    if (AdditionalData[3] + AdditionalData[4] > 0.9
+        || AdditionalData[3] < 0.0
+        || AdditionalData[4] < 0.0)
+        ERR(ERR_BadCutOff);
+    if (AdditionalData[5] < 0 || AdditionalData[5] > 0.9)
+        ERR(ERR_BadLinFit);
+
+    {/*********************************** засовываю в блок чтобы goto не ругался **********************************/
+        st_time_end_time[0] = AdditionalData[1];		    // время начала обработки (если этот параметр не выбран: -1)
+        st_time_end_time[1] = AdditionalData[2];		    // время конца обработки (если этот параметр не выбран: -1)
+        leftP = AdditionalData[3];					        // часть точек отсечки слева
+        rightP = AdditionalData[4];					        // часть точек отсечки справа
+        freqP = (int)AdditionalData[7];					    // частота пилы
+        int resistance = (int)AdditionalData[8];			// сопротивление на зонде
+        int coefPila = (int)AdditionalData[9];				// коэффициент усиления пилы
+        int arrPsize = (int)AdditionalData[12];				// размер входного массива пилы
+        int arrSsize = (int)AdditionalData[13];				// размер входного массива сигнала
+
+        int numSegments = 0;
+
+        vector <double> vPila(arrPila, arrPila + arrPsize);
+        vector <double> vSignal(arrSignal, arrSignal + arrSsize);
+        vector <double> vSegPila;
+        vector <int> vStartSegIndxs;
+
+        /* домножаем пилу на коэффициент усиления */
+        vectormult(vPila, coefPila);
+        /* переворачиваем ток чтобы смотрел вверх(если нужно), и делим на сопротивление */
+        vectordiv(vSignal, resistance);
+
+        if (is_invalid(vPila[0])
+            || is_invalid(vPila[vPila.size() - 1])
+            || is_invalid(vSignal[0])
+            || is_invalid(vSignal[vSignal.size() - 1]))
+            ERR(ERR_BadFactorizing);
+        
+        vector <myflo> vP(vPila.begin(), vPila.end());
+        vector <myflo> vS(vSignal.begin(), vSignal.end());
+        vector <myflo> vSP;
+
+        ERR(find_signal_and_make_pila(vP, vS, vSP, vStartSegIndxs));
+        numSegments = vStartSegIndxs.size();
+
+        vPila.assign(vP.begin(), vP.end());
+        vSignal.assign(vS.begin(), vS.end());
+        vSegPila.assign(vSP.begin(), vSP.end());
+        
+        if (vStartSegIndxs.size() == 0
+            || vStartSegIndxs.empty()
+            || is_invalid(vSegPila[0])
+            || is_invalid(vSegPila[vSegPila.size() - 1])
+            || is_invalid(vStartSegIndxs[0])
+            || is_invalid(vStartSegIndxs[vStartSegIndxs.size() - 1]))
+            ERR(ERR_BadNoise);
+
+        /* ВРЕМЕННЫЙ КОСТЫЛЬ */
+        if (diagnostics == 0 || diagnostics == 1)
+        {
+            vector <double> IndHandler(vStartSegIndxs.begin(), vStartSegIndxs.end());
+            vectormult(IndHandler, 1.001f);
+            vStartSegIndxs.assign(IndHandler.begin(), IndHandler.end());
+        }
+        /* ВРЕМЕННЫЙ КОСТЫЛЬ */
+        
+        DIM1 = numSegments;
+        DIM2 = vSegPila.size();
+        memcpy(vResP, vSegPila.data(), sizeof (double) * vSegPila.size());
+        memcpy(vSsI, vStartSegIndxs.data(), sizeof (int) * vStartSegIndxs.size());
+    }/*************************************************************************************************************/
+
+Error:
+    return err;
+}
+
+extern "C" __declspec(dllexport) int OriginMakeOne(_In_ int diagnostics,                 // diagnostics type (zond::0|setka::1|cilind::2)
+                                                   _In_ double* arrPila,                 // 1д массив с данными пилы
+                                                   _In_ double* arrSignal,               // 1д массив с данными сигнала
+                                                   _In_ double* AdditionalData,          // 1д дополнительная информация об импульсе (!размер 6!)
+                                                   _Out_ double* arrres,			     // array to be filled with the result
+                                                   _Out_ double* arrfilt,			     // array to be filled with the filtration
+                                                   _Out_ double* arrcoeffs)		         // additional coeffs/results vector
+{
+    int err = 0;
+
+    if (arrPila == nullptr ||
+        arrSignal == nullptr ||
+        AdditionalData == nullptr)
+        ERR(ERR_BadInputVecs);
+    if (AdditionalData[0] == 0 ||
+        AdditionalData[4] == 0 ||
+        AdditionalData[5] <= 1)
+        ERR(ERR_ZeroInputVals);
+    if (diagnostics < 0 ||
+        diagnostics > 2)
+        ERR(ERR_BadDiagNum);
+    if (AdditionalData[1] < 0 || AdditionalData[1] > 0.9)
+        ERR(ERR_BadLinFit);
+    
+    {/*********************************** засовываю в блок чтобы goto не ругался **********************************/
+        S = AdditionalData[0];
+        linfitP = AdditionalData[1];
+        filtS = AdditionalData[2];
+        fuel = (int)AdditionalData[3];
+        Num_iter = (int)AdditionalData[4];
+        int arrsize = (int)AdditionalData[5];
+
+        vector <double> vPila(arrPila, arrPila + arrsize);
+        vector <double> vSignal(arrSignal, arrSignal + arrsize);
+        vector <double> vres, vfilt, vcoeffs;
+
+        vector <myflo> vP(vPila.begin(), vPila.end());
+        vector <myflo> vS(vSignal.begin(), vSignal.end());
+        vector <myflo> vR, vF, vC = { S, linfitP, filtS , (myflo)fuel, (myflo)Num_iter };
+
+        ERR(make_one_segment(diagnostics, vP, vS, vR, vF, vC));
+
+        vres.assign(vR.begin(), vR.end());
+        vfilt.assign(vF.begin(), vF.end());
+        vcoeffs.assign(vC.begin(), vC.end());
+
+        memcpy(arrres, vres.data(), sizeof (double) * vres.size());
+        memcpy(arrfilt, vfilt.data(), sizeof (double) * vfilt.size());
+        memcpy(arrcoeffs, vcoeffs.data(), sizeof (double) * vcoeffs.size());
     }/*************************************************************************************************************/
 
 Error:

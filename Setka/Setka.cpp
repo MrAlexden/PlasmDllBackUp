@@ -3,7 +3,7 @@
 int Setka(_In_ vector <myflo> & vPila,
 		  _In_ vector <myflo> & vSignal,
 		  _In_ const vector <myflo> & AdditionalData,
-		  _Out_ Plasma_proc_result & fdata)
+		  _Out_ Plasma_proc_result <myflo> & fdata)
 {
 	if (vPila.size() == 0
 		|| vPila.empty()
@@ -63,6 +63,12 @@ int Setka(_In_ vector <myflo> & vPila,
 	ERR(find_signal_and_make_pila(vPila, vSignal, vSegPila, vStartSegIndxs));
 	numSegments = vStartSegIndxs.size();
 
+	{/* бпелеммши йняршкэ */
+		vector <myflo> IndHandler(vStartSegIndxs.begin(), vStartSegIndxs.end());
+		vectormult(IndHandler, 1.001f);
+		vStartSegIndxs.assign(IndHandler.begin(), IndHandler.end());
+	}/* бпелеммши йняршкэ */
+
 	if (vStartSegIndxs.size() == 0
 		|| vStartSegIndxs.empty()
 		|| is_invalid(vSegPila.at(0))
@@ -79,7 +85,7 @@ int Setka(_In_ vector <myflo> & vPila,
 
 	for (int segnum = 0; segnum < numSegments; ++segnum)
 	{
-		vector <myflo> vY, vres, vfilt, vcoeffs = { filtS , linfitP };
+		vector <myflo> vY, vres, vfilt, vcoeffs = { S, linfitP, filtS , (myflo)fuel, (myflo)Num_iter };
 
 		vY.assign(vSignal.begin() + vStartSegIndxs.at(segnum) + one_segment_width * leftP,
 			vSignal.begin() + vStartSegIndxs.at(segnum) + one_segment_width * leftP + vSegPila.size());

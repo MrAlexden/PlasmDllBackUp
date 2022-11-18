@@ -169,15 +169,15 @@ int make_one_segment(_In_ int,					     // diagnostics type (zond::0|setka::1|ci
 extern "C" __declspec(dllexport) int Zond(_In_ vector <myflo> & Pila,                      // входной одномерный массив пилы
                                           _In_ vector <myflo> & Signal,                    // входной одномерный массив сигнала
                                           _In_ const vector <myflo> & AdditionalData,      // дополнительные данные по импульсу
-                                          _Out_ Plasma_proc_result & fdata);               // выходной класс с результатом обработки
+                                          _Out_ Plasma_proc_result <myflo> & fdata);        // выходной класс с результатом обработки
 extern "C" __declspec(dllexport) int Setka(_In_ vector <myflo> & Pila,                     // входной одномерный массив пилы
                                            _In_ vector <myflo> & Signal,                   // входной одномерный массив сигнала
                                            _In_ const vector <myflo> & AdditionalData,     // дополнительные данные по импульсу
-                                           _Out_ Plasma_proc_result & fdata);              // выходной класс с результатом обработки
+                                           _Out_ Plasma_proc_result <myflo> & fdata);       // выходной класс с результатом обработки
 extern "C" __declspec(dllexport) int Cilinder(_In_ vector <myflo> & Pila,                  // входной одномерный массив пилы
                                               _In_ vector <myflo> & Signal,                // входной одномерный массив сигнала
                                               _In_ const vector <myflo> & AdditionalData,  // дополнительные данные по импульсу
-                                              _Out_ Plasma_proc_result & fdata);           // выходной класс с результатом обработки
+                                              _Out_ Plasma_proc_result <myflo> & fdata);    // выходной класс с результатом обработки
 template <typename T>
 bool is_invalid(T val)
 {
@@ -215,8 +215,8 @@ bool is_signalpeakslookingdown(_In_ const vector <T>& v)
 };
 
 // Error codes
-typedef enum {
-
+typedef enum 
+{
     ERR_NoError = 0,                // No error
     ERR_BadInputVecs = -6201,       // Corrupted input vectors
     ERR_ZeroInputVals = -6202,      // Input data error, some values equals 0

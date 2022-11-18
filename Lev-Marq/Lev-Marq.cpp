@@ -93,7 +93,7 @@ myflo partial_derivative(_In_ myflo x,
 
 /* make linear approximation of given data */
 vector <myflo> linear_fit(_In_ const vector <myflo> & vec_X, 
-						  _In_ const vector <myflo>& vec_Y)
+						  _In_ const vector <myflo> & vec_Y)
 {
 	vector <myflo> vParams = { 0.0f, 0.0f };
 	vector <bool> vFixed = { false, false };

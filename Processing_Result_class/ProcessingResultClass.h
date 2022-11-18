@@ -13,6 +13,7 @@ using namespace std;
 typedef float myflo;
 #endif
 
+template <typename T>
 class Plasma_proc_result
 {
 public:
@@ -65,56 +66,56 @@ public:
 		NumberOfParameters = Number_Of_Parameters;
 	}
 
-	void SetPila(vector <myflo> & v)
+	void SetPila(vector <T> & v)
 	{
 		vPila = v;
 	}
 
-	int SetOriginSegment(vector <myflo> & v, int i)
+	int SetOriginSegment(vector <T> & v, int i)
 	{
 		if (i > NumberOfSegments || i < 0) return -1;
 		mOriginalData[i] = v;
 	}
 
-	int SetFiltedSegment(vector <myflo> & v, int i)
+	int SetFiltedSegment(vector <T> & v, int i)
 	{
 		if (i > NumberOfSegments || i < 0) return -1;
 		mFeltrationData[i] = v;
 	}
 
-	int SetApproxSegment(vector <myflo> & v, int i)
+	int SetApproxSegment(vector <T> & v, int i)
 	{
 		if (i > NumberOfSegments || i < 0) return -1;
 		mApproximatedData[i] = v;
 	}
 
-	int SetParamsSegment(vector <myflo>& v, int i)
+	int SetParamsSegment(vector <T>& v, int i)
 	{
 		if (i > NumberOfSegments || i < 0) return -1;
 		mParametersData[i] = v;
 	}
 
-	vector < myflo > & const Get_vPila()
+	vector < T > & const Get_vPila()
 	{
 		return vPila;
 	}
 
-	vector < vector <myflo> > & const Get_mOriginalData()
+	vector < vector <T> > & const Get_mOriginalData()
 	{
 		return mOriginalData;
 	}
 
-	vector < vector <myflo> > & const Get_mFeltrationData()
+	vector < vector <T> > & const Get_mFeltrationData()
 	{
 		return mFeltrationData;
 	}
 
-	vector < vector <myflo> > & const Get_mApproximatedData()
+	vector < vector <T> > & const Get_mApproximatedData()
 	{
 		return mApproximatedData;
 	}
 
-	vector < vector <myflo> > & const Get_mParametersData()
+	vector < vector <T> > & const Get_mParametersData()
 	{
 		return mParametersData;
 	}
@@ -136,12 +137,12 @@ public:
 
 private:
 
-	vector <myflo> vPila;
+	vector <T> vPila;
 
-	vector < vector <myflo> > mOriginalData;
-	vector < vector <myflo> > mFeltrationData;
-	vector < vector <myflo> > mApproximatedData;
-	vector < vector <myflo> > mParametersData;
+	vector < vector <T> > mOriginalData;
+	vector < vector <T> > mFeltrationData;
+	vector < vector <T> > mApproximatedData;
+	vector < vector <T> > mParametersData;
 
 	int NumberOfSegments;
 	int SizeOfSegment;

@@ -566,15 +566,18 @@ inline int take_data_around_the_edges(_In_ const unsigned int size,
 	return 0;
 }
 
-int make_one_segment(_In_ const int diagnostics,					 // diagnostics type (zond::0|setka::1|cilind::2)
+int make_one_segment(_In_ const int diagnostics,			 // diagnostics type (zond::0|setka::1|cilind::2)
 					 _In_ const vector <myflo> & vPila,		 // X data
 					 _In_ vector <myflo> & vSignal,			 // Y data
 					 _Out_ vector <myflo> & vres,			 // vector to be filled with the result
 					 _Out_ vector <myflo> & vfilt,			 // vector to be filled with the filtration
 					 _Inout_ vector <myflo> & vcoeffs)		 // additional coeffs/results vector
 {
-	myflo filtS = vcoeffs[0],
-		linfitP = vcoeffs[1];
+	S = vcoeffs[0];
+	myflo linfitP = vcoeffs[1],
+		  filtS = vcoeffs[2];
+	fuel = (int)vcoeffs[3];
+	Num_iter = (int)vcoeffs[4];
 
 	switch (diagnostics)
 	{
@@ -764,7 +767,7 @@ int make_one_segment(_In_ const int diagnostics,					 // diagnostics type (zond:
 			vcoeffs.resize(4);
 			vcoeffs[0] = vParams[0] + vParams[3] / (vParams[2] * 1.25331414/*sqrt(Pi / 2)*/);	// Max Value
 			vcoeffs[1] = vParams[2];															// Temp
-			vcoeffs[2] = vParams[1];															// Peak Voltage
+			vcoeffs[2] = abs(vParams[1]);														// Peak Voltage
 			vcoeffs[3] = /*sqrt(log(4))*/1.17741001 * vParams[2];								// Energy
 
 			break;
