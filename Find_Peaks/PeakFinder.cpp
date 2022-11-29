@@ -9,7 +9,7 @@ inline void diff(_In_ const vector <myflo> & in,
 
 	for (int i = 1; i < in.size(); ++i)
 		out[i - 1] = (in[i] - in[i - 1]) * k;
-	out[out.size() - 1] = out[out.size() - 2];
+	out.back() = out[out.size() - 2];
 }
 
 inline void vectorElementsProduct(_In_ const vector <myflo> & a, 
@@ -96,7 +96,7 @@ int PeakFinder::findPeaks(_In_ const vector <myflo> & in,
 		//x = [x0(1);x0(ind);x0(end)];	
 		selectElementsFromIndices(x0, ind, x);
 		x.insert(x.begin(), x0[0]);
-		x.insert(x.end(), x0[x0.size() - 1]);
+		x.insert(x.end(), x0.back());
 		//ind = [1;ind;len0];
 		ind.insert(ind.begin(), 1);
 		ind.insert(ind.end(), len0);
@@ -212,10 +212,10 @@ int PeakFinder::findPeaks(_In_ const vector <myflo> & in,
 		// Check end point
 		if (includeEndpoints)
 		{
-			if (x[x.size() - 1] > tempMag && x[x.size() - 1] > leftMin + sel)
+			if (x.back() > tempMag && x.back() > leftMin + sel)
 			{
 				peakLoc[cInd - 1] = len - 1;
-				peakMag[cInd - 1] = x[x.size() - 1];
+				peakMag[cInd - 1] = x.back();
 				cInd = cInd + 1;
 			}
 			else if (!foundPeak && tempMag > minMag)// Check if we still need to add the last point
@@ -227,11 +227,11 @@ int PeakFinder::findPeaks(_In_ const vector <myflo> & in,
 		}
 		else if (!foundPeak)
 		{
-			myflo minAux = x0[x0.size() - 1] < x[x.size() - 1] ? x0[x0.size() - 1] : x[x.size() - 1];
-			if (x[x.size() - 1] > tempMag && x[x.size() - 1] > leftMin + sel)
+			myflo minAux = x0.back() < x.back() ? x0.back() : x.back();
+			if (x.back() > tempMag && x.back() > leftMin + sel)
 			{
 				peakLoc[cInd - 1] = len - 1;
-				peakMag[cInd - 1] = x[x.size() - 1];
+				peakMag[cInd - 1] = x.back();
 				cInd = cInd + 1;
 			}
 			else if (!tempMag > minAux + sel)// Check if we still need to add the last point

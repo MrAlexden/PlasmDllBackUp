@@ -39,7 +39,7 @@ static inline int find_i_nach(_In_ const vector <myflo> & vSignal,
 	int nach_ignored_gap = vnIndices[0] + (1 - rightP) * one_segment_width,
 		konec_ignored_gap = vnIndices[0] + (1 + leftP) * one_segment_width;
 
-	for (int i = vnIndices[0] + one_segment_width * leftP, k = 0; i < vnIndices[vnIndices.size() - 1]; i += ef_koef)
+	for (int i = vnIndices[0] + one_segment_width * leftP, k = 0; i < vnIndices.back(); i += ef_koef)
 	{
 		if ((i < nach_ignored_gap) || (i > konec_ignored_gap))
 		{
@@ -69,10 +69,10 @@ static inline int find_i_konec(_In_ const vector <myflo> & vSignal,
 {
 	/*myflo otsech = (leftP >= rightP) ? leftP : rightP;
 	otsech = (otsech < 0.05f) ? 0.05f : otsech;*/
-	int nach_ignored_gap = vnIndices[vnIndices.size() - 1] - (1 - rightP) * one_segment_width,
-		konec_ignored_gap = vnIndices[vnIndices.size() - 1] - (1 + leftP) * one_segment_width;
+	int nach_ignored_gap = vnIndices.back() - (1 - rightP) * one_segment_width,
+		konec_ignored_gap = vnIndices.back() - (1 + leftP) * one_segment_width;
 
-	for (int i = vnIndices[vnIndices.size() - 1] - one_segment_width * rightP, counter = 0, k = 0; i > vnIndices[0]; i -= ef_koef)
+	for (int i = vnIndices.back() - one_segment_width * rightP, counter = 0, k = 0; i > vnIndices[0]; i -= ef_koef)
 	{
 		if ((i > nach_ignored_gap) || (i < konec_ignored_gap))
 		{
@@ -107,7 +107,7 @@ static inline void noise_vecs(_In_ int k,
 	int i = 0, j = 0, n = 0, nach_ignored_gap = 0, konec_ignored_gap = 0;
 	
 	i = vnIndices[k] - one_segment_width * (1 - rightP);
-	if (i < 0) i = ef_koef;
+	if (i < 0 || i < ef_koef) i = ef_koef;
 
 	nach_ignored_gap = vnIndices[k] - rightP * one_segment_width;
 	konec_ignored_gap = vnIndices[k] + leftP * one_segment_width;
@@ -129,7 +129,7 @@ static inline void noise_vecs(_In_ int k,
 	}
 
 	i = vnIndices[vnIndices.size() - 1 - k] + one_segment_width * (1 - leftP);
-	if (i > vSignal.size() - 1) i = vSignal.size() - 1 - ef_koef;
+	if (i > vSignal.size() - 1 || i > vSignal.size() - 1 - ef_koef) i = vSignal.size() - 1 - ef_koef;
 
 	nach_ignored_gap = vnIndices[vnIndices.size() - 1 - k] + rightP * one_segment_width;
 	konec_ignored_gap = vnIndices[vnIndices.size() - 1 - k] - leftP * one_segment_width;
@@ -213,9 +213,37 @@ inline void fit_linear_pila(_In_ const vector <myflo> & vPila,
 	myflo segment_length = endVP - stVP, segment_points_amount = abs(ind_st - ind_end), transform_factor = (myflo)one_segment_width / NumPointsOfOriginalPila;
 	delta = segment_length / (segment_points_amount * transform_factor);
 
-	vSegPila[0] = (leftP >= 0.2) ? stVP : vPila[ind_st_of_pil + leftP * NumPointsOfOriginalPila];
+#define iterator vector <myflo>::iterator
+	function<iterator(iterator, iterator)> minormax;
+
+	if (stVP > endVP)
+	{
+		minormax = [](iterator begin, iterator end)
+		{
+			return max_element(begin, end);
+		};
+	}
+
+	if (stVP < endVP)
+	{
+		minormax = [](iterator begin, iterator end)
+		{
+			return min_element(begin, end);
+		};
+	}
+#undef iterator
+	
+	/* Нужен держатель иначе дельта функия ругается на константный итератор */
+	vector <myflo> vPilaHolder(vPila.begin() + ind_st_of_pil, vPila.begin() + ind_st_of_pil + NumPointsOfOriginalPila);
+	int index_of_minormax = minormax(vPilaHolder.begin(), vPilaHolder.end()) - vPilaHolder.begin();
+
+	vSegPila[0] = *(vPila.begin() + ind_st_of_pil + index_of_minormax + leftP * NumPointsOfOriginalPila);
+
 	for (i = 1; i < vSegPila.size(); ++i)
 		vSegPila[i] = vSegPila[i - 1] + delta;
+
+	if (vSegPila.back() < vSegPila.front())
+		vectormult(vSegPila, -1);
 }
 
 static inline int convert_time_to_pts(_In_ int v_tok_size)
@@ -298,7 +326,7 @@ static inline int match_pila_and_signal(_In_ const vector <myflo> & vPila,
 		(vPila.size() > vSignal.size()) ? vectordiv(IndHandler, (vPila.size() / vSignal.size())) : vectormult(IndHandler, (vSignal.size() / vPila.size()));
 
 	/*проверяем превышение крайнего индекса*/
-	if (IndHandler[IndHandler.size() - 1] > vSignal.size())
+	if (IndHandler.back() > vSignal.size())
 		IndHandler.pop_back();
 
 	/* возвращаем данные в основной вектор типа int */
@@ -509,13 +537,13 @@ inline myflo metod_Newton(_In_ myflo x0,
 inline myflo find_floating_potential(_In_ const vector <myflo> & vPila,
 									 _In_ const vector <myflo> & vParams)
 {
-	myflo x = metod_Newton(vPila[vPila.size() - 1], vParams, fx_STEP);
+	myflo x = metod_Newton(vPila.back(), vParams, fx_STEP);
 
 	if (is_invalid(x) || !x)
 	{
-		x = metod_hord(vPila[0], vPila[vPila.size() - 1], vParams, fx_STEP);
+		x = metod_hord(vPila[0], vPila.back(), vParams, fx_STEP);
 		if (is_invalid(x) || !x)
-			x = vPila[vPila.size() - 1];
+			x = vPila.back();
 	}
 
 	return x;
@@ -700,17 +728,49 @@ int make_one_segment(_In_ const int diagnostics,			 // diagnostics type (zond::0
 			vector <myflo> vL, vR;
 			take_data_around_the_edges(vres.size() / 10, vres, vL, vR);
 
-																											/* среднее между средним с краев */
+			/* среднее между средним с краев */
 			vParams[0] = (vSum(vL) / vL.size() + vSum(vR) / vR.size()) * 0.5;								// y0 - offset
-																											/* значение X максимума */
+			/* значение X максимума */
 			vParams[1] = vPila[max_element(vres.begin(), vres.end()) - vres.begin()];						// xc - center
-																											/* вся ширина пилы делить на 10 */
-			vParams[2] = abs(vPila[vPila.size() - 1] - vPila[0]) / 10;										// w - width
-																											/* выражено из формулы yc = y0 + A / (w * sqrt(Pi / 2)) */
+			/* вся ширина пилы делить на 10 */
+			vParams[2] = abs(vPila.back() - vPila[0]) / 10;										// w - width
+			/* выражено из формулы yc = y0 + A / (w * sqrt(Pi / 2)) */
 			vParams[3] = (*max_element(vres.begin(), vres.end()) - vParams[0]) * (vParams[2] * 1.25331414);	// A - area
 
 			/* аппроксимируем производную Гауссом */
 			levmarq(vPila, vres, vParams, vFixed, Num_iter/* * 2*/, fx_GAUSS);
+
+			if (vParams[2] < 0.0 || vParams[2] > abs(vPila.back() - vPila[0]) / 2)
+			{
+				filtS = max(filtS, 0.8f);
+
+				/* фильтруем сигнал и записываем в vfilt */
+				sg_smooth(vSignal, vfilt, vPila.size() * (filtS / 2), (5/*OriginLab poly order*/ - 1));
+				/* дифференцируем */
+				diff(vfilt, vSignal, -1);
+				/* фильтруем производную */
+				sg_smooth(vSignal, vres, vPila.size() * (filtS / 2), (5/*OriginLab poly order*/ - 1));
+
+				/* берем ветора с краев аппроксимируемых данных чтобы потом найти по ним y0 */
+				vector <myflo> vL, vR;
+				take_data_around_the_edges(vres.size() / 10, vres, vL, vR);
+
+				/* среднее между средним с краев */
+				vParams[0] = (vSum(vL) / vL.size() + vSum(vR) / vR.size()) * 0.5;								// y0 - offset
+				/* значение X максимума */
+				vParams[1] = vPila[max_element(vres.begin(), vres.end()) - vres.begin()];						// xc - center
+				/*vParams[1] = (vParams[1] <= vPila[vPila.size() * 0.3]
+							|| vParams[1] >= vPila[vPila.size() * 0.7]) ? vPila[vPila.size() * 0.5] : vParams[1];*/
+				/* вся ширина пилы делить на 10 */
+				vParams[2] = abs(vPila.back() - vPila[0]) / 10;										// w - width
+				/* выражено из формулы yc = y0 + A / (w * sqrt(Pi / 2)) */
+				vParams[3] = (*max_element(vres.begin(), vres.end()) - vParams[0]) * (vParams[2] * 1.25331414);	// A - area
+
+				levmarq(vPila, vres, vParams, vFixed, min(Num_iter, 2), fx_GAUSS);
+
+				if (vParams[2] < 0.0 || vParams[2] > 100.0)
+					vParams[2] = 10;
+			}
 
 			/* записываем в vres */
 			for (i = 0; i < vPila.size(); ++i)
@@ -748,17 +808,45 @@ int make_one_segment(_In_ const int diagnostics,			 // diagnostics type (zond::0
 			vector <myflo> vL, vR;
 			take_data_around_the_edges(vSignal.size() / 10, vSignal, vL, vR);
 
-																													/* среднее между средним с краев */
+			/* среднее между средним с краев */
 			vParams[0] = (vSum(vL) / vL.size() + vSum(vR) / vR.size()) * 0.5;										// y0 - offset
-																													/* значение X максимума */
+			/* значение X максимума */
 			vParams[1] = vPila[max_element(vSignal.begin(), vSignal.end()) - vSignal.begin()];						// xc - center
-																													/* вся ширина пилы делить на 10 */
-			vParams[2] = abs(vPila[vPila.size() - 1] - vPila[0]) / 10;												// w - width
-																													/* выражено из формулы yc = y0 + A / (w * sqrt(Pi / 2)) */
+			/* вся ширина пилы делить на 10 */
+			vParams[2] = abs(vPila.back() - vPila[0]) / 10;												// w - width
+			/* выражено из формулы yc = y0 + A / (w * sqrt(Pi / 2)) */
 			vParams[3] = (*max_element(vSignal.begin(), vSignal.end()) - vParams[0]) * (vParams[2] * 1.25331414);	// A - area
 
 			/* аппроксимируем производную Гауссом */
 			levmarq(vPila, vSignal, vParams, vFixed, Num_iter/* * 2*/, fx_GAUSS);
+
+			if (vParams[2] < 0.0 || vParams[2] > abs(vPila.back() - vPila[0]) / 2)
+			{
+				filtS = max(filtS, 0.8f);
+
+				/* фильтруем сигнал и записываем в vfilt */
+				sg_smooth(vSignal, vres, vPila.size() * (filtS / 2), (5/*OriginLab poly order*/ - 1));
+
+				/* берем ветора с краев аппроксимируемых данных чтобы потом найти по ним y0 */
+				vector <myflo> vL, vR;
+				take_data_around_the_edges(vres.size() / 10, vres, vL, vR);
+
+				/* среднее между средним с краев */
+				vParams[0] = (vSum(vL) / vL.size() + vSum(vR) / vR.size()) * 0.5;								// y0 - offset
+				/* значение X максимума */
+				vParams[1] = vPila[max_element(vres.begin(), vres.end()) - vres.begin()];						// xc - center
+				/*vParams[1] = (vParams[1] <= vPila[vPila.size() * 0.3]
+							|| vParams[1] >= vPila[vPila.size() * 0.7]) ? vPila[vPila.size() * 0.5] : vParams[1];*/
+				/* вся ширина пилы делить на 10 */
+				vParams[2] = abs(vPila.back() - vPila[0]) / 10;										// w - width
+				/* выражено из формулы yc = y0 + A / (w * sqrt(Pi / 2)) */
+				vParams[3] = (*max_element(vres.begin(), vres.end()) - vParams[0]) * (vParams[2] * 1.25331414);	// A - area
+
+				levmarq(vPila, vres, vParams, vFixed, min(Num_iter, 2), fx_GAUSS);
+
+				if (vParams[2] < 0.0 || vParams[2] > 100.0)
+					vParams[2] = 10;
+			}
 
 			/* записываем в vres */
 			for (i = 0; i < vPila.size(); ++i)

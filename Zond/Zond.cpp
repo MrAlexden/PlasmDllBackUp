@@ -85,7 +85,7 @@ int Zond(_In_ vector <myflo> & vPila,
 	fdata.SetParamsNumber(dimension);
 
 	fdata.SetPila(vSegPila);
-	
+
 	for (int segnum = 0; segnum < numSegments; ++segnum)
 	{
 		vector <myflo> vY, vres, vfilt, vcoeffs = { S, linfitP, filtS , (myflo)fuel, (myflo)Num_iter };

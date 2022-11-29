@@ -28,6 +28,15 @@ public:
 	~Plasma_proc_result()
 	{
 		vPila.clear();
+
+		for (int i = 0; i < NumberOfSegments; ++i)
+		{
+			mOriginalData[i].clear();
+			mFeltrationData[i].clear();
+			mApproximatedData[i].clear();
+			mParametersData[i].clear();
+		}
+
 		mOriginalData.clear();
 		mFeltrationData.clear();
 		mApproximatedData.clear();

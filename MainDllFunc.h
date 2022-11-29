@@ -10,19 +10,9 @@
 
 #define ERR(f) if (err = (f), err < 0) goto Error;
 
-//#ifdef __APPLE__
-//# include <OpenCL/opencl.h>      // для компьютеров на MacOsX
-//#else
-//# include <CL/cl.h>              // для компьютеров на Win\Linux указывайте путь к файлу cl.h 
-//#endif
-//#ifndef __cl_clang_function_pointers
-//#error "Missing __cl_clang_function_pointers define"
-//#endif
-//#pragma OPENCL EXTENSION __cl_clang_function_pointers : enable
-
 typedef float myflo;
 
-// Файлы заголовков Windows
+/* Файлы заголовков Windows */
 #include <windows.h>    // for windows interface
 #include <iostream>     // for cin/cout
 #include <fstream>      // for file access
@@ -35,11 +25,9 @@ typedef float myflo;
 #include <list>         // for list
 #include <functional>   // for function
 
-//#include <functional>     // for function
-
 #include "Processing_Result_class/ProcessingResultClass.h"
 
-using namespace std;         // for std::
+using namespace std;    // for std::
 
 ////////////////////////////////////////////// GLOBAL FUNCTIONS //////////////////////////////////////////////
 /*===================================== GAUSS =====================================*/
@@ -200,13 +188,23 @@ inline T vSum(const vector <T>& v)
 };
 
 template <typename T>
-bool is_signalpeakslookingdown(_In_ const vector <T>& v)
+bool is_signalpeakslookingdown(_In_ const vector <T> & v)
 {
     T min = *min_element(v.begin(), v.end()),
       max = *max_element(v.begin(), v.end()),
-      vsum = vSum(v),
+      vsuml,
+      vsumr,
       vavg;
-    vavg = vsum / v.size();
+
+    vector <T> vholder;
+
+    vholder.assign(v.begin(), v.begin() + v.size() * 0.1);
+    vsuml = vSum(vholder);
+
+    vholder.assign(v.begin() + v.size() * 0.9, v.end());
+    vsumr = vSum(vholder);
+
+    vavg = (vsuml + vsumr) / (v.size() * 0.2);
 
     if (abs(vavg - max) >= abs(vavg - min))
         return false;

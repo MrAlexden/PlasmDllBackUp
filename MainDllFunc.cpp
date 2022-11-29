@@ -138,9 +138,9 @@ extern "C" __declspec(dllexport) int FindSignalWrapper(_In_ myflo * arrPila,    
         vectordiv(vSignal, resistance);
 
         if (is_invalid(vPila[0])
-            || is_invalid(vPila[vPila.size() - 1])
+            || is_invalid(vPila.back())
             || is_invalid(vSignal[0])
-            || is_invalid(vSignal[vSignal.size() - 1]))
+            || is_invalid(vSignal.back()))
             ERR(ERR_BadFactorizing);
 
         ERR(find_signal_and_make_pila(vPila, vSignal, vSegPila, vStartSegIndxs));
@@ -149,9 +149,9 @@ extern "C" __declspec(dllexport) int FindSignalWrapper(_In_ myflo * arrPila,    
         if (vStartSegIndxs.size() == 0
             || vStartSegIndxs.empty()
             || is_invalid(vSegPila[0])
-            || is_invalid(vSegPila[vSegPila.size() - 1])
+            || is_invalid(vSegPila.back())
             || is_invalid(vStartSegIndxs[0])
-            || is_invalid(vStartSegIndxs[vStartSegIndxs.size() - 1]))
+            || is_invalid(vStartSegIndxs.back()))
             ERR(ERR_BadNoise);
 
         DIM1 = numSegments;
@@ -200,9 +200,9 @@ extern "C" __declspec(dllexport) int SetUpPila(_In_ int diagnostics,           /
         if (vStartSegIndxs.size() == 0
             || vStartSegIndxs.empty()
             || is_invalid(vSegPila[0])
-            || is_invalid(vSegPila[vSegPila.size() - 1])
+            || is_invalid(vSegPila.back())
             || is_invalid(vStartSegIndxs[0])
-            || is_invalid(vStartSegIndxs[vStartSegIndxs.size() - 1]))
+            || is_invalid(vStartSegIndxs.back()))
             ERR(ERR_BadNoise);
 
         /* находим все участки на пиле при помощи пиков */
@@ -434,9 +434,9 @@ extern "C" __declspec(dllexport) int OriginFindSignal(_In_ int diagnostics,     
         vectordiv(vSignal, resistance);
 
         if (is_invalid(vPila[0])
-            || is_invalid(vPila[vPila.size() - 1])
+            || is_invalid(vPila.back())
             || is_invalid(vSignal[0])
-            || is_invalid(vSignal[vSignal.size() - 1]))
+            || is_invalid(vSignal.back()))
             ERR(ERR_BadFactorizing);
         
         vector <myflo> vP(vPila.begin(), vPila.end());
@@ -453,9 +453,9 @@ extern "C" __declspec(dllexport) int OriginFindSignal(_In_ int diagnostics,     
         if (vStartSegIndxs.size() == 0
             || vStartSegIndxs.empty()
             || is_invalid(vSegPila[0])
-            || is_invalid(vSegPila[vSegPila.size() - 1])
+            || is_invalid(vSegPila.back())
             || is_invalid(vStartSegIndxs[0])
-            || is_invalid(vStartSegIndxs[vStartSegIndxs.size() - 1]))
+            || is_invalid(vStartSegIndxs.back()))
             ERR(ERR_BadNoise);
 
         /* ВРЕМЕННЫЙ КОСТЫЛЬ */
