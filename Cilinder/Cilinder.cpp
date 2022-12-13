@@ -31,6 +31,9 @@ int Cilinder(_In_ vector <myflo> & vPila,
 		dimension = 5,		// количество столбиков parameters
 		err = 0;
 
+	ThreadArgs args;
+	HANDLE hThread;
+
 	S = 0.0;										// площадь поверхности зонда
 	st_time_end_time[0] = AdditionalData[1];		// время начала обработки (если этот параметр не выбран: -1)
 	st_time_end_time[1] = AdditionalData[2];		// время конца обработки (если этот параметр не выбран: -1)
@@ -75,27 +78,45 @@ int Cilinder(_In_ vector <myflo> & vPila,
 	fdata.SetSegmentsNumber(numSegments);
 	fdata.SetSegmentsSize(vSegPila.size());
 	fdata.SetParamsNumber(dimension);
-
 	fdata.SetPila(vSegPila);
+
+	hThread = CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)&DialogBoxParamWrapper, &args, NULL, NULL);
+	if (hThread)
+	{
+		WaitForSingleObject(hThread, 10);
+		SendMessage(GetDlgItem(mywindow, IDC_PROGRESS1), PBM_SETRANGE, 0, MAKELPARAM(0, numSegments));
+	}
 
 	for (int segnum = 0; segnum < numSegments; ++segnum)
 	{
-		vector <myflo> vY, vres, vfilt, vcoeffs = { S, linfitP, filtS , (myflo)fuel, (myflo)Num_iter };
+		SendMessage(GetDlgItem(mywindow, IDC_PROGRESS1), PBM_SETPOS, segnum, NULL);
+		wstring wstr = L"In Progress... " + to_wstring(int(((myflo)segnum / numSegments) * 100)) + L" %";
+		SetDlgItemText(mywindow, IDC_STATIC, wstr.c_str());
+
+		vector <myflo> vY, 
+					   vres, 
+					   vfilt,
+					   vdiff,
+					   vcoeffs = { S, linfitP, filtS , (myflo)fuel, (myflo)Num_iter };
 
 		vY.assign(vSignal.begin() + vStartSegIndxs.at(segnum) + one_segment_width * leftP,
 			vSignal.begin() + vStartSegIndxs.at(segnum) + one_segment_width * leftP + vSegPila.size());
 
 		fdata.SetOriginSegment(vY, segnum);
 
-		if (make_one_segment(2, vSegPila, vY, vres, vfilt, vcoeffs) < 0)
+		if (make_one_segment(2, vSegPila, vY, vres, vfilt, vdiff, vcoeffs) < 0)
 			continue;
 
 		vcoeffs.insert(vcoeffs.begin(), vStartSegIndxs.at(segnum) * (1.0 / (one_segment_width * freqP)));
 
-		fdata.SetFiltedSegment(vfilt, segnum);
 		fdata.SetApproxSegment(vres, segnum);
+		fdata.SetFiltedSegment(vfilt, segnum);
+		fdata.SetDiffedSegment(vdiff, segnum);
 		fdata.SetParamsSegment(vcoeffs, segnum);
 	}
+
+	TerminateThread(hThread, -1);
+	CloseHandle(hThread);
 
 Error:
 	return err;

@@ -456,7 +456,8 @@ void sg_smooth(_In_ const vector <myflo> & vorig,
     if ((width < 1) || (deg < 0) || (vorig.size() < (2 * width + 2)))
         return;
 
-    res.resize(vorig.size(), 0.0);
+    res.resize(vorig.size());
+    memset(&res[0], 0.0, sizeof(myflo) * res.size());
 
     const int window = 2 * width + 1;
     const int endidx = vorig.size() - 1;

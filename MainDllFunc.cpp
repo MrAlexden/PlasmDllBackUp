@@ -1,5 +1,39 @@
 ﻿#include "MainDllFunc.h"
 
+BOOL WINAPI DllMain(HINSTANCE hinstDLL,  // handle to DLL module
+                    DWORD fdwReason,     // reason for calling function
+                    LPVOID lpvReserved)  // reserved
+{
+    // Perform actions based on the reason for calling.
+    switch (fdwReason)
+    {
+    case DLL_PROCESS_ATTACH:
+        // Initialize once for each new process.
+        // Return FALSE to fail DLL load.
+        hInstThisDll = hinstDLL;
+        break;
+
+    case DLL_THREAD_ATTACH:
+        // Do thread-specific initialization.
+        break;
+
+    case DLL_THREAD_DETACH:
+        // Do thread-specific cleanup.
+        break;
+
+    case DLL_PROCESS_DETACH:
+
+        if (lpvReserved != nullptr)
+        {
+            break; // do not do cleanup if process termination scenario
+        }
+
+        // Perform any necessary cleanup.
+        break;
+    }
+    return TRUE;  // Successful DLL_PROCESS_ATTACH.
+}
+
 extern "C" __declspec(dllexport) int MainWrapper(_In_ int diagnostics,               // diagnostics type (zond::0|setka::1|cilind::2)
                                                  _In_ myflo * arrPila,               // 1д массив с данными пилы
                                                  _In_ myflo * arrSignal,             // 1д массив с данными сигнала
@@ -7,6 +41,7 @@ extern "C" __declspec(dllexport) int MainWrapper(_In_ int diagnostics,          
                                                  _Out_ myflo * OriginalData,         // возвращаемый 1д массив с разделенными на отрезки оригинальными данными
                                                  _Out_ myflo * ResultData,           // возвращяемый 1д массив с результатом обработки
                                                  _Out_ myflo * FiltedData,           // возвращяемый 1д массив с отфильтрованными данными (если эта функция выбрана)
+                                                 _Out_ myflo * DiffedData,			 // возвращяемый 1д массив с данными производной (если эта функция выбрана)
                                                  _Out_ myflo * Parameters)           // возвращаемый 1д массив с параметрами резултата обработки (температура, плотность и тд)
 {
     int err = 0;
@@ -17,6 +52,7 @@ extern "C" __declspec(dllexport) int MainWrapper(_In_ int diagnostics,          
         OriginalData == nullptr ||
         ResultData == nullptr ||
         FiltedData == nullptr ||
+        DiffedData == nullptr ||
         Parameters == nullptr)
         ERR(ERR_BadInputVecs);
     if (AdditionalData[0] == 0 ||
@@ -69,7 +105,8 @@ extern "C" __declspec(dllexport) int MainWrapper(_In_ int diagnostics,          
             for (int i = 0, j = 0, k = 0; i < d1; ++i, j += d2, k += d3)
             {
                 memcpy(&OriginalData[j], &fdata->Get_mOriginalData().at(i).at(0), sizeof myflo * d2);
-                memcpy(&FiltedData[j], &fdata->Get_mFeltrationData().at(i).at(0), sizeof myflo * d2);
+                memcpy(&FiltedData[j], &fdata->Get_mFiltratedData().at(i).at(0), sizeof myflo * d2);
+                memcpy(&DiffedData[j], &fdata->Get_mDifferentiatedData().at(i).at(0), sizeof myflo * d2);
                 memcpy(&ResultData[j], &fdata->Get_mApproximatedData().at(i).at(0), sizeof myflo * d2);
                 memcpy(&Parameters[k], &fdata->Get_mParametersData().at(i).at(0), sizeof myflo * d3);
             }
@@ -292,6 +329,7 @@ extern "C" __declspec(dllexport) int OriginAll(_In_ int diagnostics,            
                                                _Out_ double* OriginalData,         // возвращаемый 1д массив с разделенными на отрезки оригинальными данными
                                                _Out_ double* ResultData,           // возвращяемый 1д массив с результатом обработки
                                                _Out_ double* FiltedData,           // возвращяемый 1д массив с отфильтрованными данными (если эта функция выбрана)
+                                               _Out_ double* DiffedData,		   // возвращяемый 1д массив с данными производной (если эта функция выбрана)
                                                _Out_ double* Parameters)           // возвращаемый 1д массив с параметрами резултата обработки (температура, плотность и тд))
 {
     int err = 0;
@@ -302,6 +340,7 @@ extern "C" __declspec(dllexport) int OriginAll(_In_ int diagnostics,            
         OriginalData == nullptr ||
         ResultData == nullptr ||
         FiltedData == nullptr ||
+        DiffedData == nullptr ||
         Parameters == nullptr)
         ERR(ERR_BadInputVecs);
     if (AdditionalData[0] == 0 ||
@@ -360,10 +399,16 @@ extern "C" __declspec(dllexport) int OriginAll(_In_ int diagnostics,            
             {
                 v.assign(fdata->Get_mOriginalData().at(i).begin(), fdata->Get_mOriginalData().at(i).end());
                 memcpy(&OriginalData[j], v.data(), sizeof(double) * d2);
-                v.assign(fdata->Get_mFeltrationData().at(i).begin(), fdata->Get_mFeltrationData().at(i).end());
-                memcpy(&FiltedData[j], v.data(), sizeof (double) * d2);
+                
                 v.assign(fdata->Get_mApproximatedData().at(i).begin(), fdata->Get_mApproximatedData().at(i).end());
                 memcpy(&ResultData[j], v.data(), sizeof (double) * d2);
+                
+                v.assign(fdata->Get_mFiltratedData().at(i).begin(), fdata->Get_mFiltratedData().at(i).end());
+                memcpy(&FiltedData[j], v.data(), sizeof (double) * d2);
+
+                v.assign(fdata->Get_mDifferentiatedData().at(i).begin(), fdata->Get_mDifferentiatedData().at(i).end());
+                memcpy(&DiffedData[j], v.data(), sizeof (double) * d2);
+                
                 v.assign(fdata->Get_mParametersData().at(i).begin(), fdata->Get_mParametersData().at(i).end());
                 memcpy(&Parameters[k], v.data(), sizeof (double) * d3);
             }
@@ -477,12 +522,13 @@ Error:
     return err;
 }
 
-extern "C" __declspec(dllexport) int OriginMakeOne(_In_ int diagnostics,                 // diagnostics type (zond::0|setka::1|cilind::2)
+extern "C" __declspec(dllexport) int __stdcall OriginMakeOne(_In_ int diagnostics,                 // diagnostics type (zond::0|setka::1|cilind::2)
                                                    _In_ double* arrPila,                 // 1д массив с данными пилы
                                                    _In_ double* arrSignal,               // 1д массив с данными сигнала
                                                    _In_ double* AdditionalData,          // 1д дополнительная информация об импульсе (!размер 6!)
                                                    _Out_ double* arrres,			     // array to be filled with the result
                                                    _Out_ double* arrfilt,			     // array to be filled with the filtration
+                                                   _Out_ double* arrdiff,			     // array to be filled with the differentiation
                                                    _Out_ double* arrcoeffs)		         // additional coeffs/results vector
 {
     int err = 0;
@@ -511,20 +557,22 @@ extern "C" __declspec(dllexport) int OriginMakeOne(_In_ int diagnostics,        
 
         vector <double> vPila(arrPila, arrPila + arrsize);
         vector <double> vSignal(arrSignal, arrSignal + arrsize);
-        vector <double> vres, vfilt, vcoeffs;
+        vector <double> vres, vfilt, vdiff, vcoeffs;
 
         vector <myflo> vP(vPila.begin(), vPila.end());
         vector <myflo> vS(vSignal.begin(), vSignal.end());
-        vector <myflo> vR, vF, vC = { S, linfitP, filtS , (myflo)fuel, (myflo)Num_iter };
+        vector <myflo> vR, vF, vD, vC = { S, linfitP, filtS , (myflo)fuel, (myflo)Num_iter };
 
-        ERR(make_one_segment(diagnostics, vP, vS, vR, vF, vC));
+        ERR(make_one_segment(diagnostics, vP, vS, vR, vF, vD, vC));
 
         vres.assign(vR.begin(), vR.end());
         vfilt.assign(vF.begin(), vF.end());
+        vdiff.assign(vD.begin(), vD.end());
         vcoeffs.assign(vC.begin(), vC.end());
 
         memcpy(arrres, vres.data(), sizeof (double) * vres.size());
         memcpy(arrfilt, vfilt.data(), sizeof (double) * vfilt.size());
+        memcpy(arrdiff, vdiff.data(), sizeof (double) * vdiff.size());
         memcpy(arrcoeffs, vcoeffs.data(), sizeof (double) * vcoeffs.size());
     }/*************************************************************************************************************/
 

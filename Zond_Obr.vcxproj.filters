@@ -63,6 +63,9 @@
     <ClInclude Include="Zond\Zond.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
+    <ClInclude Include="ProgressBarWindow\resource.h">
+      <Filter>Файлы ресурсов</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Файлы заголовков">
@@ -79,5 +82,10 @@
     <None Include="cpp.hint">
       <Filter>Файлы ресурсов</Filter>
     </None>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="ProgressBarWindow\ProgressBarWindowSource.rc">
+      <Filter>Файлы ресурсов</Filter>
+    </ResourceCompile>
   </ItemGroup>
 </Project>

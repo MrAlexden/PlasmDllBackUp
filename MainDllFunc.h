@@ -10,8 +10,6 @@
 
 #define ERR(f) if (err = (f), err < 0) goto Error;
 
-typedef float myflo;
-
 /* Файлы заголовков Windows */
 #include <windows.h>    // for windows interface
 #include <iostream>     // for cin/cout
@@ -24,19 +22,42 @@ typedef float myflo;
 #include <thread>       // for multithreading
 #include <list>         // for list
 #include <functional>   // for function
+#include <CommCtrl.h>   // for progressbar
 
+#include "ProgressBarWindow/resource.h"   // progress bar resource
 #include "Processing_Result_class/ProcessingResultClass.h"
 
 using namespace std;    // for std::
 
+typedef float myflo;
+
+////////////////////////////////////////////// GLOBAL VARIABLES //////////////////////////////////////////////
+extern int freqP,
+Num_iter,
+one_segment_width,
+fuel;
+
+extern myflo leftP,
+rightP,
+linfitP,
+filtS,
+st_time_end_time[2],
+S,
+M_Ar,
+M_He;
+
+extern HWND mywindow;
+extern HINSTANCE hInstThisDll;
+////////////////////////////////////////////// GLOBAL VARIABLES //////////////////////////////////////////////
+
 ////////////////////////////////////////////// GLOBAL FUNCTIONS //////////////////////////////////////////////
-/*===================================== GAUSS =====================================*/
+/* GAUSS */
 myflo fx_GAUSS(myflo, const vector <myflo> &); // from MainDllFunc.cpp
 
-/*===================================== STEP =====================================*/
+/* STEP */
 myflo fx_STEP(myflo, const vector <myflo> &); // from MainDllFunc.cpp
 
-/*===================================== LINE =====================================*/
+/* LINE */
 myflo fx_LINE(myflo, const vector <myflo> &); // from MainDllFunc.cpp
 
 /* make linear approximation of given data, returns vector(2) with A and B */
@@ -66,10 +87,12 @@ inline void vectordiv(_Inout_ vector <v> & in, _In_ s scalar)
         in[i] /= scalar;
 };
 
+/* find derivtive */
 void diff(_In_ const vector <myflo> &,
           _Out_ vector <myflo> &,
           _In_opt_ int);  // если -1 - то переворачивает функцию, если 1 - оставляет
 
+/* find peaks */
 namespace PeakFinder {
     const myflo EPS = 2.2204e-16f;
 
@@ -129,6 +152,7 @@ myflo partial_derivative(_In_ myflo,
                          _In_ myflo(*)(myflo, const vector <myflo> &),
                          _In_ int);     // from Lev-Marq.cpp
 
+/* Levenberg-Marqurdt curve fitting method */
 void levmarq(_In_ const vector <myflo> &,					 // independent data
              _In_ const vector <myflo> &,					 // dependent data
              _Inout_ vector <myflo> &,					     // vector of parameters we are searching for
@@ -136,6 +160,7 @@ void levmarq(_In_ const vector <myflo> &,					 // independent data
              _In_ unsigned int,							     // number of max iterations this method does
              _In_ myflo(*)(myflo, const vector <myflo> &));  // the function that the data will be approximated by
 
+/* my function which finds usefull signal out of noise and creates voltage approximation */
 int find_signal_and_make_pila(_In_ const vector <myflo> &,
                               _In_ const vector <myflo> &,
                               _Out_ vector <myflo> &,
@@ -147,25 +172,37 @@ void sg_smooth(_In_ const vector <myflo> &,
                _In_ const int,
                _In_ int);  // from Savitsky-Golay.cpp
 
-int make_one_segment(_In_ int,					     // diagnostics type (zond::0|setka::1|cilind::2)
-                     _In_ const vector <myflo> &,	 // X data
-                     _In_ vector <myflo> &,			 // Y data
-                     _Out_ vector <myflo> &,		 // vector to be filled with the result
-                     _Out_ vector <myflo> &,		 // vector to be filled with the filtration
-                     _Inout_ vector <myflo> &);		 // additional coeffs/results vector
+/* processes one segment out of the whole signal */
+extern "C" __declspec(dllexport) int make_one_segment(_In_ int,					            // diagnostics type (zond::0|setka::1|cilind::2)
+                                                      _In_ const vector <myflo> &,	        // X data
+                                                      _In_ vector <myflo> &,			    // Y data
+                                                      _Out_ vector <myflo> &,		        // vector to be filled with the result
+                                                      _Out_ vector <myflo> &,		        // vector to be filled with the filtration
+                                                      _Out_ vector <myflo> &,		        // vector to be filled with the differentiation
+                                                      _Inout_ vector <myflo> &);		    // additional coeffs/results vector
 
-extern "C" __declspec(dllexport) int Zond(_In_ vector <myflo> & Pila,                      // входной одномерный массив пилы
-                                          _In_ vector <myflo> & Signal,                    // входной одномерный массив сигнала
-                                          _In_ const vector <myflo> & AdditionalData,      // дополнительные данные по импульсу
+/* processes the whole Lengmur probe signal */
+extern "C" __declspec(dllexport) int Zond(_In_ vector <myflo> & Pila,                       // входной одномерный массив пилы
+                                          _In_ vector <myflo> & Signal,                     // входной одномерный массив сигнала
+                                          _In_ const vector <myflo> & AdditionalData,       // дополнительные данные по импульсу
                                           _Out_ Plasma_proc_result <myflo> & fdata);        // выходной класс с результатом обработки
-extern "C" __declspec(dllexport) int Setka(_In_ vector <myflo> & Pila,                     // входной одномерный массив пилы
-                                           _In_ vector <myflo> & Signal,                   // входной одномерный массив сигнала
-                                           _In_ const vector <myflo> & AdditionalData,     // дополнительные данные по импульсу
+
+/* processes the whole potential analizator signal */
+extern "C" __declspec(dllexport) int Setka(_In_ vector <myflo> & Pila,                      // входной одномерный массив пилы
+                                           _In_ vector <myflo> & Signal,                    // входной одномерный массив сигнала
+                                           _In_ const vector <myflo> & AdditionalData,      // дополнительные данные по импульсу
                                            _Out_ Plasma_proc_result <myflo> & fdata);       // выходной класс с результатом обработки
-extern "C" __declspec(dllexport) int Cilinder(_In_ vector <myflo> & Pila,                  // входной одномерный массив пилы
-                                              _In_ vector <myflo> & Signal,                // входной одномерный массив сигнала
-                                              _In_ const vector <myflo> & AdditionalData,  // дополнительные данные по импульсу
+
+/* processes the whole cilinder analizator signal */
+extern "C" __declspec(dllexport) int Cilinder(_In_ vector <myflo> & Pila,                   // входной одномерный массив пилы
+                                              _In_ vector <myflo> & Signal,                 // входной одномерный массив сигнала
+                                              _In_ const vector <myflo> & AdditionalData,   // дополнительные данные по импульсу
                                               _Out_ Plasma_proc_result <myflo> & fdata);    // выходной класс с результатом обработки
+
+/* get this dll code description */
+extern "C" __declspec(dllexport) string ERR_GetErrorDescription(int);    // from GlobalVarsInit.cpp
+
+/* check whether a value valid or not */
 template <typename T>
 bool is_invalid(T val)
 {
@@ -178,6 +215,7 @@ bool is_invalid(T val)
     return false;
 };
 
+/* summitate a vector */
 template <typename T>
 inline T vSum(const vector <T>& v)
 {
@@ -187,6 +225,7 @@ inline T vSum(const vector <T>& v)
     return sum;
 };
 
+/* check whether signal looks like ^ or V */
 template <typename T>
 bool is_signalpeakslookingdown(_In_ const vector <T> & v)
 {
@@ -212,6 +251,21 @@ bool is_signalpeakslookingdown(_In_ const vector <T> & v)
         return true;
 };
 
+/* funcs for progress bar */
+LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
+struct ThreadArgs
+{
+    HINSTANCE hInstance = hInstThisDll;
+    LPCWSTR lpTemplateName = MAKEINTRESOURCE(IDD_DIALOG1);
+    HWND hWndParent = NULL;
+    DLGPROC lpDialogFunc = WndProc;
+    LPARAM dwInitParam = NULL;
+};
+DWORD WINAPI DialogBoxParamWrapper(ThreadArgs* lpParameter);
+
+/* get win32 errors description */
+string GetLastErrorAsString();
+
 // Error codes
 typedef enum 
 {
@@ -236,24 +290,4 @@ typedef enum
     ERR_BadStEndTime = -6218        // Error!: start time must be less then end time and total time, more than 0\n\
                                     end time must be less then total time, more then 0
 };
-
-extern "C" __declspec(dllexport) string ERR_GetErrorDescription(int);    // from GlobalVarsInit.cpp
 ////////////////////////////////////////////// GLOBAL FUNCTIONS //////////////////////////////////////////////
-
-
-
-////////////////////////////////////////////// GLOBAL VARIABLES //////////////////////////////////////////////
-extern int freqP,
-           Num_iter,
-           one_segment_width,
-           fuel;
-
-extern myflo leftP,
-             rightP,
-             linfitP,
-             filtS,
-             st_time_end_time[2],
-             S,
-             M_Ar,
-             M_He;
-////////////////////////////////////////////// GLOBAL VARIABLES //////////////////////////////////////////////

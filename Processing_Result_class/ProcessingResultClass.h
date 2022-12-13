@@ -6,13 +6,6 @@
 #include <iostream>     // for std::
 #include <vector>       // for vector
 
-using namespace std;
-
-#ifndef WIN32_LEAN_AND_MEAN
-#define WIN32_LEAN_AND_MEAN
-typedef float myflo;
-#endif
-
 template <typename T>
 class Plasma_proc_result
 {
@@ -24,7 +17,6 @@ public:
 	NumberOfParameters(0)
 	{
 	}
-
 	~Plasma_proc_result()
 	{
 		vPila.clear();
@@ -34,15 +26,16 @@ public:
 			mOriginalData[i].clear();
 			mFeltrationData[i].clear();
 			mApproximatedData[i].clear();
+			mDifferentiatedData[i].clear();
 			mParametersData[i].clear();
 		}
 
 		mOriginalData.clear();
 		mFeltrationData.clear();
 		mApproximatedData.clear();
+		mDifferentiatedData.clear();
 		mParametersData.clear();
 	}
-
 	Plasma_proc_result(int Number_Of_Segments, int Size_Of_Segment, int Number_Of_Parameters)
 	{
 		NumberOfSegments = Number_Of_Segments;
@@ -52,9 +45,9 @@ public:
 		mOriginalData.resize(Number_Of_Segments);
 		mFeltrationData.resize(Number_Of_Segments);
 		mApproximatedData.resize(Number_Of_Segments);
+		mDifferentiatedData.resize(Number_Of_Segments);
 		mParametersData.resize(Number_Of_Segments);
 	}
-
 	void SetSegmentsNumber(int Number_Of_Segments)
 	{
 		NumberOfSegments = Number_Of_Segments;
@@ -62,83 +55,87 @@ public:
 		mOriginalData.resize(Number_Of_Segments);
 		mFeltrationData.resize(Number_Of_Segments);
 		mApproximatedData.resize(Number_Of_Segments);
+		mDifferentiatedData.resize(Number_Of_Segments);
 		mParametersData.resize(Number_Of_Segments);
 	}
-
 	void SetSegmentsSize(int Size_Of_Segment)
 	{
 		SizeOfSegment = Size_Of_Segment;
 	}
-
 	void SetParamsNumber(int Number_Of_Parameters)
 	{
 		NumberOfParameters = Number_Of_Parameters;
 	}
 
-	void SetPila(vector <T> & v)
+
+	/* DATA SETTING */
+	void SetPila(std::vector <T> & v)
 	{
 		vPila = v;
 	}
-
-	int SetOriginSegment(vector <T> & v, int i)
+	int SetOriginSegment(std::vector <T> & v, int i)
 	{
 		if (i > NumberOfSegments || i < 0) return -1;
 		mOriginalData[i] = v;
 	}
-
-	int SetFiltedSegment(vector <T> & v, int i)
+	int SetFiltedSegment(std::vector <T> & v, int i)
 	{
 		if (i > NumberOfSegments || i < 0) return -1;
 		mFeltrationData[i] = v;
 	}
-
-	int SetApproxSegment(vector <T> & v, int i)
+	int SetApproxSegment(std::vector <T> & v, int i)
 	{
 		if (i > NumberOfSegments || i < 0) return -1;
 		mApproximatedData[i] = v;
 	}
-
-	int SetParamsSegment(vector <T>& v, int i)
+	int SetDiffedSegment(std::vector <T> & v, int i)
+	{
+		if (i > NumberOfSegments || i < 0) return -1;
+		mDifferentiatedData[i] = v;
+	}
+	int SetParamsSegment(std::vector <T> & v, int i)
 	{
 		if (i > NumberOfSegments || i < 0) return -1;
 		mParametersData[i] = v;
 	}
 
-	vector < T > & const Get_vPila()
+
+	/* DATA GETTING */
+	std::vector < T > & const Get_vPila()
 	{
 		return vPila;
 	}
-
-	vector < vector <T> > & const Get_mOriginalData()
+	std::vector < std::vector <T> > & const Get_mOriginalData()
 	{
 		return mOriginalData;
 	}
-
-	vector < vector <T> > & const Get_mFeltrationData()
+	std::vector < std::vector <T> > & const Get_mFiltratedData()
 	{
 		return mFeltrationData;
 	}
-
-	vector < vector <T> > & const Get_mApproximatedData()
+	std::vector < std::vector <T> > & const Get_mApproximatedData()
 	{
 		return mApproximatedData;
 	}
-
-	vector < vector <T> > & const Get_mParametersData()
+	std::vector < std::vector <T> > & const Get_mDifferentiatedData()
+	{
+		return mDifferentiatedData;
+	}
+	std::vector < std::vector <T> > & const Get_mParametersData()
 	{
 		return mParametersData;
 	}
 
+
+	/* DIMENSION GETTING */
 	int Get_NumberOfSegments() const
 	{
 		return NumberOfSegments;
 	}
-
 	int Get_SizeOfSegment() const
 	{
 		return SizeOfSegment;
 	}
-
 	int Get_NumberOfParameters() const
 	{
 		return NumberOfParameters;
@@ -146,12 +143,13 @@ public:
 
 private:
 
-	vector <T> vPila;
+	std::vector <T> vPila;
 
-	vector < vector <T> > mOriginalData;
-	vector < vector <T> > mFeltrationData;
-	vector < vector <T> > mApproximatedData;
-	vector < vector <T> > mParametersData;
+	std::vector < std::vector <T> > mOriginalData;
+	std::vector < std::vector <T> > mFeltrationData;
+	std::vector < std::vector <T> > mApproximatedData;
+	std::vector < std::vector <T> > mDifferentiatedData;
+	std::vector < std::vector <T> > mParametersData;
 
 	int NumberOfSegments;
 	int SizeOfSegment;

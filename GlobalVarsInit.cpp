@@ -14,6 +14,9 @@ myflo leftP = 0.05f,
       M_He = 6.6464731f * 10E-27f - 9.10938356f * 10E-31f,
 	  M_Ar = 6.6335209f * 10E-26f - 9.10938356f * 10E-31f;
 
+HWND mywindow = NULL;
+HINSTANCE hInstThisDll = NULL;
+
 /*===================================== GAUSS =====================================*/
 myflo fx_GAUSS(myflo x, const vector <myflo> & vParams)
 {
@@ -79,4 +82,64 @@ end time must be less then total time, more then 0";
     default:
         return "No Error";
     }
+}
+
+LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam)
+{
+    mywindow = hWnd;
+    
+    switch (message)
+    {
+    case WM_CLOSE:
+        DestroyWindow(hWnd);
+        break;
+    case WM_DESTROY:
+        PostQuitMessage(NULL);
+        break;
+    default:
+        return DefWindowProc(hWnd, message, wParam, lParam);
+    }
+
+    return 0;
+}
+
+DWORD WINAPI DialogBoxParamWrapper(ThreadArgs* lpParameter)
+{
+    if (DialogBoxParam(lpParameter->hInstance, // ÑÞÄÀ ÍÓÆÍÎ ÊËÀÑÒÜ ÒÎËÜÊÎ HINSTANCE ÝÒÎÉ DLL, ÈÍÀ×Å ÍÅ ÐÀÁÎÒÀÅÒ
+                       lpParameter->lpTemplateName,
+                       lpParameter->hWndParent,
+                       lpParameter->lpDialogFunc,
+                       lpParameter->dwInitParam) < 0)
+        MessageBoxA(NULL, GetLastErrorAsString().c_str(), "Error!", MB_ICONWARNING | MB_OK);
+
+    return 0;
+}
+
+//Returns the last Win32 error, in string format. Returns an empty string if there is no error.
+string GetLastErrorAsString()
+{
+    //Get the error message ID, if any.
+    DWORD errorMessageID = GetLastError();
+    if (errorMessageID == 0)
+        return string(); //No error message has been recorded
+
+    LPSTR messageBuffer = nullptr;
+
+    //Ask Win32 to give us the string version of that message ID.
+    //The parameters we pass in, tell Win32 to create the buffer that holds the message for us (because we don't yet know how long the message string will be).
+    size_t size = FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
+                                 NULL,
+                                 errorMessageID,
+                                 MAKELANGID(LANG_NEUTRAL, SUBLANG_DEFAULT),
+                                 (LPSTR)&messageBuffer, 
+                                 NULL,
+                                 NULL);
+
+    //Copy the error message into a std::string.
+    string message(messageBuffer, size);
+
+    //Free the Win32's string's buffer.
+    LocalFree(messageBuffer);
+
+    return message;
 }

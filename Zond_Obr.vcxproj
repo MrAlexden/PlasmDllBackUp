@@ -134,9 +134,14 @@
       <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
     </ClCompile>
     <Link>
-      <SubSystem>Windows</SubSystem>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableUAC>false</EnableUAC>
+      <SubSystem>Windows</SubSystem>
+      <EmbedManagedResourceFile>
+      </EmbedManagedResourceFile>
+      <AssemblyLinkResource>
+      </AssemblyLinkResource>
+      <NoEntryPoint>false</NoEntryPoint>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -165,6 +170,7 @@
     <ClInclude Include="MainDllFunc.h" />
     <ClInclude Include="Matrix Class\matrix.h" />
     <ClInclude Include="Processing_Result_class\ProcessingResultClass.h" />
+    <ClInclude Include="ProgressBarWindow\resource.h" />
     <ClInclude Include="Savitsky-Golay\Savitsky-Golay.h" />
     <ClInclude Include="Setka\Setka.h" />
     <ClInclude Include="SubFunctions\SubFuncs.h" />
@@ -184,6 +190,9 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="cpp.hint" />
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="ProgressBarWindow\ProgressBarWindowSource.rc" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

@@ -599,6 +599,7 @@ int make_one_segment(_In_ const int diagnostics,			 // diagnostics type (zond::0
 					 _In_ vector <myflo> & vSignal,			 // Y data
 					 _Out_ vector <myflo> & vres,			 // vector to be filled with the result
 					 _Out_ vector <myflo> & vfilt,			 // vector to be filled with the filtration
+					 _Out_ vector <myflo> & vdiff,			 // vector to be filled with the differentiation
 					 _Inout_ vector <myflo> & vcoeffs)		 // additional coeffs/results vector
 {
 	S = vcoeffs[0];
@@ -622,6 +623,7 @@ int make_one_segment(_In_ const int diagnostics,			 // diagnostics type (zond::0
 
 			vres.resize(vPila.size());
 			vfilt.resize(vPila.size());
+			vdiff.resize(vPila.size());
 
 			if (filtS != 0)
 			{
@@ -664,7 +666,9 @@ int make_one_segment(_In_ const int diagnostics,			 // diagnostics type (zond::0
 			else
 				levmarq(vPila, vSignal, vParams, vFixed, Num_iter, fx_STEP);
 
-			if (vParams[3] < 0.0 || vParams[3] > 100.0)
+			if (vParams[3] < 0.0 
+				|| vParams[3] > 100.0
+				|| is_invalid(vParams[3]))
 			{
 				vector <myflo> vX, vY;
 
@@ -678,15 +682,20 @@ int make_one_segment(_In_ const int diagnostics,			 // diagnostics type (zond::0
 				vParams[2] = -vParams[0];
 				vParams[3] = 10;
 
-				//vFixed[0] = vFixed[1] = true;
+				vFixed[0] = vFixed[1] = true;
 
 				vX.assign(vPila.begin() + vPila.size() * (1 - 0.5), vPila.end());
 				vY.assign(vSignal.begin() + vPila.size() * (1 - 0.5), vSignal.end());
 
-				levmarq(vX, vY, vParams, vFixed, min(Num_iter, 2), fx_STEP);
+				levmarq(vX, vY, vParams, vFixed, max(Num_iter, 400), fx_STEP);
 
-				if (vParams[3] < 0.0 || vParams[3] > 100.0)
+				if (vParams[3] < 0.0
+					|| vParams[3] > 100.0
+					|| is_invalid(vParams[3]))
+				{
+					vParams[2] = - vAB[0] / 1E5;
 					vParams[3] = 10;
+				}
 			}
 
 			/* записываем в vres */
@@ -714,15 +723,17 @@ int make_one_segment(_In_ const int diagnostics,			 // diagnostics type (zond::0
 
 			vres.resize(vPila.size());
 			vfilt.resize(vPila.size());
+			vdiff.resize(vPila.size());
 
 			if (filtS == 0)
 				filtS = 0.4f;
 			/* фильтруем сигнал и записываем в vfilt */
 			sg_smooth(vSignal, vfilt, vPila.size() * (filtS / 2), (5/*OriginLab poly order*/ - 1));
 			/* дифференцируем */
-			diff(vfilt, vSignal, -1);
+			diff(vfilt, vdiff, -1); // -1 -> чтобы сразу перевернуть
 			/* фильтруем производную */
-			sg_smooth(vSignal, vres, vPila.size() * (filtS / 2), (5/*OriginLab poly order*/ - 1));
+			sg_smooth(vdiff, vres, vPila.size() * (filtS / 2), (5/*OriginLab poly order*/ - 1));
+			vdiff = vres;
 
 			/* берем ветора с краев аппроксимируемых данных чтобы потом найти по ним y0 */
 			vector <myflo> vL, vR;
@@ -733,23 +744,26 @@ int make_one_segment(_In_ const int diagnostics,			 // diagnostics type (zond::0
 			/* значение X максимума */
 			vParams[1] = vPila[max_element(vres.begin(), vres.end()) - vres.begin()];						// xc - center
 			/* вс€ ширина пилы делить на 10 */
-			vParams[2] = abs(vPila.back() - vPila[0]) / 10;										// w - width
+			vParams[2] = abs(vPila.back() - vPila[0]) / 10;													// w - width
 			/* выражено из формулы yc = y0 + A / (w * sqrt(Pi / 2)) */
 			vParams[3] = (*max_element(vres.begin(), vres.end()) - vParams[0]) * (vParams[2] * 1.25331414);	// A - area
 
 			/* аппроксимируем производную √ауссом */
 			levmarq(vPila, vres, vParams, vFixed, Num_iter/* * 2*/, fx_GAUSS);
 
-			if (vParams[2] < 0.0 || vParams[2] > abs(vPila.back() - vPila[0]) / 2)
+			if (vParams[2] < 0.0 
+				|| vParams[2] > abs(vPila.back() - vPila[0]) / 2
+				|| is_invalid(vParams[2]))
 			{
 				filtS = max(filtS, 0.8f);
 
 				/* фильтруем сигнал и записываем в vfilt */
 				sg_smooth(vSignal, vfilt, vPila.size() * (filtS / 2), (5/*OriginLab poly order*/ - 1));
 				/* дифференцируем */
-				diff(vfilt, vSignal, -1);
+				diff(vfilt, vdiff, -1);
 				/* фильтруем производную */
-				sg_smooth(vSignal, vres, vPila.size() * (filtS / 2), (5/*OriginLab poly order*/ - 1));
+				sg_smooth(vdiff, vres, vPila.size() * (filtS / 2), (5/*OriginLab poly order*/ - 1));
+				vdiff = vres;
 
 				/* берем ветора с краев аппроксимируемых данных чтобы потом найти по ним y0 */
 				vector <myflo> vL, vR;
@@ -762,14 +776,16 @@ int make_one_segment(_In_ const int diagnostics,			 // diagnostics type (zond::0
 				/*vParams[1] = (vParams[1] <= vPila[vPila.size() * 0.3]
 							|| vParams[1] >= vPila[vPila.size() * 0.7]) ? vPila[vPila.size() * 0.5] : vParams[1];*/
 				/* вс€ ширина пилы делить на 10 */
-				vParams[2] = abs(vPila.back() - vPila[0]) / 10;										// w - width
+				vParams[2] = abs(vPila.back() - vPila[0]) / 10;													// w - width
 				/* выражено из формулы yc = y0 + A / (w * sqrt(Pi / 2)) */
 				vParams[3] = (*max_element(vres.begin(), vres.end()) - vParams[0]) * (vParams[2] * 1.25331414);	// A - area
 
 				levmarq(vPila, vres, vParams, vFixed, min(Num_iter, 2), fx_GAUSS);
 
-				if (vParams[2] < 0.0 || vParams[2] > 100.0)
-					vParams[2] = 10;
+				if (vParams[2] < 0.0
+					|| vParams[2] > 100.0
+					|| is_invalid(vParams[2]))
+					vParams[2] = 20;
 			}
 
 			/* записываем в vres */
@@ -777,10 +793,10 @@ int make_one_segment(_In_ const int diagnostics,			 // diagnostics type (zond::0
 				vres[i] = fx_GAUSS(vPila[i], vParams);
 
 			vcoeffs.resize(4);
-			vcoeffs[0] = vParams[0] + vParams[3] / (vParams[2] * 1.25331414/*sqrt(Pi / 2)*/);	// Max Value
-			vcoeffs[1] = vParams[2];															// Temp
-			vcoeffs[2] = vParams[1];															// Peak Voltage
-			vcoeffs[3] = /*sqrt(log(4))*/1.17741001 * vParams[2];								// Energy
+			vcoeffs[0] = *max_element(vSignal.begin(), vSignal.end());		// Max Value
+			vcoeffs[1] = vParams[2];										// Temp
+			vcoeffs[2] = vParams[1];										// Peak Voltage
+			vcoeffs[3] = /*sqrt(log(4))*/1.17741001 * vParams[2];			// Energy
 
 			break;
 		}
@@ -797,6 +813,7 @@ int make_one_segment(_In_ const int diagnostics,			 // diagnostics type (zond::0
 
 			vres.resize(vPila.size());
 			vfilt.resize(vPila.size());
+			vdiff.resize(vPila.size());
 
 			if (filtS != 0)
 			{
@@ -813,14 +830,16 @@ int make_one_segment(_In_ const int diagnostics,			 // diagnostics type (zond::0
 			/* значение X максимума */
 			vParams[1] = vPila[max_element(vSignal.begin(), vSignal.end()) - vSignal.begin()];						// xc - center
 			/* вс€ ширина пилы делить на 10 */
-			vParams[2] = abs(vPila.back() - vPila[0]) / 10;												// w - width
+			vParams[2] = abs(vPila.back() - vPila[0]) / 10;															// w - width
 			/* выражено из формулы yc = y0 + A / (w * sqrt(Pi / 2)) */
 			vParams[3] = (*max_element(vSignal.begin(), vSignal.end()) - vParams[0]) * (vParams[2] * 1.25331414);	// A - area
 
 			/* аппроксимируем производную √ауссом */
 			levmarq(vPila, vSignal, vParams, vFixed, Num_iter/* * 2*/, fx_GAUSS);
 
-			if (vParams[2] < 0.0 || vParams[2] > abs(vPila.back() - vPila[0]) / 2)
+			if (vParams[2] < 0.0 
+				|| vParams[2] > abs(vPila.back() - vPila[0]) / 2
+				|| is_invalid(vParams[2]))
 			{
 				filtS = max(filtS, 0.8f);
 
@@ -838,14 +857,16 @@ int make_one_segment(_In_ const int diagnostics,			 // diagnostics type (zond::0
 				/*vParams[1] = (vParams[1] <= vPila[vPila.size() * 0.3]
 							|| vParams[1] >= vPila[vPila.size() * 0.7]) ? vPila[vPila.size() * 0.5] : vParams[1];*/
 				/* вс€ ширина пилы делить на 10 */
-				vParams[2] = abs(vPila.back() - vPila[0]) / 10;										// w - width
+				vParams[2] = abs(vPila.back() - vPila[0]) / 10;													// w - width
 				/* выражено из формулы yc = y0 + A / (w * sqrt(Pi / 2)) */
 				vParams[3] = (*max_element(vres.begin(), vres.end()) - vParams[0]) * (vParams[2] * 1.25331414);	// A - area
 
 				levmarq(vPila, vres, vParams, vFixed, min(Num_iter, 2), fx_GAUSS);
 
-				if (vParams[2] < 0.0 || vParams[2] > 100.0)
-					vParams[2] = 10;
+				if (vParams[2] < 0.0
+					|| vParams[2] > 100.0
+					|| is_invalid(vParams[2]))
+					vParams[2] = 20;
 			}
 
 			/* записываем в vres */
@@ -853,10 +874,10 @@ int make_one_segment(_In_ const int diagnostics,			 // diagnostics type (zond::0
 				vres[i] = fx_GAUSS(vPila[i], vParams);
 
 			vcoeffs.resize(4);
-			vcoeffs[0] = vParams[0] + vParams[3] / (vParams[2] * 1.25331414/*sqrt(Pi / 2)*/);	// Max Value
-			vcoeffs[1] = vParams[2];															// Temp
-			vcoeffs[2] = abs(vParams[1]);														// Peak Voltage
-			vcoeffs[3] = /*sqrt(log(4))*/1.17741001 * vParams[2];								// Energy
+			vcoeffs[0] = *max_element(vSignal.begin(), vSignal.end());		// Max Value
+			vcoeffs[1] = vParams[2];										// Temp
+			vcoeffs[2] = abs(vParams[1]);									// Peak Voltage
+			vcoeffs[3] = /*sqrt(log(4))*/1.17741001 * vParams[2];			// Energy
 
 			break;
 		}

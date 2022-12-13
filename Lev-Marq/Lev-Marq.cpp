@@ -7,11 +7,14 @@ inline myflo error_func(_In_ const vector <myflo>& vec_X,
 						_In_ myflo(*fx)(myflo, const vector <myflo>&))
 {
 	myflo res, e = 0;
+
 	for (int x = 0 + (ef_koef - 1); x < vec_Y.size() - (ef_koef - 1); x += ef_koef)
+		/* ef_koef - 1 чтобы было 0 если ef_koef == 0*/
 	{
 		res = fx(vec_X[x], vParams) - vec_Y[x];
 		e += res * res * ef_koef;
 	}
+
 	return e;
 }
 
