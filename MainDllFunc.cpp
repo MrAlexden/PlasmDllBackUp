@@ -522,14 +522,14 @@ Error:
     return err;
 }
 
-extern "C" __declspec(dllexport) int __stdcall OriginMakeOne(_In_ int diagnostics,                 // diagnostics type (zond::0|setka::1|cilind::2)
-                                                   _In_ double* arrPila,                 // 1д массив с данными пилы
-                                                   _In_ double* arrSignal,               // 1д массив с данными сигнала
-                                                   _In_ double* AdditionalData,          // 1д дополнительная информация об импульсе (!размер 6!)
-                                                   _Out_ double* arrres,			     // array to be filled with the result
-                                                   _Out_ double* arrfilt,			     // array to be filled with the filtration
-                                                   _Out_ double* arrdiff,			     // array to be filled with the differentiation
-                                                   _Out_ double* arrcoeffs)		         // additional coeffs/results vector
+extern "C" __declspec(dllexport) int OriginMakeOne(_In_ int diagnostics,                    // diagnostics type (zond::0|setka::1|cilind::2)
+                                                   _In_ double* arrPila,                    // 1д массив с данными пилы
+                                                   _In_ double* arrSignal,                  // 1д массив с данными сигнала
+                                                   _In_ double* AdditionalData,             // 1д дополнительная информация об импульсе (!размер 6!)
+                                                   _Out_ double* arrres,			        // array to be filled with the result
+                                                   _Out_ double* arrfilt,			        // array to be filled with the filtration
+                                                   _Out_ double* arrdiff,			        // array to be filled with the differentiation
+                                                   _Out_ double* arrcoeffs)		            // additional coeffs/results vector
 {
     int err = 0;
 

@@ -258,7 +258,7 @@ struct ThreadArgs
     HINSTANCE hInstance = hInstThisDll;
     LPCWSTR lpTemplateName = MAKEINTRESOURCE(IDD_DIALOG1);
     HWND hWndParent = NULL;
-    DLGPROC lpDialogFunc = WndProc;
+    DLGPROC lpDialogFunc = (DLGPROC)WndProc;
     LPARAM dwInitParam = NULL;
 };
 DWORD WINAPI DialogBoxParamWrapper(ThreadArgs* lpParameter);
