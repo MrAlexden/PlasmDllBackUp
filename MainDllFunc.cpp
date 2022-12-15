@@ -150,7 +150,7 @@ extern "C" __declspec(dllexport) int FindSignalWrapper(_In_ myflo * arrPila,    
         ERR(ERR_BadCutOff);
     if (AdditionalData[5] < 0 || AdditionalData[5] > 0.9)
         ERR(ERR_BadLinFit);
-
+    
     {/*********************************** засовываю в блок чтобы goto не ругался **********************************/
         st_time_end_time[0] = AdditionalData[1];		    // время начала обработки (если этот параметр не выбран: -1)
         st_time_end_time[1] = AdditionalData[2];		    // время конца обработки (если этот параметр не выбран: -1)
@@ -182,7 +182,7 @@ extern "C" __declspec(dllexport) int FindSignalWrapper(_In_ myflo * arrPila,    
 
         ERR(find_signal_and_make_pila(vPila, vSignal, vSegPila, vStartSegIndxs));
         numSegments = vStartSegIndxs.size();
-
+        
         if (vStartSegIndxs.size() == 0
             || vStartSegIndxs.empty()
             || is_invalid(vSegPila[0])
@@ -195,7 +195,7 @@ extern "C" __declspec(dllexport) int FindSignalWrapper(_In_ myflo * arrPila,    
         DIM2 = vSegPila.size();
         memcpy(vResP, vSegPila.data(), sizeof myflo * vSegPila.size());
     }/*************************************************************************************************************/
-
+    
 Error:
     if (err < 0)
         MessageBoxA(NULL, ERR_GetErrorDescription(err).c_str(), "Error!", MB_ICONWARNING | MB_OK);
@@ -231,7 +231,7 @@ extern "C" __declspec(dllexport) int SetUpPila(_In_ int diagnostics,           /
         vector <int> vStartSegIndxs;
         vector <int> vnIndices;
         myflo vless = 0.0, vmore = 0.0;
-
+        
         ERR(find_signal_and_make_pila(vPila, vSignal, vSegPila, vStartSegIndxs));
 
         if (vStartSegIndxs.size() == 0
@@ -247,12 +247,8 @@ extern "C" __declspec(dllexport) int SetUpPila(_In_ int diagnostics,           /
         if (vnIndices.size() <= 3)
             ERR(ERR_TooFewSegs);
 
-        /* нужен держатель чтобы сделать индексы int с плавающей точкой, для точного приведения фазы */
-        IndHandler.assign(vnIndices.begin(), vnIndices.end());
-        if (vPila.size() != vSignal.size())
-            (vPila.size() > vSignal.size()) ? vectordiv(IndHandler, (vPila.size() / vSignal.size())) : vectormult(IndHandler, (vSignal.size() / vPila.size()));
-        /* возвращаем данные в основной вектор типа int */
-        vnIndices.assign(IndHandler.begin(), IndHandler.end());
+        /* приводим индексы начал отрезков к одной фазе с током */
+        match_pila_and_signal(vPila, vSignal, vnIndices);
 
         /* ВРЕМЕННЫЙ КОСТЫЛЬ */
         if (diagnostics == 0 || diagnostics == 1)

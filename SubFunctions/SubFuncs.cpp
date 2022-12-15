@@ -316,21 +316,22 @@ inline int easy_find_peaks(_In_ const vector <myflo> & v,	// input data in which
 	return 0;
 }
 
-static inline int match_pila_and_signal(_In_ const vector <myflo> & vPila,
-										_In_ const vector <myflo> & vSignal,
-										_Inout_ vector <int> & vnPilaPeaks)
+inline int match_pila_and_signal(_In_ const vector <myflo> & vPila,
+								 _In_ const vector <myflo> & vSignal,
+								 _Inout_ vector <int> & vnPilaPeaks)
 {
 	/* нужен держатель чтобы сделать индексы int с плавающей точкой, для точного приведения фазы */
 	vector <myflo> IndHandler(vnPilaPeaks.begin(), vnPilaPeaks.end()); 
 	if (vPila.size() != vSignal.size())
-		(vPila.size() > vSignal.size()) ? vectordiv(IndHandler, (vPila.size() / vSignal.size())) : vectormult(IndHandler, (vSignal.size() / vPila.size()));
-
-	/*проверяем превышение крайнего индекса*/
-	if (IndHandler.back() > vSignal.size())
-		IndHandler.pop_back();
+		(vPila.size() > vSignal.size()) ? vectordiv(IndHandler, (myflo)vPila.size() / vSignal.size())
+										: vectormult(IndHandler, (myflo)vSignal.size() / vPila.size());
 
 	/* возвращаем данные в основной вектор типа int */
 	vnPilaPeaks.assign(IndHandler.begin(), IndHandler.end());
+
+	/*проверяем превышение крайнего индекса*/
+	while (vnPilaPeaks.back() > vSignal.size())
+		vnPilaPeaks.pop_back();
 
 	/* окончательное приведение, во избежании небольшой погрешности */
 	//vector <int> vnSignalPeaks;

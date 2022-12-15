@@ -166,6 +166,10 @@ int find_signal_and_make_pila(_In_ const vector <myflo> &,
                               _Out_ vector <myflo> &,
                               _Out_ vector <int> &);    // from SubFuncs.cpp
 
+inline int match_pila_and_signal(_In_ const vector <myflo> &,
+                                 _In_ const vector <myflo> &,
+                                 _Inout_ vector <int> &);     // from SubFuncs.cpp
+
 /* savitzky golay smoothing */
 void sg_smooth(_In_ const vector <myflo> &,
                _Out_ vector <myflo> &,
