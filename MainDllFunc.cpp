@@ -198,7 +198,7 @@ extern "C" __declspec(dllexport) int FindSignalWrapper(_In_ myflo * arrPila,    
     
 Error:
     if (err < 0)
-        MessageBoxA(NULL, ERR_GetErrorDescription(err).c_str(), "Error!", MB_ICONWARNING | MB_OK);
+        MessageBoxA(NULL, ERR_GetErrorDescription(err).c_str(), "Error!", MB_ICONINFORMATION | MB_OK);
     return err;
 }
 
@@ -256,6 +256,9 @@ extern "C" __declspec(dllexport) int SetUpPila(_In_ int diagnostics,           /
             IndHandler.assign(vnIndices.begin(), vnIndices.end());
             vectormult(IndHandler, 1.001f);
             vnIndices.assign(IndHandler.begin(), IndHandler.end());
+            /*проверяем превышение крайнего индекса*/
+            while (vnIndices.back() > vSignal.size())
+                vnIndices.pop_back();
         }
         /* ВРЕМЕННЫЙ КОСТЫЛЬ */
 
@@ -311,7 +314,6 @@ extern "C" __declspec(dllexport) int SetUpPila(_In_ int diagnostics,           /
         for (int i = 1; i < arrSsize; ++i)
             if (vResP[i] == 0 || vResP[i] < vless || vResP[i] > vmore)
                 vResP[i] = vResP[i - 1];
-
     }/*************************************************************************************************************/
 
 Error:
@@ -505,6 +507,9 @@ extern "C" __declspec(dllexport) int OriginFindSignal(_In_ int diagnostics,     
             vector <double> IndHandler(vStartSegIndxs.begin(), vStartSegIndxs.end());
             vectormult(IndHandler, 1.001f);
             vStartSegIndxs.assign(IndHandler.begin(), IndHandler.end());
+            /*проверяем превышение крайнего индекса*/
+            while (vStartSegIndxs.back() > vSignal.size())
+                vStartSegIndxs.pop_back();
         }
         /* ВРЕМЕННЫЙ КОСТЫЛЬ */
         

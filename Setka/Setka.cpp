@@ -70,6 +70,9 @@ int Setka(_In_ vector <myflo> & vPila,
 		vector <myflo> IndHandler(vStartSegIndxs.begin(), vStartSegIndxs.end());
 		vectormult(IndHandler, 1.001f);
 		vStartSegIndxs.assign(IndHandler.begin(), IndHandler.end());
+		/*проверяем превышение крайнего индекса*/
+		while (vStartSegIndxs.back() > vSignal.size())
+			vStartSegIndxs.pop_back();
 	}/* ВРЕМЕННЫЙ КОСТЫЛЬ */
 
 	if (vStartSegIndxs.size() == 0

@@ -110,7 +110,7 @@ DWORD WINAPI DialogBoxParamWrapper(ThreadArgs* lpParameter)
                        lpParameter->hWndParent,
                        lpParameter->lpDialogFunc,
                        lpParameter->dwInitParam) < 0)
-        MessageBoxA(NULL, GetLastErrorAsString().c_str(), "Error!", MB_ICONWARNING | MB_OK);
+        MessageBoxA(NULL, GetLastErrorAsString().c_str(), "Error!", MB_ICONINFORMATION | MB_OK);
 
     return 0;
 }
