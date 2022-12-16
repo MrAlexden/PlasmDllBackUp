@@ -11,8 +11,8 @@ myflo leftP = 0.05f,
 	  filtS = 0.0f,
 	  st_time_end_time[2] = { -1.0f, -1.0f },
 	  S = 3.141592f * 0.0005f * 0.005f + Pi * 0.0005f * 0.0005f / 4,
-      M_He = 6.6464731f * 10E-27f - 9.10938356f * 10E-31f,
-	  M_Ar = 6.6335209f * 10E-26f - 9.10938356f * 10E-31f;
+      M_He = 6.6464731E-27f - 9.10938356E-31f,
+	  M_Ar = 6.6335209E-26f - 9.10938356E-31f;
 
 HWND mywindow = NULL;
 HINSTANCE hInstThisDll = NULL;

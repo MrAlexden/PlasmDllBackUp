@@ -250,6 +250,7 @@ extern "C" __declspec(dllexport) int SetUpPila(_In_ int diagnostics,           /
         /* приводим индексы начал отрезков к одной фазе с током */
         match_pila_and_signal(vPila, vSignal, vnIndices);
 
+#ifdef KLUDGE
         /* ВРЕМЕННЫЙ КОСТЫЛЬ */
         if (diagnostics == 0 || diagnostics == 1)
         {
@@ -261,6 +262,7 @@ extern "C" __declspec(dllexport) int SetUpPila(_In_ int diagnostics,           /
                 vnIndices.pop_back();
         }
         /* ВРЕМЕННЫЙ КОСТЫЛЬ */
+#endif
 
         try
         {
@@ -501,6 +503,7 @@ extern "C" __declspec(dllexport) int OriginFindSignal(_In_ int diagnostics,     
             || is_invalid(vStartSegIndxs.back()))
             ERR(ERR_BadNoise);
 
+#ifdef KLUDGE
         /* ВРЕМЕННЫЙ КОСТЫЛЬ */
         if (diagnostics == 0 || diagnostics == 1)
         {
@@ -512,6 +515,7 @@ extern "C" __declspec(dllexport) int OriginFindSignal(_In_ int diagnostics,     
                 vStartSegIndxs.pop_back();
         }
         /* ВРЕМЕННЫЙ КОСТЫЛЬ */
+#endif
         
         DIM1 = numSegments;
         DIM2 = vSegPila.size();

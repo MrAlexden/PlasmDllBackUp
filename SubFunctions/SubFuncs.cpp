@@ -567,8 +567,8 @@ inline myflo find_density(_In_ const myflo ion_current,
 		__assume(0);
 	}
 
-	return ion_current * (10E-6f) / (0.52026f * S * (1.602f * 10E-19f) * sqrt((1.380649f * 10E-23f) * temperature * 11604.51812f / M)); //моя формула
-	//return ion_current * (10E-6f) / (S * (1.602f * 10E-19f) * sqrt(2 * temperature * (1.602f * 10E-19f) / M)); //формула сергея
+	return ion_current * (1E-6f) / (0.52026f * S * (1.602E-19f) * sqrt((1.380649E-23f) * temperature * 11604.51812f / M)); //моя формула
+	//return ion_current * (1E-6f) / (S * (1.602E-19f) * sqrt(2 * temperature * (1.602E-19f) / M)); //формула сергея
 }
 
 inline myflo find_ion_current(_In_ const myflo A,
@@ -774,8 +774,6 @@ int make_one_segment(_In_ const int diagnostics,			 // diagnostics type (zond::0
 				vParams[0] = (vSum(vL) / vL.size() + vSum(vR) / vR.size()) * 0.5;								// y0 - offset
 				/* значение X максимума */
 				vParams[1] = vPila[max_element(vres.begin(), vres.end()) - vres.begin()];						// xc - center
-				/*vParams[1] = (vParams[1] <= vPila[vPila.size() * 0.3]
-							|| vParams[1] >= vPila[vPila.size() * 0.7]) ? vPila[vPila.size() * 0.5] : vParams[1];*/
 				/* вся ширина пилы делить на 10 */
 				vParams[2] = abs(vPila.back() - vPila[0]) / 10;													// w - width
 				/* выражено из формулы yc = y0 + A / (w * sqrt(Pi / 2)) */
@@ -855,8 +853,6 @@ int make_one_segment(_In_ const int diagnostics,			 // diagnostics type (zond::0
 				vParams[0] = (vSum(vL) / vL.size() + vSum(vR) / vR.size()) * 0.5;								// y0 - offset
 				/* значение X максимума */
 				vParams[1] = vPila[max_element(vres.begin(), vres.end()) - vres.begin()];						// xc - center
-				/*vParams[1] = (vParams[1] <= vPila[vPila.size() * 0.3]
-							|| vParams[1] >= vPila[vPila.size() * 0.7]) ? vPila[vPila.size() * 0.5] : vParams[1];*/
 				/* вся ширина пилы делить на 10 */
 				vParams[2] = abs(vPila.back() - vPila[0]) / 10;													// w - width
 				/* выражено из формулы yc = y0 + A / (w * sqrt(Pi / 2)) */

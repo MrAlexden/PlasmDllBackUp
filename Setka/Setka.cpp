@@ -66,6 +66,7 @@ int Setka(_In_ vector <myflo> & vPila,
 	ERR(find_signal_and_make_pila(vPila, vSignal, vSegPila, vStartSegIndxs));
 	numSegments = vStartSegIndxs.size();
 
+#ifdef KLUDGE
 	{/* бпелеммши йняршкэ */
 		vector <myflo> IndHandler(vStartSegIndxs.begin(), vStartSegIndxs.end());
 		vectormult(IndHandler, 1.001f);
@@ -74,6 +75,7 @@ int Setka(_In_ vector <myflo> & vPila,
 		while (vStartSegIndxs.back() > vSignal.size())
 			vStartSegIndxs.pop_back();
 	}/* бпелеммши йняршкэ */
+#endif
 
 	if (vStartSegIndxs.size() == 0
 		|| vStartSegIndxs.empty()

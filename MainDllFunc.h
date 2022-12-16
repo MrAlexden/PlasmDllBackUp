@@ -1,6 +1,7 @@
 #pragma once
 
 #define WIN32_LEAN_AND_MEAN // Исключите редко используемые компоненты из заголовков Windows
+#define KLUDGE
 
 #define TOL 10E-30f /* smallest value allowed in cholesky_decomp() */
 #define Pi 3.14159265f
@@ -94,7 +95,7 @@ void diff(_In_ const vector <myflo> &,
 
 /* find peaks */
 namespace PeakFinder {
-    const myflo EPS = 2.2204e-16f;
+    const myflo EPS = 2.2204E-16f;
 
     /*
         Inputs
