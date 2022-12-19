@@ -567,8 +567,8 @@ inline myflo find_density(_In_ const myflo ion_current,
 		__assume(0);
 	}
 
-	return ion_current * (1E-6f) / (0.52026f * S * (1.602E-19f) * sqrt((1.380649E-23f) * temperature * 11604.51812f / M)); //моя формула
-	//return ion_current * (1E-6f) / (S * (1.602E-19f) * sqrt(2 * temperature * (1.602E-19f) / M)); //формула сергея
+	return abs(ion_current) * 1E-6f / (0.52026f * S * e * sqrt(kb * temperature * eVtoK / M)); //моя формула
+	//return abs(ion_current) * 1E-6f / (S * e * sqrt(2 * temperature * e / M)); //формула сергея
 }
 
 inline myflo find_ion_current(_In_ const myflo A,
@@ -704,10 +704,10 @@ int make_one_segment(_In_ const int diagnostics,			 // diagnostics type (zond::0
 				vres[i] = fx_STEP(vPila[i], vParams);
 
 			vcoeffs.resize(4);
-			vcoeffs[0] = find_floating_potential(vPila, vParams);					// Floating potential
-			vcoeffs[1] = find_ion_current(vParams[0], vParams[1], vcoeffs[0]);		// Saturate ion current
-			vcoeffs[2] = vParams[3];												// Temperature
-			vcoeffs[3] = find_density(vcoeffs[1], vcoeffs[2]);						// Density ne
+			vcoeffs[0] = find_floating_potential(vPila, vParams);							// Floating potential
+			vcoeffs[1] = vres[0]/*find_ion_current(vParams[0], vParams[1], vcoeffs[0])*/;	// Saturate ion current
+			vcoeffs[2] = vParams[3];														// Temperature
+			vcoeffs[3] = find_density(vcoeffs[1], vcoeffs[2]);								// Density ne
 
 			break;
 		}

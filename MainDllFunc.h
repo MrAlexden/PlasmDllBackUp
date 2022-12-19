@@ -5,6 +5,9 @@
 
 #define TOL 10E-30f /* smallest value allowed in cholesky_decomp() */
 #define Pi 3.14159265f
+#define e 1.602176634E-19f
+#define kb 1.380649E-23f
+#define eVtoK 11604.51812f
 #define ef_koef 10 /* коэффициент эффективности, если == 1 то метод обрабатывает все точки, 
                 если == 2 каждую вторую (в два раза быстре, но точность меньше) и тд \
                 ef_koef используется в **SubFuncs** **Lev-Marq** */
@@ -53,13 +56,16 @@ extern HINSTANCE hInstThisDll;
 
 ////////////////////////////////////////////// GLOBAL FUNCTIONS //////////////////////////////////////////////
 /* GAUSS */
-myflo fx_GAUSS(myflo, const vector <myflo> &); // from MainDllFunc.cpp
+myflo fx_GAUSS(myflo, const vector <myflo> &); // from GlobalVarsInit.cpp
 
 /* STEP */
-myflo fx_STEP(myflo, const vector <myflo> &); // from MainDllFunc.cpp
+myflo fx_STEP(myflo, const vector <myflo> &); // from GlobalVarsInit.cpp
 
 /* LINE */
-myflo fx_LINE(myflo, const vector <myflo> &); // from MainDllFunc.cpp
+myflo fx_LINE(myflo, const vector <myflo> &); // from GlobalVarsInit.cpp
+
+/* PEACEWISE LINEAR THREE */
+myflo fx_PWL3(myflo, const vector <myflo> &); // from GlobalVarsInit.cpp
 
 /* make linear approximation of given data, returns vector(2) with A and B */
 vector <myflo> linear_fit(_In_ const vector <myflo> &,

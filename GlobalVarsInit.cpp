@@ -17,25 +17,31 @@ myflo leftP = 0.05f,
 HWND mywindow = NULL;
 HINSTANCE hInstThisDll = NULL;
 
-/*===================================== GAUSS =====================================*/
+/* GAUSS */
 myflo fx_GAUSS(myflo x, const vector <myflo> & vParams)
 {
 	myflo y0 = vParams[0], xc = vParams[1], w = vParams[2], A = vParams[3];
 	return y0 + (A / (w * sqrt(Pi / 2))) * exp(-2 * pow(((x - xc) / w), 2));
 }
 
-/*===================================== STEP =====================================*/
+/* STEP */
 myflo fx_STEP(myflo x, const vector <myflo> & vParams)
 {
 	myflo A = vParams[0], B = vParams[1], C = vParams[2], D = vParams[3];
 	return A + B * x + C * exp(x / D);
 }
 
-/*===================================== LINE =====================================*/
+/* LINE */
 myflo fx_LINE(myflo x, const vector <myflo> & vParams)
 {
 	myflo A = vParams[0], B = vParams[1];
 	return A + B * x;
+}
+
+/* PEACEWISE LINEAR THREE */
+myflo fx_PWL3(myflo x, const vector <myflo> & vParams)
+{
+    return 0;
 }
 
 string ERR_GetErrorDescription(int err)
