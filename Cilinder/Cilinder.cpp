@@ -84,12 +84,13 @@ int Cilinder(_In_ vector <myflo> & vPila,
 	if (hThread)
 	{
 		WaitForSingleObject(hThread, 10);
-		SendMessage(GetDlgItem(mywindow, IDC_PROGRESS1), PBM_SETRANGE, 0, MAKELPARAM(0, numSegments));
+		SendMessage(GetDlgItem(mywindow, IDC_PROGRESS1), PBM_SETRANGE, 0, MAKELPARAM(0, numSegments - 1));
 	}
 
 	for (int segnum = 0; segnum < numSegments; ++segnum)
 	{
-		SendMessage(GetDlgItem(mywindow, IDC_PROGRESS1), PBM_SETPOS, segnum, NULL);
+		if (segnum % 4 == 0) // отправл€ю мэсседж раз в 4 итерации чтобы меньше нагружать
+			SendMessage(GetDlgItem(mywindow, IDC_PROGRESS1), PBM_SETPOS, segnum, NULL);
 		wstring wstr = L"In Progress... " + to_wstring(int(((myflo)segnum / numSegments) * 100)) + L" %";
 		SetDlgItemText(mywindow, IDC_STATIC, wstr.c_str());
 
@@ -115,8 +116,11 @@ int Cilinder(_In_ vector <myflo> & vPila,
 		fdata.SetParamsSegment(vcoeffs, segnum);
 	}
 
-	TerminateThread(hThread, -1);
-	CloseHandle(hThread);
+	if (hThread)
+	{
+		TerminateThread(hThread, -1);
+		CloseHandle(hThread);
+	}
 
 Error:
 	return err;

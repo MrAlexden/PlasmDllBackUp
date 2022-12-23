@@ -16,15 +16,12 @@
 
 /* Файлы заголовков Windows */
 #include <windows.h>    // for windows interface
-#include <iostream>     // for cin/cout
-#include <fstream>      // for file access
-#include <sstream>      // for file access
 #include <vector>       // for vector
-#include <tuple>        // for tuple
+#include <list>      // for list
+#include <string>      // for string/wstring
 #include <algorithm>    // for min_element|max_element
 //#include <omp.h>        // for multithreading
 #include <thread>       // for multithreading
-#include <list>         // for list
 #include <functional>   // for function
 #include <CommCtrl.h>   // for progressbar
 
@@ -56,16 +53,25 @@ extern HINSTANCE hInstThisDll;
 
 ////////////////////////////////////////////// GLOBAL FUNCTIONS //////////////////////////////////////////////
 /* GAUSS */
-myflo fx_GAUSS(myflo, const vector <myflo> &); // from GlobalVarsInit.cpp
+myflo fx_GAUSS(myflo, const vector <myflo> &);  // from GlobalVarsInit.cpp
+int GAUSS_InitParams(_In_ const vector <myflo>,
+                     _In_ const vector <myflo>,
+                     _Out_ vector <myflo> &);     // from GlobalVarsInit.cpp
 
 /* STEP */
-myflo fx_STEP(myflo, const vector <myflo> &); // from GlobalVarsInit.cpp
+myflo fx_STEP(myflo, const vector <myflo> &);   // from GlobalVarsInit.cpp
 
 /* LINE */
-myflo fx_LINE(myflo, const vector <myflo> &); // from GlobalVarsInit.cpp
+myflo fx_LINE(myflo, const vector <myflo> &);   // from GlobalVarsInit.cpp
+
+/* EXPONENTIAL */
+myflo fx_EXP(myflo, const vector <myflo> &);    // from GlobalVarsInit.cpp
 
 /* PEACEWISE LINEAR THREE */
-myflo fx_PWL3(myflo, const vector <myflo> &); // from GlobalVarsInit.cpp
+myflo fx_PWL3(myflo, const vector <myflo> &);   // from GlobalVarsInit.cpp
+int PWL3_InitParams(_In_ const vector <myflo>,
+                    _In_ const vector <myflo>,
+                    _Out_ vector <myflo> &);    // from GlobalVarsInit.cpp
 
 /* make linear approximation of given data, returns vector(2) with A and B */
 vector <myflo> linear_fit(_In_ const vector <myflo> &,
@@ -76,28 +82,53 @@ inline void vectorElementsProduct(_In_ const vector <myflo> &,
                                   _In_ const vector <myflo> &,
                                   _Out_ vector <myflo> &); // from PeakFinder.cpp
 
-/* multiply the given scalar on given vector */
+/* multiply the given scalar on the given vector */
 template <typename v, typename s>
 inline void vectormult(_Inout_ vector <v> &in, _In_ s scalar)
 { 
+    if (in.size() == 0 || scalar == 0) return;
+
     for (int i = 0; i < in.size(); ++i)
         in[i] *= scalar;
 };
 
-/* divide the given vector on given scalar */
+/* divide the given vector on the given scalar */
 template <typename v, typename s>
 inline void vectordiv(_Inout_ vector <v> & in, _In_ s scalar)
 {
-    if (scalar == 0) return;
+    if (in.size() == 0 || scalar == 0) return;
 
     for (int i = 0; i < in.size(); ++i)
         in[i] /= scalar;
 };
 
+/* substract the given sclar from the given vector */
+template <typename v, typename s>
+inline void vectoradd(_Inout_ vector <v> & in, _In_ s scalar)
+{
+    if (in.size() == 0 || scalar == 0) return;
+
+    for (int i = 0; i < in.size(); ++i)
+        in[i] += scalar;
+};
+
+/* fills two vectors with data of size "size" at the begin and the end of the input vector */
+template <typename T>
+inline int take_data_around_the_edges(_In_ const unsigned int size,
+                                      _In_ const vector <T>& vIN,
+                                      _Out_ vector <T>& vL,
+                                      _Out_ vector <T>& vR)
+{
+    vL.assign(vIN.begin(), vIN.begin() + size);
+    vR.assign(vIN.end() - size, vIN.end());
+
+    return 0;
+}
+
 /* find derivtive */
 void diff(_In_ const vector <myflo> &,
           _Out_ vector <myflo> &,
-          _In_opt_ int);  // если -1 - то переворачивает функцию, если 1 - оставляет
+          _In_opt_ int = 1);  // если -1 - то переворачивает функцию, если 1 - оставляет
 
 /* find peaks */
 namespace PeakFinder {
@@ -113,7 +144,7 @@ namespace PeakFinder {
     */
     int findPeaks(_In_ const vector <myflo>&,
                   _Out_ vector <int>&,
-                  _In_opt_ bool = true,
+                  _In_opt_ bool = false,
                   _In_opt_ int = 1);    // from PeakFinder.cpp
 };
 
@@ -124,7 +155,6 @@ private:
     vector<vector<myflo> > m_matrix;
 public:
     Matrix(unsigned, unsigned, myflo);
-    Matrix(const char*);
     Matrix(const Matrix&);
     ~Matrix();
 

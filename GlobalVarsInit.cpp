@@ -10,7 +10,7 @@ myflo leftP = 0.05f,
 	  linfitP = 0.5f,
 	  filtS = 0.0f,
 	  st_time_end_time[2] = { -1.0f, -1.0f },
-	  S = 3.141592f * 0.0005f * 0.005f + Pi * 0.0005f * 0.0005f / 4,
+	  S = Pi * 0.0005f * 0.005f + Pi * 0.0005f * 0.0005f / 4,
       M_He = 6.6464731E-27f - 9.10938356E-31f,
 	  M_Ar = 6.6335209E-26f - 9.10938356E-31f;
 
@@ -22,6 +22,25 @@ myflo fx_GAUSS(myflo x, const vector <myflo> & vParams)
 {
 	myflo y0 = vParams[0], xc = vParams[1], w = vParams[2], A = vParams[3];
 	return y0 + (A / (w * sqrt(Pi / 2))) * exp(-2 * pow(((x - xc) / w), 2));
+}
+int GAUSS_InitParams(_In_ const vector <myflo> vx, 
+                     _In_ const vector <myflo> vy, 
+                     _Out_ vector <myflo> & vParams)
+{
+    /* берем ветора с краев аппроксимируемых данных чтобы потом найти по ним y0 */
+    vector <myflo> vL, vR;
+    take_data_around_the_edges(vy.size() / 10, vy, vL, vR);
+
+    /* среднее между средним с краев */
+    vParams[0] = (vSum(vL) / vL.size() + vSum(vR) / vR.size()) * 0.5;							// y0 - offset
+    /* значение X максимума */
+    vParams[1] = vx[max_element(vy.begin(), vy.end()) - vy.begin()];						    // xc - center
+    /* вся ширина пилы делить на 10 */
+    vParams[2] = abs(vx.back() - vx[0]) / 10;													// w - width
+    /* выражено из формулы yc = y0 + A / (w * sqrt(Pi / 2)) */
+    vParams[3] = (*max_element(vy.begin(), vy.end()) - vParams[0]) * (vParams[2] * 1.25331414);	// A - area
+
+    return 0;
 }
 
 /* STEP */
@@ -38,9 +57,82 @@ myflo fx_LINE(myflo x, const vector <myflo> & vParams)
 	return A + B * x;
 }
 
+/* EXPONENTIAL */
+myflo fx_EXP(myflo x, const vector <myflo> & vParams)
+{
+    myflo y0 = vParams[0], A = vParams[1], R0 = vParams[2];
+    return y0 + A * exp(x / R0);
+}
+
 /* PEACEWISE LINEAR THREE */
 myflo fx_PWL3(myflo x, const vector <myflo> & vParams)
 {
+    myflo a1 = vParams[0],
+          k1 = vParams[1],
+          xi1 = vParams[2],
+          k2 = vParams[3],
+          xi2 = vParams[4],
+          k3 = vParams[5];
+    myflo yi1 = a1 + k1 * xi1;
+    myflo yi2 = yi1 + k2 * (xi2 - xi1);
+
+    if (x < xi1)
+        return a1 + k1 * x;
+    else if (x < xi2)
+        return yi1 + k2 * (x - xi1);
+    else
+        return yi2 + k3 * (x - xi2);
+
+    return 0;
+}
+int PWL3_InitParams(_In_ const vector <myflo> vx,
+                    _In_ const vector <myflo> vy,
+                    _Out_ vector <myflo>& vParams)
+{
+    if (vx.size() != vy.size())
+        return -1;
+
+    myflo a1 = vParams[0],
+          k1 = vParams[1],
+          xi1 = vParams[2],
+          k2 = vParams[3],
+          xi2 = vParams[4],
+          k3 = vParams[5];
+
+    int n1, n2, ni1, ni2;
+
+    auto it_minx = min_element(vx.begin(), vx.end()),
+         it_maxx = max_element(vx.begin(), vx.end());
+    myflo x1 = *it_minx, 
+          x2 = *it_maxx, 
+          y1, 
+          y2, 
+          yi1, 
+          yi2;
+
+    xi1 = x1 + (x2 - x1) / 3;
+    xi2 = x1 + 2 * (x2 - x1) / 3;
+
+    y1 = vy[it_minx - vx.begin()];
+    y2 = vy[it_maxx - vx.begin()];
+
+    vector <myflo> vd(vx.begin(), vx.end());
+
+    for (int i = 0; i < vx.size(); ++i)
+        vd[i] = abs(vx[i] - xi1);
+
+    yi1 = vy[min_element(vd.begin(), vd.end()) - vd.begin()];
+
+    for (int i = 0; i < vx.size(); ++i)
+        vd[i] = abs(vx[i] - xi2);
+
+    yi2 = vy[min_element(vd.begin(), vd.end()) - vd.begin()];
+
+    k1 = (yi1 - y1) / (xi1 - x1);
+    a1 = y1 - k1 * x1;
+    k2 = (yi2 - yi1) / (xi2 - xi1);
+    k3 = (y2 - yi2) / (x2 - xi2);
+
     return 0;
 }
 

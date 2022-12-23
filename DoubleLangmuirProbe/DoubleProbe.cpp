@@ -1,9 +1,9 @@
-#include "Zond.h"
+#include "DoubleProbe.h"
 
-int Zond(_In_ vector <myflo> & vPila,
-		 _In_ vector <myflo> & vSignal, 
-		 _In_ const vector <myflo> & AdditionalData,
-		 _Out_ Plasma_proc_result <myflo> & fdata)
+int DubleProbe(_In_ vector <myflo> & vPila,
+			   _In_ vector <myflo> & vSignal,
+			   _In_ const vector <myflo> & AdditionalData,
+			   _Out_ Plasma_proc_result <myflo> & fdata)
 {
 	if (vPila.size() == 0
 		|| vPila.empty()
@@ -69,17 +69,6 @@ int Zond(_In_ vector <myflo> & vPila,
 	ERR(find_signal_and_make_pila(vPila, vSignal, vSegPila, vStartSegIndxs));
 	numSegments = vStartSegIndxs.size();
 
-#ifdef KLUDGE
-	{/* ВРЕМЕННЫЙ КОСТЫЛЬ */
-		vector <myflo> IndHandler(vStartSegIndxs.begin(), vStartSegIndxs.end());
-		vectormult(IndHandler, 1.001f);
-		vStartSegIndxs.assign(IndHandler.begin(), IndHandler.end());
-		/*проверяем превышение крайнего индекса*/
-		while (vStartSegIndxs.back() > vSignal.size())
-			vStartSegIndxs.pop_back();
-	}/* ВРЕМЕННЫЙ КОСТЫЛЬ */
-#endif
-
 	if (vStartSegIndxs.size() == 0
 		|| vStartSegIndxs.empty()
 		|| is_invalid(vSegPila.at(0))
@@ -101,34 +90,34 @@ int Zond(_In_ vector <myflo> & vPila,
 	}
 
 	for (int segnum = 0; segnum < numSegments; ++segnum)
-	{	
+	{
 		if (segnum % 4 == 0) // отправляю мэсседж раз в 4 итерации чтобы меньше нагружать
 			SendMessage(GetDlgItem(mywindow, IDC_PROGRESS1), PBM_SETPOS, segnum, NULL);
 		wstring wstr = L"In Progress... " + to_wstring(int(((myflo)segnum / numSegments) * 100)) + L" %";
 		SetDlgItemText(mywindow, IDC_STATIC, wstr.c_str());
 
-		vector <myflo> vY, 
-					   vres, 
-					   vfilt, 
-					   vdiff, 
-					   vcoeffs = { S, linfitP, filtS , (myflo)fuel, (myflo)Num_iter };
+		vector <myflo> vY,
+			vres,
+			vfilt,
+			vdiff,
+			vcoeffs = { S, linfitP, filtS , (myflo)fuel, (myflo)Num_iter };
 
 		vY.assign(vSignal.begin() + vStartSegIndxs.at(segnum) + one_segment_width * leftP,
 			vSignal.begin() + vStartSegIndxs.at(segnum) + one_segment_width * leftP + vSegPila.size());
 
 		fdata.SetOriginSegment(vY, segnum);
 
-		if (make_one_segment(0, vSegPila, vY, vres, vfilt, vdiff, vcoeffs) < 0)
+		if (make_one_segment(3, vSegPila, vY, vres, vfilt, vdiff, vcoeffs) < 0)
 			continue;
 
 		vcoeffs.insert(vcoeffs.begin(), vStartSegIndxs.at(segnum) * (1.0 / (one_segment_width * freqP)));
-	
+
 		fdata.SetApproxSegment(vres, segnum);
 		fdata.SetFiltedSegment(vfilt, segnum);
 		fdata.SetDiffedSegment(vdiff, segnum);
 		fdata.SetParamsSegment(vcoeffs, segnum);
-	}	
-	
+	}
+
 	if (hThread)
 	{
 		TerminateThread(hThread, -1);

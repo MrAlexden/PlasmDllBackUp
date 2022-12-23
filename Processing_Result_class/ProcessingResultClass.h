@@ -3,7 +3,6 @@
 #ifndef PROC_RES
 #define PROC_RES
 
-#include <iostream>     // for std::
 #include <vector>       // for vector
 
 template <typename T>

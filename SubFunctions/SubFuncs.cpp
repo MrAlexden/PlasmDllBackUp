@@ -583,18 +583,6 @@ inline myflo find_ion_current(_In_ const myflo A,
 	return ic;
 }
 
-template <typename T>
-inline int take_data_around_the_edges(_In_ const unsigned int size,
-									  _In_ const vector <T> & vIN,
-									  _Out_ vector <T> & vL,
-									  _Out_ vector <T> & vR)
-{
-	vL.assign(vIN.begin(), vIN.begin() + size);
-	vR.assign(vIN.end() - size, vIN.end());
-
-	return 0;
-}
-
 int make_one_segment(_In_ const int diagnostics,			 // diagnostics type (zond::0|setka::1|cilind::2)
 					 _In_ const vector <myflo> & vPila,		 // X data
 					 _In_ vector <myflo> & vSignal,			 // Y data
@@ -681,7 +669,7 @@ int make_one_segment(_In_ const int diagnostics,			 // diagnostics type (zond::0
 				vParams[0] = vAB[0];
 				vParams[1] = vAB[1];
 				vParams[2] = -vParams[0];
-				vParams[3] = 10;
+				vParams[3] = 15;
 
 				vFixed[0] = vFixed[1] = true;
 
@@ -695,7 +683,7 @@ int make_one_segment(_In_ const int diagnostics,			 // diagnostics type (zond::0
 					|| is_invalid(vParams[3]))
 				{
 					vParams[2] = - vAB[0] / 1E5;
-					vParams[3] = 10;
+					vParams[3] = 15;
 				}
 			}
 
@@ -703,9 +691,10 @@ int make_one_segment(_In_ const int diagnostics,			 // diagnostics type (zond::0
 			for (i = 0; i < vPila.size(); ++i)
 				vres[i] = fx_STEP(vPila[i], vParams);
 
+			/* записываем в vcoeffs */
 			vcoeffs.resize(4);
 			vcoeffs[0] = find_floating_potential(vPila, vParams);							// Floating potential
-			vcoeffs[1] = vres[0]/*find_ion_current(vParams[0], vParams[1], vcoeffs[0])*/;	// Saturate ion current
+			vcoeffs[1] = find_ion_current(vParams[0], vParams[1], vcoeffs[0]);				// Saturate ion current
 			vcoeffs[2] = vParams[3];														// Temperature
 			vcoeffs[3] = find_density(vcoeffs[1], vcoeffs[2]);								// Density ne
 
@@ -736,18 +725,8 @@ int make_one_segment(_In_ const int diagnostics,			 // diagnostics type (zond::0
 			sg_smooth(vdiff, vres, vPila.size() * (filtS / 2), (5/*OriginLab poly order*/ - 1));
 			vdiff = vres;
 
-			/* берем ветора с краев аппроксимируемых данных чтобы потом найти по ним y0 */
-			vector <myflo> vL, vR;
-			take_data_around_the_edges(vres.size() / 10, vres, vL, vR);
-
-			/* среднее между средним с краев */
-			vParams[0] = (vSum(vL) / vL.size() + vSum(vR) / vR.size()) * 0.5;								// y0 - offset
-			/* значение X максимума */
-			vParams[1] = vPila[max_element(vres.begin(), vres.end()) - vres.begin()];						// xc - center
-			/* вся ширина пилы делить на 10 */
-			vParams[2] = abs(vPila.back() - vPila[0]) / 10;													// w - width
-			/* выражено из формулы yc = y0 + A / (w * sqrt(Pi / 2)) */
-			vParams[3] = (*max_element(vres.begin(), vres.end()) - vParams[0]) * (vParams[2] * 1.25331414);	// A - area
+			/* инициализируем прицельные параметры ф-ии Гаусса */
+			GAUSS_InitParams(vPila, vres, vParams);
 
 			/* аппроксимируем производную Гауссом */
 			levmarq(vPila, vres, vParams, vFixed, Num_iter/* * 2*/, fx_GAUSS);
@@ -766,18 +745,8 @@ int make_one_segment(_In_ const int diagnostics,			 // diagnostics type (zond::0
 				sg_smooth(vdiff, vres, vPila.size() * (filtS / 2), (5/*OriginLab poly order*/ - 1));
 				vdiff = vres;
 
-				/* берем ветора с краев аппроксимируемых данных чтобы потом найти по ним y0 */
-				vector <myflo> vL, vR;
-				take_data_around_the_edges(vres.size() / 10, vres, vL, vR);
-
-				/* среднее между средним с краев */
-				vParams[0] = (vSum(vL) / vL.size() + vSum(vR) / vR.size()) * 0.5;								// y0 - offset
-				/* значение X максимума */
-				vParams[1] = vPila[max_element(vres.begin(), vres.end()) - vres.begin()];						// xc - center
-				/* вся ширина пилы делить на 10 */
-				vParams[2] = abs(vPila.back() - vPila[0]) / 10;													// w - width
-				/* выражено из формулы yc = y0 + A / (w * sqrt(Pi / 2)) */
-				vParams[3] = (*max_element(vres.begin(), vres.end()) - vParams[0]) * (vParams[2] * 1.25331414);	// A - area
+				/* инициализируем прицельные параметры ф-ии Гаусса */
+				GAUSS_InitParams(vPila, vres, vParams);
 
 				levmarq(vPila, vres, vParams, vFixed, min(Num_iter, 2), fx_GAUSS);
 
@@ -791,6 +760,7 @@ int make_one_segment(_In_ const int diagnostics,			 // diagnostics type (zond::0
 			for (i = 0; i < vPila.size(); ++i)
 				vres[i] = fx_GAUSS(vPila[i], vParams);
 
+			/* записываем в vcoeffs */
 			vcoeffs.resize(4);
 			vcoeffs[0] = *max_element(vSignal.begin(), vSignal.end());		// Max Value
 			vcoeffs[1] = vParams[2];										// Temp
@@ -820,18 +790,8 @@ int make_one_segment(_In_ const int diagnostics,			 // diagnostics type (zond::0
 				vSignal = vfilt;
 			}
 
-			/* берем ветора с краев аппроксимируемых данных чтобы потом найти по ним y0 */
-			vector <myflo> vL, vR;
-			take_data_around_the_edges(vSignal.size() / 10, vSignal, vL, vR);
-
-			/* среднее между средним с краев */
-			vParams[0] = (vSum(vL) / vL.size() + vSum(vR) / vR.size()) * 0.5;										// y0 - offset
-			/* значение X максимума */
-			vParams[1] = vPila[max_element(vSignal.begin(), vSignal.end()) - vSignal.begin()];						// xc - center
-			/* вся ширина пилы делить на 10 */
-			vParams[2] = abs(vPila.back() - vPila[0]) / 10;															// w - width
-			/* выражено из формулы yc = y0 + A / (w * sqrt(Pi / 2)) */
-			vParams[3] = (*max_element(vSignal.begin(), vSignal.end()) - vParams[0]) * (vParams[2] * 1.25331414);	// A - area
+			/* инициализируем прицельные параметры ф-ии Гаусса */
+			GAUSS_InitParams(vPila, vSignal, vParams);
 
 			/* аппроксимируем производную Гауссом */
 			levmarq(vPila, vSignal, vParams, vFixed, Num_iter/* * 2*/, fx_GAUSS);
@@ -845,18 +805,8 @@ int make_one_segment(_In_ const int diagnostics,			 // diagnostics type (zond::0
 				/* фильтруем сигнал и записываем в vfilt */
 				sg_smooth(vSignal, vres, vPila.size() * (filtS / 2), (5/*OriginLab poly order*/ - 1));
 
-				/* берем ветора с краев аппроксимируемых данных чтобы потом найти по ним y0 */
-				vector <myflo> vL, vR;
-				take_data_around_the_edges(vres.size() / 10, vres, vL, vR);
-
-				/* среднее между средним с краев */
-				vParams[0] = (vSum(vL) / vL.size() + vSum(vR) / vR.size()) * 0.5;								// y0 - offset
-				/* значение X максимума */
-				vParams[1] = vPila[max_element(vres.begin(), vres.end()) - vres.begin()];						// xc - center
-				/* вся ширина пилы делить на 10 */
-				vParams[2] = abs(vPila.back() - vPila[0]) / 10;													// w - width
-				/* выражено из формулы yc = y0 + A / (w * sqrt(Pi / 2)) */
-				vParams[3] = (*max_element(vres.begin(), vres.end()) - vParams[0]) * (vParams[2] * 1.25331414);	// A - area
+				/* инициализируем прицельные параметры ф-ии Гаусса */
+				GAUSS_InitParams(vPila, vres, vParams);
 
 				levmarq(vPila, vres, vParams, vFixed, min(Num_iter, 2), fx_GAUSS);
 
@@ -870,11 +820,82 @@ int make_one_segment(_In_ const int diagnostics,			 // diagnostics type (zond::0
 			for (i = 0; i < vPila.size(); ++i)
 				vres[i] = fx_GAUSS(vPila[i], vParams);
 
+			/* записываем в vcoeffs */
 			vcoeffs.resize(4);
 			vcoeffs[0] = *max_element(vSignal.begin(), vSignal.end());		// Max Value
 			vcoeffs[1] = vParams[2];										// Temp
 			vcoeffs[2] = abs(vParams[1]);									// Peak Voltage
 			vcoeffs[3] = /*sqrt(log(4))*/1.17741001 * vParams[2];			// Energy
+
+			break;
+		}
+		case 3:	// double langmuir probe
+		{
+			if (vPila.size() != vSignal.size()
+				|| vPila.empty()
+				|| vSignal.empty())
+				return ERR_BadSegInput;
+
+			int i = 0;
+			vector <bool> vFixed = { false, false, false, false };
+			vector <myflo> vParams(4);
+
+			vres.resize(vPila.size());
+			vfilt.resize(vPila.size());
+			vdiff.resize(vPila.size());
+
+			if (filtS != 0)
+			{
+				sg_smooth(vSignal, vfilt, vPila.size() * (filtS / 2), (5/*OriginLab poly order*/ - 1));
+				vSignal = vfilt;
+			}
+
+			PWL3_InitParams(vPila, vSignal, vParams);
+
+			levmarq(vPila, vSignal, vParams, vFixed, Num_iter, fx_PWL3);
+
+			if (vParams[3] < 0.0
+				|| vParams[3] > 100.0
+				|| is_invalid(vParams[3]))
+			{
+				vector <myflo> vX, vY;
+
+				vX.assign(vPila.begin(), vPila.begin() + vPila.size() * 0.5);
+				vY.assign(vSignal.begin(), vSignal.begin() + vPila.size() * 0.5);
+
+				vector <myflo> vAB = linear_fit(vX, vY);
+
+				vParams[0] = vAB[0];
+				vParams[1] = vAB[1];
+				vParams[2] = -vParams[0];
+				vParams[3] = 15;
+
+				vFixed[0] = vFixed[1] = true;
+
+				vX.assign(vPila.begin() + vPila.size() * (1 - 0.5), vPila.end());
+				vY.assign(vSignal.begin() + vPila.size() * (1 - 0.5), vSignal.end());
+
+				levmarq(vX, vY, vParams, vFixed, max(Num_iter, 400), fx_STEP);
+
+				if (vParams[3] < 0.0
+					|| vParams[3] > 100.0
+					|| is_invalid(vParams[3]))
+				{
+					vParams[2] = -vAB[0] / 1E5;
+					vParams[3] = 15;
+				}
+			}
+
+			/* записываем в vres */
+			for (i = 0; i < vPila.size(); ++i)
+				vres[i] = fx_STEP(vPila[i], vParams);
+
+			/* записываем в vcoeffs */
+			vcoeffs.resize(4);
+			vcoeffs[0] = find_floating_potential(vPila, vParams);							// Floating potential
+			vcoeffs[1] = find_ion_current(vParams[0], vParams[1], vcoeffs[0]);				// Saturate ion current
+			vcoeffs[2] = vParams[3];														// Temperature
+			vcoeffs[3] = find_density(vcoeffs[1], vcoeffs[2]);								// Density ne
 
 			break;
 		}

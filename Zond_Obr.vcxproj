@@ -170,6 +170,7 @@
   </ItemDefinitionGroup>
   <ItemGroup>
     <ClInclude Include="Cilinder\Cilinder.h" />
+    <ClInclude Include="DoubleLangmuirProbe\DoubleProbe.h" />
     <ClInclude Include="Find_Peaks\PeakFinder.h" />
     <ClInclude Include="Lev-Marq\Lev-Marq.h" />
     <ClInclude Include="MainDllFunc.h" />
@@ -183,6 +184,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="Cilinder\Cilinder.cpp" />
+    <ClCompile Include="DoubleLangmuirProbe\DoubleProbe.cpp" />
     <ClCompile Include="Find_Peaks\PeakFinder.cpp" />
     <ClCompile Include="GlobalVarsInit.cpp" />
     <ClCompile Include="Lev-Marq\Lev-Marq.cpp" />

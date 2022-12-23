@@ -31,6 +31,9 @@
     <ClCompile Include="Zond\Zond.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
+    <ClCompile Include="DoubleLangmuirProbe\DoubleProbe.cpp">
+      <Filter>Исходные файлы</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Cilinder\Cilinder.h">
@@ -65,6 +68,9 @@
     </ClInclude>
     <ClInclude Include="ProgressBarWindow\resource.h">
       <Filter>Файлы ресурсов</Filter>
+    </ClInclude>
+    <ClInclude Include="DoubleLangmuirProbe\DoubleProbe.h">
+      <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
