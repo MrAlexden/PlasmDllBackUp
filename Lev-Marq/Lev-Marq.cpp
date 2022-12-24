@@ -120,17 +120,15 @@ void levmarq(_In_ const vector <myflo> & vec_X,					// independent data
 	if (vFixed.empty())
 		for (i = 0; i < vParams.size(); ++i)
 			vFixed[i] = false;
-	if (niter == NULL)
-		niter = 100;
+	if (vParams.size() != vFixed.size())
+			vFixed.resize(vParams.size());
+	if (niter == NULL || niter >= 400)
+		niter = 400;
 
 	/* params counting, fixed params are not calculated */
-	if (vParams.size() == vFixed.size())
-	{
-		for (i = 0; i < vFixed.size(); ++i)
-			if (vFixed[i] == false)
-				++npar;
-	}
-	else return;
+	for (i = 0; i < vFixed.size(); ++i)
+		if (vFixed[i] == false)
+			++npar;
 
 	Matrix Hessian(npar, npar, 0.0), ch(npar, npar, 0.0);
 	vector <myflo> grad(npar), drvtv(npar), delta(npar, 0.0), newvParams = vParams;

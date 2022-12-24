@@ -1,7 +1,8 @@
 #pragma once
 
 #define WIN32_LEAN_AND_MEAN // Исключите редко используемые компоненты из заголовков Windows
-#define KLUDGE
+#define KLUDGE              // будет ли использован костыль
+#define NOGAUSSFIT          // будет ли использована аппроксимация гауссом в обработке сеточного
 
 #define TOL 10E-30f /* smallest value allowed in cholesky_decomp() */
 #define Pi 3.14159265f

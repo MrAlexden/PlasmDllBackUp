@@ -583,6 +583,32 @@ inline myflo find_ion_current(_In_ const myflo A,
 	return ic;
 }
 
+inline myflo find_width_at_half_maximum(_In_ const vector <myflo> vx, _In_ const vector <myflo> vy)
+{
+	auto max = max_element(vy.begin(), vy.end()),
+		min = min_element(vy.begin(), vy.end()),
+		itl = max,
+		itr = max;
+
+	for (bool lflag = NULL, rflag = NULL; itl != vy.begin() && itr != vy.end();)
+	{
+		if (*itl > *min + (*max - *min) / 2)
+			itl--;
+		else 
+			lflag = true;
+
+		if (*itr > *min + (*max - *min) / 2)
+			itr++;
+		else
+			rflag = true;
+
+		if (lflag && rflag)
+			break;
+	}
+
+	return vx[itr - vy.begin()] - vx[itl - vy.begin()];
+}
+
 int make_one_segment(_In_ const int diagnostics,			 // diagnostics type (zond::0|setka::1|cilind::2)
 					 _In_ const vector <myflo> & vPila,		 // X data
 					 _In_ vector <myflo> & vSignal,			 // Y data
@@ -708,8 +734,6 @@ int make_one_segment(_In_ const int diagnostics,			 // diagnostics type (zond::0
 				return ERR_BadSegInput;
 
 			int i = 0;
-			vector <bool> vFixed = { false, false, false, false };
-			vector <myflo> vParams(4);
 
 			vres.resize(vPila.size());
 			vfilt.resize(vPila.size());
@@ -719,11 +743,15 @@ int make_one_segment(_In_ const int diagnostics,			 // diagnostics type (zond::0
 				filtS = 0.4f;
 			/* фильтруем сигнал и записываем в vfilt */
 			sg_smooth(vSignal, vfilt, vPila.size() * (filtS / 2), (5/*OriginLab poly order*/ - 1));
-			/* дифференцируем */
+			/* дифференцируем (первая производная) */
 			diff(vfilt, vdiff, -1); // -1 -> чтобы сразу перевернуть
-			/* фильтруем производную */
+			/* фильтруем первую производную */
 			sg_smooth(vdiff, vres, vPila.size() * (filtS / 2), (5/*OriginLab poly order*/ - 1));
 			vdiff = vres;
+
+#ifdef GAUSSFIT
+			vector <bool> vFixed = { false, false, false, false };
+			vector <myflo> vParams(4);
 
 			/* инициализируем прицельные параметры ф-ии Гаусса */
 			GAUSS_InitParams(vPila, vres, vParams);
@@ -753,19 +781,71 @@ int make_one_segment(_In_ const int diagnostics,			 // diagnostics type (zond::0
 				if (vParams[2] < 0.0
 					|| vParams[2] > 100.0
 					|| is_invalid(vParams[2]))
-					vParams[2] = 20;
+					vParams[2] = 15;
 			}
 
 			/* записываем в vres */
 			for (i = 0; i < vPila.size(); ++i)
 				vres[i] = fx_GAUSS(vPila[i], vParams);
+#else
+			vector <bool> vFixed = { false, false, false };
+			vector <myflo> vParams(3);
+			vector <myflo> vhandler(vPila.size());
+
+			int middlepoint_of_curvature = max_element(vdiff.begin(), vdiff.end()) - vdiff.begin();
+
+			vhandler.assign(vdiff.begin() + middlepoint_of_curvature, vdiff.end());
+
+			/* дифференцируем (вторая производная) */
+			diff(vhandler, vres, -1); // -1 -> чтобы сразу перевернуть
+			/* фильтруем вторую производную */
+			sg_smooth(vres, vhandler, vPila.size()* (filtS / 10), (5/*OriginLab poly order*/ - 1));
+			
+			int endpoint_of_curvature = middlepoint_of_curvature + 4 * abs(max_element(vhandler.begin(), vhandler.end()) - vhandler.begin());
+
+			if (endpoint_of_curvature < vPila.size() && middlepoint_of_curvature < endpoint_of_curvature)
+			{
+				vhandler.assign(vPila.begin() + middlepoint_of_curvature, vPila.begin() + endpoint_of_curvature);
+				vres.assign(vfilt.begin() + middlepoint_of_curvature, vfilt.begin() + endpoint_of_curvature);
+			}
+			else
+			{
+				vhandler.assign(vPila.begin() + middlepoint_of_curvature, vPila.end());
+				vres.assign(vfilt.begin() + middlepoint_of_curvature, vfilt.end());
+			}
+
+			vParams[0] = *min_element(vres.begin(), vres.end());
+			vParams[1] = abs(vParams[0]);
+			vParams[2] = -15;
+
+			/* аппроксимируем выбранный участок экспонентой */
+			levmarq(vhandler, vres, vParams, vFixed, max(Num_iter, 100), fx_EXP);
+
+			if (vParams[2] > 0.0
+				|| vParams[2] < -100.0
+				|| is_invalid(vParams[2]))
+			{
+				vParams[2] = -15;
+			}
+
+			vres.resize(vPila.size());
+			/* записываем в vres */
+			for (i = 0; i < vPila.size(); ++i)
+			{
+				if (i >= middlepoint_of_curvature &&
+					i <= middlepoint_of_curvature + vhandler.size())
+					vres[i] = fx_EXP(vPila[i], vParams);
+				else
+					vres[i] = NULL;
+			}
+#endif
 
 			/* записываем в vcoeffs */
 			vcoeffs.resize(4);
-			vcoeffs[0] = *max_element(vSignal.begin(), vSignal.end());		// Max Value
-			vcoeffs[1] = vParams[2];										// Temp
-			vcoeffs[2] = vParams[1];										// Peak Voltage
-			vcoeffs[3] = /*sqrt(log(4))*/1.17741001 * vParams[2];			// Energy
+			vcoeffs[0] = *max_element(vSignal.begin(), vSignal.end());						// Max Value
+			vcoeffs[1] = abs(vParams[2]);													// Temp
+			vcoeffs[2] = vPila[max_element(vdiff.begin(), vdiff.end()) - vdiff.begin()];	// Peak Voltage
+			vcoeffs[3] = find_width_at_half_maximum(vPila, vdiff);							// Energy
 
 			break;
 		}
@@ -813,7 +893,7 @@ int make_one_segment(_In_ const int diagnostics,			 // diagnostics type (zond::0
 				if (vParams[2] < 0.0
 					|| vParams[2] > 100.0
 					|| is_invalid(vParams[2]))
-					vParams[2] = 20;
+					vParams[2] = 15;
 			}
 
 			/* записываем в vres */
@@ -825,7 +905,7 @@ int make_one_segment(_In_ const int diagnostics,			 // diagnostics type (zond::0
 			vcoeffs[0] = *max_element(vSignal.begin(), vSignal.end());		// Max Value
 			vcoeffs[1] = vParams[2];										// Temp
 			vcoeffs[2] = abs(vParams[1]);									// Peak Voltage
-			vcoeffs[3] = /*sqrt(log(4))*/1.17741001 * vParams[2];			// Energy
+			vcoeffs[3] = find_width_at_half_maximum(vPila, vSignal);		// Energy
 
 			break;
 		}
