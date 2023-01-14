@@ -121,12 +121,12 @@
       <OpenMPSupport>false</OpenMPSupport>
       <SupportJustMyCode>true</SupportJustMyCode>
       <LanguageStandard>stdcpp20</LanguageStandard>
-      <Optimization>MaxSpeed</Optimization>
+      <Optimization>Disabled</Optimization>
       <WholeProgramOptimization>true</WholeProgramOptimization>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <DebugInformationFormat>ProgramDatabase</DebugInformationFormat>
       <BufferSecurityCheck>true</BufferSecurityCheck>
-      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <FavorSizeOrSpeed>Neither</FavorSizeOrSpeed>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <PrecompiledHeaderOutputFile />
       <UseFullPaths>false</UseFullPaths>
@@ -159,6 +159,9 @@
       </PrecompiledHeaderFile>
       <BasicRuntimeChecks>Default</BasicRuntimeChecks>
       <Optimization>MaxSpeed</Optimization>
+      <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
+      <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
+      <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -175,6 +178,7 @@
     <ClInclude Include="Lev-Marq\Lev-Marq.h" />
     <ClInclude Include="MainDllFunc.h" />
     <ClInclude Include="Matrix Class\matrix.h" />
+    <ClInclude Include="Matrix Class\mynamespace.h" />
     <ClInclude Include="Processing_Result_class\ProcessingResultClass.h" />
     <ClInclude Include="ProgressBarWindow\resource.h" />
     <ClInclude Include="Savitsky-Golay\Savitsky-Golay.h" />

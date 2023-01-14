@@ -10,7 +10,8 @@ myflo leftP = 0.05f,
 	  linfitP = 0.5f,
 	  filtS = 0.0f,
 	  st_time_end_time[2] = { -1.0f, -1.0f },
-	  S = Pi * 0.0005f * 0.005f + Pi * 0.0005f * 0.0005f / 4,
+	  //S = Pi * 0.0005f * 0.005f + Pi * 0.0005f * 0.0005f / 4, // вся боковая поверхность цилиндра
+      S = 0.0005f * 0.005f, // только проекция для набегающего потока
       M_He = 6.6464731E-27f - 9.10938356E-31f,
 	  M_Ar = 6.6335209E-26f - 9.10938356E-31f;
 
@@ -23,8 +24,8 @@ myflo fx_GAUSS(myflo x, const vector <myflo> & vParams)
 	myflo y0 = vParams[0], xc = vParams[1], w = vParams[2], A = vParams[3];
 	return y0 + (A / (w * sqrt(Pi / 2))) * exp(-2 * pow(((x - xc) / w), 2));
 }
-int GAUSS_InitParams(_In_ const vector <myflo> vx, 
-                     _In_ const vector <myflo> vy, 
+int GAUSS_InitParams(_In_ const vector <myflo> & vx, 
+                     _In_ const vector <myflo> & vy, 
                      _Out_ vector <myflo> & vParams)
 {
     /* берем ветора с краев аппроксимируемых данных чтобы потом найти по ним y0 */
@@ -85,9 +86,9 @@ myflo fx_PWL3(myflo x, const vector <myflo> & vParams)
 
     return 0;
 }
-int PWL3_InitParams(_In_ const vector <myflo> vx,
-                    _In_ const vector <myflo> vy,
-                    _Out_ vector <myflo>& vParams)
+int PWL3_InitParams(_In_ const vector <myflo> & vx,
+                    _In_ const vector <myflo> & vy,
+                    _Out_ vector <myflo> & vParams)
 {
     if (vx.size() != vy.size())
         return -1;

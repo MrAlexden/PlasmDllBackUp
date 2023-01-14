@@ -18,8 +18,8 @@
 /* Файлы заголовков Windows */
 #include <windows.h>    // for windows interface
 #include <vector>       // for vector
-#include <list>      // for list
-#include <string>      // for string/wstring
+#include <list>         // for list
+#include <string>       // for string/wstring
 #include <algorithm>    // for min_element|max_element
 //#include <omp.h>        // for multithreading
 #include <thread>       // for multithreading
@@ -28,10 +28,12 @@
 
 #include "ProgressBarWindow/resource.h"   // progress bar resource
 #include "Processing_Result_class/ProcessingResultClass.h"
+#include "Matrix Class/mynamespace.h"
 
+using namespace myspace;// for LMfit
 using namespace std;    // for std::
 
-typedef float myflo;
+typedef double myflo;
 
 ////////////////////////////////////////////// GLOBAL VARIABLES //////////////////////////////////////////////
 extern int freqP,
@@ -55,8 +57,8 @@ extern HINSTANCE hInstThisDll;
 ////////////////////////////////////////////// GLOBAL FUNCTIONS //////////////////////////////////////////////
 /* GAUSS */
 myflo fx_GAUSS(myflo, const vector <myflo> &);  // from GlobalVarsInit.cpp
-int GAUSS_InitParams(_In_ const vector <myflo>,
-                     _In_ const vector <myflo>,
+int GAUSS_InitParams(_In_ const vector <myflo> &,
+                     _In_ const vector <myflo> &,
                      _Out_ vector <myflo> &);     // from GlobalVarsInit.cpp
 
 /* STEP */
@@ -70,8 +72,8 @@ myflo fx_EXP(myflo, const vector <myflo> &);    // from GlobalVarsInit.cpp
 
 /* PEACEWISE LINEAR THREE */
 myflo fx_PWL3(myflo, const vector <myflo> &);   // from GlobalVarsInit.cpp
-int PWL3_InitParams(_In_ const vector <myflo>,
-                    _In_ const vector <myflo>,
+int PWL3_InitParams(_In_ const vector <myflo> &,
+                    _In_ const vector <myflo> &,
                     _Out_ vector <myflo> &);    // from GlobalVarsInit.cpp
 
 /* make linear approximation of given data, returns vector(2) with A and B */
@@ -85,7 +87,7 @@ inline void vectorElementsProduct(_In_ const vector <myflo> &,
 
 /* multiply the given scalar on the given vector */
 template <typename v, typename s>
-inline void vectormult(_Inout_ vector <v> &in, _In_ s scalar)
+inline void vectormult(_Inout_ vector <v> & in, _In_ s scalar)
 { 
     if (in.size() == 0 || scalar == 0) return;
 
@@ -245,17 +247,17 @@ extern "C" __declspec(dllexport) int Cilinder(_In_ vector <myflo> & Pila,       
 extern "C" __declspec(dllexport) string ERR_GetErrorDescription(int);    // from GlobalVarsInit.cpp
 
 /* check whether a value valid or not */
-template <typename T>
-bool is_invalid(T val)
-{
-    if (val == NAN ||
-        val == INFINITY ||
-        val == -INFINITY ||
-        val != val)
-        return true;
-
-    return false;
-};
+//template <typename T>
+//bool is_invalid(T val)
+//{
+//    if (val == NAN ||
+//        val == INFINITY ||
+//        val == -INFINITY ||
+//        val != val)
+//        return true;
+//
+//    return false;
+//};
 
 /* summitate a vector */
 template <typename T>

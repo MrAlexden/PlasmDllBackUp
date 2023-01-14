@@ -9,7 +9,7 @@ inline myflo error_func(_In_ const vector <myflo>& vec_X,
 	myflo res, err = 0;
 
 	for (int x = 0 + (ef_koef - 1); x < vec_Y.size() - (ef_koef - 1); x += ef_koef)
-		/* ef_koef - 1 чтобы было 0 если ef_koef == 0*/
+		/* ef_koef - 1 чтобы было 0 если ef_koef == 1 */
 	{
 		res = fx(vec_X[x], vParams) - vec_Y[x];
 		err += res * res * ef_koef;
@@ -114,21 +114,28 @@ void levmarq(_In_ const vector <myflo> & vec_X,					// independent data
 			 _In_ myflo (*fx)(myflo, const vector <myflo> &))	// the function that the data will be approximated by
 {
 	int x, i, j, it, npar = 0;
-	myflo lambda = 0.01f, up = 10, down = 1 / up, mult, err = 0, newerr = 0, derr = 0, target_derr = TOL;
+	myflo lambda = 0.01f, up = 10, down = 1 / up, mult, err = 0, newerr = 0, derr = 0, target_derr = /*1E-12*/TOL;
 
 	/* check for input mistakes */
+	if (vec_X.size() <= ef_koef
+		|| vec_Y.size() <= ef_koef)
+		return;
 	if (vFixed.empty())
 		for (i = 0; i < vParams.size(); ++i)
 			vFixed[i] = false;
 	if (vParams.size() != vFixed.size())
 			vFixed.resize(vParams.size());
-	if (niter == NULL || niter >= 400)
+	if (niter == NULL || niter > 400)
 		niter = 400;
 
 	/* params counting, fixed params are not calculated */
 	for (i = 0; i < vFixed.size(); ++i)
-		if (vFixed[i] == false)
+	{
+		if (!vFixed[i])
 			++npar;
+		if (is_invalid(vParams[i]))
+			vParams[i] = 1;
+	}
 
 	Matrix Hessian(npar, npar, 0.0), ch(npar, npar, 0.0);
 	vector <myflo> grad(npar), drvtv(npar), delta(npar, 0.0), newvParams = vParams;
@@ -144,9 +151,7 @@ void levmarq(_In_ const vector <myflo> & vec_X,					// independent data
 		{
 			drvtv[i] = 0.0;
 			for (j = 0; j < npar; ++j)
-			{
 				Hessian(i, j) = 0;
-			}
 		}
 
 		/* calculate the approximation to the Hessian and the "derivative" drvtv */
@@ -154,22 +159,15 @@ void levmarq(_In_ const vector <myflo> & vec_X,					// independent data
 		{
 			/* calculate gradient */
 			for (i = 0, j = 0; i < vFixed.size(); ++i)
-			{
-				if (vFixed[i] == false)
-				{
-					grad[j] = partial_derivative(vec_X[x], vParams, fx, i);
-					++j;
-				}
-			}
+				if (!vFixed[i])
+					grad[j++] = partial_derivative(vec_X[x], vParams, fx, i);
 
 			for (i = 0; i < npar; ++i)
 			{
 				drvtv[i] += (vec_Y[x] - fx(vec_X[x], vParams)) * grad[i] * ef_koef;
 
 				for (j = 0; j < npar; ++j)
-				{
 					Hessian(i, j) += grad[i] * grad[j] * ef_koef;
-				}
 			}
 		}
 
@@ -188,13 +186,8 @@ void levmarq(_In_ const vector <myflo> & vec_X,					// independent data
 				solve_axb_cholesky(ch, delta, drvtv);
 
 				for (i = 0, j = 0; i < vFixed.size(); ++i)
-				{
-					if (vFixed[i] == false)
-					{
-						newvParams[i] = vParams[i] + delta[j];
-						++j;
-					}
-				}
+					if (!vFixed[i])
+						newvParams[i] = vParams[i] + delta[j++];
 
 				newerr = error_func(vec_X, vec_Y, newvParams, fx);
 				derr = newerr - err;
@@ -210,12 +203,32 @@ void levmarq(_In_ const vector <myflo> & vec_X,					// independent data
 		}
 
 		for (i = 0; i < vFixed.size(); ++i)
-			if (vFixed[i] == false)
+			if (!vFixed[i])
 				vParams[i] = newvParams[i];
 
 		err = newerr;
 		lambda *= down;
 
-		if ((!ill) && (/*было -derr<...,стало:*/abs(err) < target_derr)) break;
+		if ((!ill) && (-derr < target_derr))
+		//if ((!ill) && (abs(err) < target_derr))
+			break;
 	}
+
+	//MessageBoxA(NULL, ("Iterations: " + to_string(it) + "\nError: " + to_string(-derr)).c_str(), "Error!", MB_ICONINFORMATION | MB_OK);
 }
+
+//fit_polyline(iNum, x_data, y_data, iSec, vk, NULL, NULL, vxave)
+//vector vkabs;
+//vkabs = vk;
+//vkabs.Abs();
+//double dMin, dMax;
+//int iMin, iMax;
+//vkabs.GetMinMax(dMin, dMax, &iMin, &iMax);
+//double dExp = log(dMax / dMin) / (vxave[iMax] - vxave[iMin]);
+//double y2 = exp(dExp * (x_data[iNum - 1] - x_data[0]));
+//double y1 = 1;
+//double dBase = (y_data[0] * y2 - y_data[iNum - 1] * y1) / (y2 - y1);
+//double dScale = (y_data[iNum - 1] - y_data[0]) / (y2 - y1);
+//
+//if (pScaleExp != NULL)
+//	*pScaleExp = log(abs(dScale)) - dExp * x_data[0];

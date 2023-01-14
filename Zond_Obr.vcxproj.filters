@@ -72,6 +72,9 @@
     <ClInclude Include="DoubleLangmuirProbe\DoubleProbe.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
+    <ClInclude Include="Matrix Class\mynamespace.h">
+      <Filter>Файлы заголовков</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <Filter Include="Файлы заголовков">

@@ -105,8 +105,9 @@ int Cilinder(_In_ vector <myflo> & vPila,
 
 		fdata.SetOriginSegment(vY, segnum);
 
-		if (make_one_segment(2, vSegPila, vY, vres, vfilt, vdiff, vcoeffs) < 0)
-			continue;
+		/*if (make_one_segment(2, vSegPila, vY, vres, vfilt, vdiff, vcoeffs) < 0)
+			continue;*/
+		make_one_segment(2, vSegPila, vY, vres, vfilt, vdiff, vcoeffs);
 
 		vcoeffs.insert(vcoeffs.begin(), vStartSegIndxs.at(segnum) * (1.0 / (one_segment_width * freqP)));
 

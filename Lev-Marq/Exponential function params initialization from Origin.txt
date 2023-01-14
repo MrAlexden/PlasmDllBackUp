@@ -1,0 +1,96 @@
+///Sophy 2/25/2014 ORG-10688-P1 PARAM_INIT_SHOULD_NOT_MODIFY_SOURCE_DATA
+double	get_exponent_cuv(Curve& cuv, double* pBase, double* pScaleExp, int* pScaleSign, bool bSortDataFirst)
+{
+	Dataset dsX;
+	cuv.AttachX(dsX);
+	return get_exponent(dsX, cuv, pBase, pScaleExp, pScaleSign, bSortDataFirst);
+}
+///end PARAM_INIT_SHOULD_NOT_MODIFY_SOURCE_DATA
+
+/// Cloud 01/14/08 REPRESENT_SCALE_BY_EXPONENT_FOR_HUGE_NUMBER
+//double get_exponent(vector &x_data, vector &y_data, double *pBase, double *pScale, bool bSortDataFirst)
+double get_exponent(vector &x_data, vector &y_data, double *pBase, double *pScaleExp, int *pScaleSign, bool bSortDataFirst)
+/// End REPRESENT_SCALE_BY_EXPONENT_FOR_HUGE_NUMBER
+{
+	if (bSortDataFirst)
+	{
+		vector<uint> vi;
+		x_data.Sort(SORT_ASCENDING, TRUE, vi);
+		y_data.Reorder(vi);
+	}
+
+	int iNum = x_data.GetSize();
+	/// Cloud 12/06/07 FIX_BUG_OF_SECTION_LENGTH
+	//int iSec = 5;
+	//if (iNum/iSec < 2)
+		//iSec = iNum / 2;
+	int iSec;
+	if (iNum>5)
+		iSec = 5;
+	else
+		iSec = iNum - 1;
+	/// End FIX_BUG_OF_SECTION_LENGTH
+	
+	vector vk;
+	/// Cloud 02/21/08 REMOVE_0_FROM_SLOPES
+	/*
+	fit_polyline(iNum, x_data, y_data, iSec, vk);
+	if (vk[0]==0)
+		vk[0] = 1e-5 * vk[iSec-1];
+
+	double dExp = log(abs(vk[iSec-1]/vk[0])) / (x_data[iNum-1]-x_data[0]);
+	*/
+	vector vxave;
+	///Sophy 8/21/2014 ORG-10629-P1 PROPER_CHECK_POLY_FIT_RESULT_WHEN_GET_EXPONENT
+	//fit_polyline(iNum, x_data, y_data, iSec, vk, NULL, NULL, vxave);
+	if ( !fit_polyline(iNum, x_data, y_data, iSec, vk, NULL, NULL, vxave) )
+	{
+		if ( pBase )
+			*pBase = 0;
+		if ( pScaleExp )
+			*pScaleExp = 0;
+		if ( pScaleSign )
+			*pScaleSign = -1;
+		return NANUM;
+	}
+	///en dPROPER_CHECK_POLY_FIT_RESULT_WHEN_GET_EXPONENT
+	vector vkabs;
+	///Sandy 2009-1-8 SPEED_UP_VECTOR_ABS
+	//vkabs = abs(vk);
+	vkabs = vk;
+	vkabs.Abs();
+	//end SPEED_UP_VECTOR_ABS
+	ocmath_replace_data_in_vector(vkabs.GetSize(), vkabs, 0, NANUM);
+	matrix mm(iSec, 2);
+	mm.SetColumn(vkabs, 0);
+	mm.SetColumn(vxave, 1);
+	mm.RemoveEmptyRows(false);
+	mm.GetColumn(vkabs, 0);
+	mm.GetColumn(vxave, 1);
+	double dMin, dMax;
+	int iMin, iMax;
+	vkabs.GetMinMax(dMin, dMax, &iMin, &iMax);
+	double dExp = log(dMax/dMin) / (vxave[iMax]-vxave[iMin]);
+	/// End REMOVE_0_FROM_SLOPES
+	/// Cloud 01/14/08 REPRESENT_SCALE_BY_EXPONENT_FOR_HUGE_NUMBER
+	//double y2 = exp(dExp * x_data[iNum-1]);
+	//double y1 = exp(dExp * x_data[0]);
+	double y2 = exp(dExp * (x_data[iNum-1]-x_data[0]));
+	double y1 = 1;
+	double dBase = (y_data[0]*y2 - y_data[iNum-1]*y1) / (y2 - y1);
+	double dScale = (y_data[iNum-1] - y_data[0]) / (y2 - y1);
+	int nSign = (dScale>0) ? 1 : -1;
+	/// End REPRESENT_SCALE_BY_EXPONENT_FOR_HUGE_NUMBER
+
+	if (pBase!=NULL)
+		*pBase = dBase;
+	/// Cloud 01/14/08 REPRESENT_SCALE_BY_EXPONENT_FOR_HUGE_NUMBER
+	//if (pScale!=NULL)
+		//*pScale = dScale;
+	if (pScaleExp!=NULL)
+		*pScaleExp = log(abs(dScale)) - dExp * x_data[0];
+	if (pScaleSign!=NULL)
+		*pScaleSign = nSign;
+	/// End REPRESENT_SCALE_BY_EXPONENT_FOR_HUGE_NUMBER
+	return dExp;
+}

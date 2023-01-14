@@ -4,7 +4,8 @@ inline void diff(_In_ const vector <myflo> & in,
 				 _Out_ vector <myflo> & out, 
 				 _In_opt_ int k)
 {
-	if (k == NULL) k = 1;
+	if (in.size() < 2) return;
+	k = (k == NULL) ? 1 : k;
 	out.resize(in.size());
 
 	for (int i = 1; i < in.size(); ++i)
