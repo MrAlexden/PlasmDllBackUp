@@ -64,7 +64,7 @@ extern "C" __declspec(dllexport) int MainWrapper(_In_ int diagnostics,          
         AdditionalData[13] <= 1)
         ERR(ERR_ZeroInputVals);
     if (diagnostics < 0 ||
-        diagnostics > 2)
+        diagnostics > 3)
         ERR(ERR_BadDiagNum);
     if (AdditionalData[3] + AdditionalData[4] > 0.9
         || AdditionalData[3] < 0.0
@@ -94,6 +94,9 @@ extern "C" __declspec(dllexport) int MainWrapper(_In_ int diagnostics,          
             break;
         case 2: // Cilinder|Magnit
             ERR(Cilinder(vPila, vSignal, vAdd, *fdata)); // вызов обработчика цилиндра|магнита
+            break;
+        case 3: // Double Prone
+            ERR(DoubleProbe(vPila, vSignal, vAdd, *fdata)); // вызов обработчика двойного зонда
             break;
         default:
             __assume(0);
@@ -352,7 +355,7 @@ extern "C" __declspec(dllexport) int OriginAll(_In_ int diagnostics,            
         AdditionalData[13] <= 1)
         ERR(ERR_ZeroInputVals);
     if (diagnostics < 0 ||
-        diagnostics > 2)
+        diagnostics > 3)
         ERR(ERR_BadDiagNum);
     if (AdditionalData[3] + AdditionalData[4] > 0.9
         || AdditionalData[3] < 0.0
@@ -386,6 +389,9 @@ extern "C" __declspec(dllexport) int OriginAll(_In_ int diagnostics,            
             break;
         case 2: // Cilinder|Magnit
             ERR(Cilinder(vP, vS, vA, *fdata)); // вызов обработчика цилиндра|магнита
+            break;
+        case 3: // Double Prone
+            ERR(DoubleProbe(vP, vS, vA, *fdata)); // вызов обработчика двойного зонда
             break;
         default:
             __assume(0);
@@ -547,7 +553,7 @@ extern "C" __declspec(dllexport) int OriginMakeOne(_In_ int diagnostics,        
         AdditionalData[5] <= 1)
         ERR(ERR_ZeroInputVals);
     if (diagnostics < 0 ||
-        diagnostics > 2)
+        diagnostics > 3)
         ERR(ERR_BadDiagNum);
     if (AdditionalData[1] < 0 || AdditionalData[1] > 0.9)
         ERR(ERR_BadLinFit);

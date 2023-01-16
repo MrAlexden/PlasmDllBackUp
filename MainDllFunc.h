@@ -225,7 +225,7 @@ extern "C" __declspec(dllexport) int make_one_segment(_In_ int,					            
                                                       _Out_ vector <myflo> &,		        // vector to be filled with the differentiation
                                                       _Inout_ vector <myflo> &);		    // additional coeffs/results vector
 
-/* processes the whole Lengmur probe signal */
+/* processes the whole Langmuir probe signal */
 extern "C" __declspec(dllexport) int Zond(_In_ vector <myflo> & Pila,                       // входной одномерный массив пилы
                                           _In_ vector <myflo> & Signal,                     // входной одномерный массив сигнала
                                           _In_ const vector <myflo> & AdditionalData,       // дополнительные данные по импульсу
@@ -242,6 +242,12 @@ extern "C" __declspec(dllexport) int Cilinder(_In_ vector <myflo> & Pila,       
                                               _In_ vector <myflo> & Signal,                 // входной одномерный массив сигнала
                                               _In_ const vector <myflo> & AdditionalData,   // дополнительные данные по импульсу
                                               _Out_ Plasma_proc_result <myflo> & fdata);    // выходной класс с результатом обработки
+
+/* processes the whole double Langmuir probe signal */
+extern "C" __declspec(dllexport) int DoubleProbe(_In_ vector <myflo> & vPila,               // входной одномерный массив пилы
+                                                 _In_ vector <myflo> & vSignal,             // входной одномерный массив сигнала
+                                                 _In_ const vector <myflo> & AdditionalData,// дополнительные данные по импульсу
+                                                 _Out_ Plasma_proc_result <myflo> & fdata); // выходной класс с результатом обработки
 
 /* get this dll code description */
 extern "C" __declspec(dllexport) string ERR_GetErrorDescription(int);    // from GlobalVarsInit.cpp

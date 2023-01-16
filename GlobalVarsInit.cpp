@@ -134,6 +134,13 @@ int PWL3_InitParams(_In_ const vector <myflo> & vx,
     k2 = (yi2 - yi1) / (xi2 - xi1);
     k3 = (y2 - yi2) / (x2 - xi2);
 
+    vParams[0] = a1;
+    vParams[1] = k1;
+    vParams[2] = xi1;
+    vParams[3] = k2;
+    vParams[4] = xi2;
+    vParams[5] = k3;
+
     return 0;
 }
 
@@ -170,7 +177,7 @@ string ERR_GetErrorDescription(int err)
     case ERR_NoSegs:
         return "No segments found, check if signal is noise or not";
     case ERR_BadDiagNum:
-        return "Diagnostics number must be > 0 and < 2";
+        return "Diagnostics number must be > 0 and < 3";
     case ERR_IdxOutOfRange:
         return "Index is out of range. Programm continued running";
     case ERR_Exception:

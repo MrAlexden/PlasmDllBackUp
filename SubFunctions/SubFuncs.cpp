@@ -1062,8 +1062,9 @@ int make_one_segment(_In_ const int diagnostics,			 // diagnostics type (zond::0
 			vcoeffs.resize(4);
 			vcoeffs[0] = 0;													// reserved
 			vcoeffs[1] = vParams[0];										// Saturate ion current
-			vcoeffs[2] = (vParams[4] - vParams[2]) /
-				(2 * (vParams[1] - vParams[3]) * vParams[2] / vParams[0]);	// Temperature
+			vcoeffs[2] = abs((vParams[4] - vParams[2]) /
+				(2 * ((vParams[1] - vParams[3]) * vParams[2] + 
+				(vParams[3] - vParams[5]) * vParams[4]) / vcoeffs[1]));		// Temperature
 			vcoeffs[3] = find_density(vcoeffs[1], vcoeffs[2]);				// Density ne
 
 			break;

@@ -1,9 +1,9 @@
 #include "DoubleProbe.h"
 
-int DubleProbe(_In_ vector <myflo> & vPila,
-			   _In_ vector <myflo> & vSignal,
-			   _In_ const vector <myflo> & AdditionalData,
-			   _Out_ Plasma_proc_result <myflo> & fdata)
+int DoubleProbe(_In_ vector <myflo> & vPila,
+			    _In_ vector <myflo> & vSignal,
+			    _In_ const vector <myflo> & AdditionalData,
+			    _Out_ Plasma_proc_result <myflo> & fdata)
 {
 	if (vPila.size() == 0
 		|| vPila.empty()
@@ -54,7 +54,7 @@ int DubleProbe(_In_ vector <myflo> & vPila,
 	thread T1(vectormult<myflo, int>, ref(vPila), coefPila);
 	//vectormult(vPila, coefPila);
 	/* переворачиваем ток чтобы смотрел вверх(если нужно), и делим на сопротивление */
-	thread T2(vectordiv<myflo, int>, ref(vSignal), -resistance);
+	thread T2(vectordiv<myflo, int>, ref(vSignal), resistance);
 	//vectordiv(vSignal, resistance);
 
 	T1.join();
