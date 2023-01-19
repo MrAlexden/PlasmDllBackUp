@@ -765,7 +765,7 @@ int make_one_segment(_In_ const int diagnostics,			 // diagnostics type (zond::0
 			sg_smooth(vdiff, vres, vPila.size() * (filtS / 2), (5/*OriginLab poly order*/ - 1));
 			vdiff = vres;
 
-#ifdef GAUSSFIT
+#ifdef GAUSSFITS
 			vector <bool> vFixed = { false, false, false, false };
 			vector <myflo> vParams(4);
 
@@ -803,6 +803,13 @@ int make_one_segment(_In_ const int diagnostics,			 // diagnostics type (zond::0
 			/* записываем в vres */
 			for (i = 0; i < vPila.size(); ++i)
 				vres[i] = fx_GAUSS(vPila[i], vParams);
+
+			/* записываем в vcoeffs */
+			vcoeffs.resize(4);
+			vcoeffs[0] = *max_element(vSignal.begin(), vSignal.end());						// Max Value
+			vcoeffs[1] = abs(vParams[2]) * 0.5;												// Temp
+			vcoeffs[2] = vPila[max_element(vdiff.begin(), vdiff.end()) - vdiff.begin()];	// Peak Voltage
+			vcoeffs[3] = find_width_at_half_maximum(vPila, vdiff);							// Energy
 #else
 			vector <bool> vFixed = { false, false, false };
 			vector <myflo> vParams(3);
@@ -850,8 +857,8 @@ int make_one_segment(_In_ const int diagnostics,			 // diagnostics type (zond::0
 			vParams[1] = (vParams[1] < 0
 						|| is_invalid(vParams[1])) ? log(abs((vres[0] - vParams[0]) / (exp(vhandler[0] / vParams[2])))) - vParams[2] * vhandler[0] : vParams[1];
 
-			vres.resize(vPila.size());
 			/* записываем в vres */
+			vres.resize(vPila.size());
 			for (i = 0; i < vPila.size(); ++i)
 			{
 				if (i >= middlepoint_of_curvature &&
@@ -860,7 +867,6 @@ int make_one_segment(_In_ const int diagnostics,			 // diagnostics type (zond::0
 				else
 					vres[i] = NULL;
 			}
-#endif
 
 			/* записываем в vcoeffs */
 			vcoeffs.resize(4);
@@ -868,7 +874,7 @@ int make_one_segment(_In_ const int diagnostics,			 // diagnostics type (zond::0
 			vcoeffs[1] = abs(vParams[2]);													// Temp
 			vcoeffs[2] = vPila[max_element(vdiff.begin(), vdiff.end()) - vdiff.begin()];	// Peak Voltage
 			vcoeffs[3] = find_width_at_half_maximum(vPila, vdiff);							// Energy
-
+#endif
 			break;
 		}
 		case 2: // Cilinder|Magnit
@@ -894,7 +900,7 @@ int make_one_segment(_In_ const int diagnostics,			 // diagnostics type (zond::0
 				vSignal = vfilt;
 			}
 
-#ifdef GAUSSFIT
+#ifdef GAUSSFITC
 			vector <bool> vFixed = { false, false, false, false };
 			vector <myflo> vParams(4);
 
@@ -931,10 +937,11 @@ int make_one_segment(_In_ const int diagnostics,			 // diagnostics type (zond::0
 			/* записываем в vcoeffs */
 			vcoeffs.resize(4);
 			vcoeffs[0] = *max_element(vSignal.begin(), vSignal.end());					// Max Value
-			vcoeffs[1] = abs(vParams[2]);												// Temp
+			vcoeffs[1] = abs(vParams[2]) * 0.5;											// Temp
 			vcoeffs[2] = vPila[max_element(vres.begin(), vres.end()) - vres.begin()];	// Peak Voltage
 			vcoeffs[3] = find_width_at_half_maximum(vPila, vres);						// Energy
 #else
+#ifndef debug
 			vector <bool> vFixed = { false, false, false };
 			vector <myflo> vParams(3);
 			vector <myflo> vhandler(vPila.size());
@@ -985,10 +992,6 @@ int make_one_segment(_In_ const int diagnostics,			 // diagnostics type (zond::0
 						log(abs(exp((vres.back() - vres[0]) / (exp((vhandler.back() - vhandler[0]) / vParams[2]) - 1)))) /* из OroginLab */
 						: vParams[1];
 
-			/*vParams[0] = -0.03694;
-			vParams[1] = 179713.90809;
-			vParams[2] = 1 / -0.01305;*/
-
 			//MessageBoxA(NULL, ("vParams[0]: " + to_string(vParams[0])
 			//			   + "\nvParams[1]: " + to_string(vParams[1])
 			//			   + "\nvParams[2]: " + to_string(vParams[2])).c_str(), "Error!", MB_ICONINFORMATION | MB_OK);
@@ -1004,8 +1007,8 @@ int make_one_segment(_In_ const int diagnostics,			 // diagnostics type (zond::0
 						|| is_invalid(vParams[1])) ? log(abs((vres[0] - vParams[0]) / (exp(vhandler[0] / vParams[2])))) - vParams[2] * vhandler[0]
 						: vParams[1];
 
-			vres.resize(vPila.size());
 			/* записываем в vres */
+			vres.resize(vPila.size());
 			for (i = 0; i < vPila.size(); ++i)
 			{
 				if (i >= middlepoint_of_curvature &&
@@ -1021,8 +1024,86 @@ int make_one_segment(_In_ const int diagnostics,			 // diagnostics type (zond::0
 			vcoeffs[1] = abs(vParams[2]);														// Temp
 			vcoeffs[2] = vPila[max_element(vSignal.begin(), vSignal.end()) - vSignal.begin()];	// Peak Voltage
 			vcoeffs[3] = find_width_at_half_maximum(vPila, vSignal);							// Energy
-#endif
+#else
+			vector <bool> vFixed = { false, false, false, false };
+			vector <myflo> vParams(4);
+			vector <myflo> vhandler(vPila.size());
 
+			/* дифференцируем (перва€ производна€) */
+			diff(vSignal, vhandler, -1); // -1 -> чтобы сразу перевернуть
+			/* фильтруем первую производную */
+			sg_smooth(vhandler, vres, vPila.size()* ((filtS != 0) ? (filtS / 2) : (0.4 / 2)), (5/*OriginLab poly order*/ - 1));
+
+			int middlepoint_of_curvature = max_element(vres.begin(), vres.end()) - vres.begin();
+			if (middlepoint_of_curvature >= vPila.size() - 1)
+			{
+				vcoeffs.resize(4);
+				vcoeffs[0] = vcoeffs[1] = vcoeffs[2] = vcoeffs[3] = 0;
+				return -1;
+			}
+
+			vhandler.assign(vPila.begin() + middlepoint_of_curvature, vPila.end());
+			vres.assign(vSignal.begin() + middlepoint_of_curvature, vSignal.end());
+
+			//vhandler.assign(vres.begin() + middlepoint_of_curvature, vres.end());
+
+			///* дифференцируем (втора€ производна€) */
+			//diff(vhandler, vres, -1); // -1 -> чтобы сразу перевернуть
+			///* фильтруем вторую производную */
+			//sg_smooth(vres, vhandler, vPila.size() * (filtS / 10), (5/*OriginLab poly order*/ - 1));
+
+			//int endpoint_of_curvature = middlepoint_of_curvature + 5 * abs(max_element(vhandler.begin(), vhandler.end()) - vhandler.begin());
+
+			//if (endpoint_of_curvature < vPila.size() && middlepoint_of_curvature < endpoint_of_curvature)
+			//{
+			//	vhandler.assign(vPila.begin() + middlepoint_of_curvature, vPila.begin() + endpoint_of_curvature);
+			//	vres.assign(vSignal.begin() + middlepoint_of_curvature, vSignal.begin() + endpoint_of_curvature);
+			//}
+			//else
+			//{
+			//	vhandler.assign(vPila.begin() + middlepoint_of_curvature, vPila.end());
+			//	vres.assign(vSignal.begin() + middlepoint_of_curvature, vSignal.end());
+			//}
+
+			{
+				vector <myflo> vX, vY;
+
+				vX.assign(vPila.begin() + vPila.size() * linfitP, vPila.end());
+				vY.assign(vSignal.begin() + vPila.size() * linfitP, vSignal.end());
+
+				vector <myflo> vAB = linear_fit(vX, vY);
+
+				vParams[0] = vAB[0];
+				vParams[1] = vAB[1];
+
+				vFixed[0] = vFixed[1] = true;
+			}
+
+			vParams[3] = -15;
+			vParams[2] = abs((vSignal.front() - vParams[0] - vParams[1] * vPila.front()) / (exp(vPila.front() / vParams[3])));
+
+			/* аппроксимируем выбранный участок экспонентой */
+			levmarq(vhandler, vres, vParams, vFixed, max(Num_iter, 400), fx_STEP);
+
+			/* записываем в vres */
+			vres.resize(vPila.size());
+			for (i = 0; i < vPila.size(); ++i)
+			{
+				if (i >= middlepoint_of_curvature &&
+					i <= middlepoint_of_curvature + vhandler.size())
+					vres[i] = fx_STEP(vPila[i], vParams);
+				else
+					vres[i] = NULL;
+			}
+
+			/* записываем в vcoeffs */
+			vcoeffs.resize(4);
+			vcoeffs[0] = *max_element(vSignal.begin(), vSignal.end());							// Max Value
+			vcoeffs[1] = abs(vParams[3]);														// Temp
+			vcoeffs[2] = vPila[max_element(vSignal.begin(), vSignal.end()) - vSignal.begin()];	// Peak Voltage
+			vcoeffs[3] = find_width_at_half_maximum(vPila, vSignal);							// Energy
+#endif
+#endif
 			break;
 		}
 		case 3:	// double langmuir probe
@@ -1059,12 +1140,15 @@ int make_one_segment(_In_ const int diagnostics,			 // diagnostics type (zond::0
 				vres[i] = fx_PWL3(vPila[i], vParams);
 
 			/* записываем в vcoeffs */
+			myflo y1 = vParams[0] + vParams[1] * vParams[2],				// central PWL3 line offset 
+				  Ipositive;												// Saturate positive ion current
 			vcoeffs.resize(4);
-			vcoeffs[0] = 0;													// reserved
-			vcoeffs[1] = vParams[0];										// Saturate ion current
+			vcoeffs[0] = vParams[2] - y1 / vParams[3];						// x of Y == 0 (OX crossing point)					
+			vcoeffs[1] = vParams[0] + vParams[1] * vcoeffs[0];				// Saturate negative ion current
+			Ipositive = y1 + vParams[3] * (vParams[4] - vParams[2]) +
+				vParams[5] * (vcoeffs[0] - vParams[4]);
 			vcoeffs[2] = abs((vParams[4] - vParams[2]) /
-				(2 * ((vParams[1] - vParams[3]) * vParams[2] + 
-				(vParams[3] - vParams[5]) * vParams[4]) / vcoeffs[1]));		// Temperature
+					(2 * (Ipositive - vcoeffs[1]) / vcoeffs[1]));			// Temperature
 			vcoeffs[3] = find_density(vcoeffs[1], vcoeffs[2]);				// Density ne
 
 			break;
