@@ -3,7 +3,7 @@
 int freqP = 50,
 	Num_iter = 10,
 	one_segment_width = 0,
-	fuel = 0; /* 0 -> He, 1 -> Ar */
+	fuel = 0; /* 0 -> He, 1 -> Ar, 2 -> Ne*/
 
 myflo leftP = 0.05f,
 	  rightP = 0.05f,
@@ -12,8 +12,9 @@ myflo leftP = 0.05f,
 	  st_time_end_time[2] = { -1.0f, -1.0f },
 	  //S = Pi * 0.0005f * 0.005f + Pi * 0.0005f * 0.0005f / 4, // вся боковая поверхность цилиндра
       S = 0.0005f * 0.005f, // только проекция для набегающего потока
-      M_He = 6.6464731E-27f - 9.10938356E-31f,
-	  M_Ar = 6.6335209E-26f - 9.10938356E-31f;
+      M_He = 6.6464731E-27 - 9.10938356E-31,
+	  M_Ar = 6.6335209E-26 - 9.10938356E-31,
+      M_Ne = 3.3509177E-26 - 9.10938356E-31;
 
 HWND mywindow = NULL;
 HINSTANCE hInstThisDll = NULL;
@@ -22,7 +23,7 @@ HINSTANCE hInstThisDll = NULL;
 myflo fx_GAUSS(myflo x, const vector <myflo> & vParams)
 {
 	myflo y0 = vParams[0], xc = vParams[1], w = vParams[2], A = vParams[3];
-	return y0 + (A / (w * sqrt(Pi / 2))) * exp(-2 * pow(((x - xc) / w), 2));
+	return y0 + (A / (w * sqrt(Pi / 2))) * exp(-0.5 * pow(((x - xc) / w), 2));
 }
 int GAUSS_InitParams(_In_ const vector <myflo> & vx, 
                      _In_ const vector <myflo> & vy, 

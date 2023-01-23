@@ -564,6 +564,9 @@ inline myflo find_density(_In_ const myflo ion_current,
 	case 1:
 		M = M_Ar;
 		break;
+	case 2:
+		M = M_Ne;
+		break;
 	default:
 		__assume(0);
 	}
@@ -1141,14 +1144,14 @@ int make_one_segment(_In_ const int diagnostics,			 // diagnostics type (zond::0
 
 			/* записываем в vcoeffs */
 			myflo y1 = vParams[0] + vParams[1] * vParams[2],				// central PWL3 line offset 
-				  Ipositive;												// Saturate positive ion current
+				  Inegative;												// Saturate negative ion current
 			vcoeffs.resize(4);
 			vcoeffs[0] = vParams[2] - y1 / vParams[3];						// x of Y == 0 (OX crossing point)					
-			vcoeffs[1] = vParams[0] + vParams[1] * vcoeffs[0];				// Saturate negative ion current
-			Ipositive = y1 + vParams[3] * (vParams[4] - vParams[2]) +
-				vParams[5] * (vcoeffs[0] - vParams[4]);
+			Inegative = vParams[0] + vParams[1] * vcoeffs[0];				
+			vcoeffs[1] = y1 + vParams[3] * (vParams[4] - vParams[2]) +
+				vParams[5] * (vcoeffs[0] - vParams[4]);						// Saturate positive ion current
 			vcoeffs[2] = abs((vParams[4] - vParams[2]) /
-					(2 * (Ipositive - vcoeffs[1]) / vcoeffs[1]));			// Temperature
+					(2 * (vcoeffs[1] - Inegative) / Inegative));			// Temperature
 			vcoeffs[3] = find_density(vcoeffs[1], vcoeffs[2]);				// Density ne
 
 			break;

@@ -44,7 +44,7 @@ int Cilinder(_In_ vector <myflo> & vPila,
 	freqP = (int)AdditionalData[7];					// частота пилы
 	resistance = 1/*(int)AdditionalData[8]*/;		// сопротивление на цилиндре|магните (1 тк не учитываем сопротивление)
 	coefPila = (int)AdditionalData[9];				// коэффициент усиления пилы
-	fuel = (int)AdditionalData[10];					// рабочее вещество (He::0|Ar::1)
+	fuel = (int)AdditionalData[10];					// рабочее вещество (He::0|Ar::1|Ne::2)
 	Num_iter = (int)AdditionalData[11];				// количество итераций аппроксимации(сильно влияет на скорость работы программы)
 
 	/* домножаем пилу на коэффициент усиления */

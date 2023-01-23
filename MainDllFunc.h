@@ -2,7 +2,8 @@
 
 #define WIN32_LEAN_AND_MEAN // Исключите редко используемые компоненты из заголовков Windows
 #define KLUDGE              // будет ли использован костыль
-#define NOGAUSSFIT          // будет ли использована аппроксимация гауссом в обработке сеточного
+#define NOGAUSSFITS         // будет ли использована аппроксимация гауссом в обработке сеточного
+#define GAUSSFITC           // будет ли использована аппроксимация гауссом в обработке цилиндрического
 
 #define TOL 10E-30f /* smallest value allowed in cholesky_decomp() */
 #define Pi 3.14159265f
@@ -37,18 +38,19 @@ typedef double myflo;
 
 ////////////////////////////////////////////// GLOBAL VARIABLES //////////////////////////////////////////////
 extern int freqP,
-Num_iter,
-one_segment_width,
-fuel;
+           Num_iter,
+           one_segment_width,
+           fuel;
 
 extern myflo leftP,
-rightP,
-linfitP,
-filtS,
-st_time_end_time[2],
-S,
-M_Ar,
-M_He;
+             rightP,
+             linfitP,
+             filtS,
+             st_time_end_time[2],
+             S,
+             M_Ar,
+             M_He,
+             M_Ne;
 
 extern HWND mywindow;
 extern HINSTANCE hInstThisDll;
@@ -56,25 +58,25 @@ extern HINSTANCE hInstThisDll;
 
 ////////////////////////////////////////////// GLOBAL FUNCTIONS //////////////////////////////////////////////
 /* GAUSS */
-myflo fx_GAUSS(myflo, const vector <myflo> &);  // from GlobalVarsInit.cpp
+myflo fx_GAUSS(myflo, const vector <myflo> &);      // from GlobalVarsInit.cpp
 int GAUSS_InitParams(_In_ const vector <myflo> &,
                      _In_ const vector <myflo> &,
-                     _Out_ vector <myflo> &);     // from GlobalVarsInit.cpp
+                     _Out_ vector <myflo> &);       // from GlobalVarsInit.cpp
 
 /* STEP */
-myflo fx_STEP(myflo, const vector <myflo> &);   // from GlobalVarsInit.cpp
+myflo fx_STEP(myflo, const vector <myflo> &);       // from GlobalVarsInit.cpp
 
 /* LINE */
-myflo fx_LINE(myflo, const vector <myflo> &);   // from GlobalVarsInit.cpp
+myflo fx_LINE(myflo, const vector <myflo> &);       // from GlobalVarsInit.cpp
 
 /* EXPONENTIAL */
-myflo fx_EXP(myflo, const vector <myflo> &);    // from GlobalVarsInit.cpp
+myflo fx_EXP(myflo, const vector <myflo> &);        // from GlobalVarsInit.cpp
 
 /* PEACEWISE LINEAR THREE */
-myflo fx_PWL3(myflo, const vector <myflo> &);   // from GlobalVarsInit.cpp
+myflo fx_PWL3(myflo, const vector <myflo> &);       // from GlobalVarsInit.cpp
 int PWL3_InitParams(_In_ const vector <myflo> &,
                     _In_ const vector <myflo> &,
-                    _Out_ vector <myflo> &);    // from GlobalVarsInit.cpp
+                    _Out_ vector <myflo> &);        // from GlobalVarsInit.cpp
 
 /* make linear approximation of given data, returns vector(2) with A and B */
 vector <myflo> linear_fit(_In_ const vector <myflo> &,

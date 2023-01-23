@@ -522,11 +522,22 @@ extern "C" __declspec(dllexport) int OriginFindSignal(_In_ int diagnostics,     
         }
         /* ВРЕМЕННЫЙ КОСТЫЛЬ */
 #endif
-        
+
         DIM1 = numSegments;
         DIM2 = vSegPila.size();
-        memcpy(vResP, vSegPila.data(), sizeof (double) * vSegPila.size());
-        memcpy(vSsI, vStartSegIndxs.data(), sizeof (int) * vStartSegIndxs.size());
+        try
+        {
+            vResP[vSegPila.size() - 1];
+            vSsI[vStartSegIndxs.size() - 1];
+
+            memcpy(vResP, vSegPila.data(), sizeof(double) * vSegPila.size());
+            memcpy(vSsI, vStartSegIndxs.data(), sizeof(int) * vStartSegIndxs.size());
+        }
+        catch (...)
+        {
+            return -1;
+        }
+            
     }/*************************************************************************************************************/
 
 Error:

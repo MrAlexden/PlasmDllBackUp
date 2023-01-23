@@ -44,7 +44,7 @@ int Setka(_In_ vector <myflo> & vPila,
 	freqP = (int)AdditionalData[7];					// частота пилы
 	resistance = (int)AdditionalData[8];			// сопротивление на сетке
 	coefPila = (int)AdditionalData[9];				// коэффициент усиления пилы
-	fuel = (int)AdditionalData[10];					// рабочее вещество (He::0|Ar::1)
+	fuel = (int)AdditionalData[10];					// рабочее вещество (He::0|Ar::1|Ne::2)
 	Num_iter = (int)AdditionalData[11];				// количество итераций аппроксимации(сильно влияет на скорость работы программы)
 
 	/* домножаем пилу на коэффициент усиления */
