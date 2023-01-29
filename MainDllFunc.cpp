@@ -129,6 +129,7 @@ Error:
 extern "C" __declspec(dllexport) int FindSignalWrapper(_In_ myflo * arrPila,                 // 1д массив с данными пилы
                                                        _In_ myflo * arrSignal,               // 1д массив с данными сигнала
                                                        _In_ myflo * AdditionalData,          // 1д дополнительная информация об импульсе (!размер 14!)
+                                                       _In_ const unsigned int buffer,       // буфер под vResP, выделяемый вызывающим кодом
                                                        _Out_ int & DIM1,                     // выходное значение (количество строк в матрице (количество отрезков))
                                                        _Out_ int & DIM2,                     // выходное значение (количество столбиков в матрице (количество точек на отрезк))
                                                        _Out_ myflo * vResP)                  // возвращяемый 1д массив с одним сегментом пилы (X для построения графика)
@@ -196,6 +197,10 @@ extern "C" __declspec(dllexport) int FindSignalWrapper(_In_ myflo * arrPila,    
 
         DIM1 = numSegments;
         DIM2 = vSegPila.size();
+
+        if (DIM2 > buffer)
+            return ERR_BufferExtension;
+
         memcpy(vResP, vSegPila.data(), sizeof myflo * vSegPila.size());
     }/*************************************************************************************************************/
     
@@ -435,6 +440,7 @@ extern "C" __declspec(dllexport) int OriginFindSignal(_In_ int diagnostics,     
                                                       _In_ double* arrPila,                 // 1д массив с данными пилы
                                                       _In_ double* arrSignal,               // 1д массив с данными сигнала
                                                       _In_ double* AdditionalData,          // 1д дополнительная информация об импульсе (!размер 14!)
+                                                      _In_ const unsigned int buffer,       // буфер под vResP, выделяемый вызывающим кодом
                                                       _Out_ int& DIM1,                      // выходное значение (количество строк в матрице (количество отрезков))
                                                       _Out_ int& DIM2,                      // выходное значение (количество столбиков в матрице (количество точек на отрезк))
                                                       _Out_ double* vResP,                  // возвращяемый 1д массив с одним сегментом пилы (X для построения графика)
@@ -525,18 +531,12 @@ extern "C" __declspec(dllexport) int OriginFindSignal(_In_ int diagnostics,     
 
         DIM1 = numSegments;
         DIM2 = vSegPila.size();
-        try
-        {
-            vResP[vSegPila.size() - 1];
-            vSsI[vStartSegIndxs.size() - 1];
 
-            memcpy(vResP, vSegPila.data(), sizeof(double) * vSegPila.size());
-            memcpy(vSsI, vStartSegIndxs.data(), sizeof(int) * vStartSegIndxs.size());
-        }
-        catch (...)
-        {
-            return -1;
-        }
+        if (DIM2 > buffer)
+            return ERR_BufferExtension;
+
+        memcpy(vResP, vSegPila.data(), sizeof(double) * vSegPila.size());
+        memcpy(vSsI, vStartSegIndxs.data(), sizeof(int) * vStartSegIndxs.size());
             
     }/*************************************************************************************************************/
 

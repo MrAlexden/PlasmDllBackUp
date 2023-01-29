@@ -339,7 +339,8 @@ typedef enum
     ERR_BadDiagNum = -6215,         // Diagnostics number must be > 0 and < 2
     ERR_IdxOutOfRange = -6216,      // Index is out of range. Programm continued running
     ERR_Exception = -6217,          // An exception been occured whule running, script did not stopt working
-    ERR_BadStEndTime = -6218        // Error!: start time must be less then end time and total time, more than 0\n\
+    ERR_BadStEndTime = -6218,       // Error!: start time must be less then end time and total time, more than 0\n\
                                     end time must be less then total time, more then 0
+    ERR_BufferExtension = -6219     // Buffer extension, bad impulse
 };
 ////////////////////////////////////////////// GLOBAL FUNCTIONS //////////////////////////////////////////////

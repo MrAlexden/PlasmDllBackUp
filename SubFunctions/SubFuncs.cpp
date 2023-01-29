@@ -833,7 +833,8 @@ int make_one_segment(_In_ const int diagnostics,			 // diagnostics type (zond::0
 			/* фильтруем вторую производную */
 			sg_smooth(vres, vhandler, vPila.size() * (filtS / 10), (5/*OriginLab poly order*/ - 1));
 			
-			int endpoint_of_curvature = middlepoint_of_curvature + 4 * abs(max_element(vhandler.begin(), vhandler.end()) - vhandler.begin());
+			/* отрезок аппроксимации будет длинной 5 полуширин изгиба */
+			int endpoint_of_curvature = middlepoint_of_curvature + 5 * abs(max_element(vhandler.begin(), vhandler.end()) - vhandler.begin());
 
 			if (endpoint_of_curvature < vPila.size() && middlepoint_of_curvature < endpoint_of_curvature)
 			{

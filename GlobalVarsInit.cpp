@@ -186,6 +186,8 @@ string ERR_GetErrorDescription(int err)
     case ERR_BadStEndTime:
         return "Error!: start time must be less then end time and total time, more than 0\n\
 end time must be less then total time, more then 0";
+    case ERR_BufferExtension:
+        return "Buffer extension, bad impulse";
     default:
         return "No Error";
     }
