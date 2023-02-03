@@ -303,6 +303,27 @@ bool is_signalpeakslookingdown(_In_ const vector <T> & v)
         return true;
 };
 
+/* takes sub vector of vector "in" from it "begin" to it "end" */
+template <typename T>
+vector <T> take_sub_vector(vector <T> & in,
+                           typename vector <T>::iterator begin,
+                           typename vector <T>::iterator end)
+{
+    vector <T> out;
+
+    if (begin > in.end() || end > in.end())
+        return out;
+
+    out.resize(end - begin);
+
+    int i = 0;
+
+    for (auto it = begin; it != end; ++it)
+        out[i++] = *it;
+
+    return out;
+};
+
 /* funcs for progress bar */
 LRESULT CALLBACK WndProc(HWND hWnd, UINT message, WPARAM wParam, LPARAM lParam);
 struct ThreadArgs

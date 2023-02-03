@@ -42,21 +42,13 @@ int Cilinder(_In_ vector <myflo> & vPila,
 	linfitP = 0.0;									// часть точек линейно аппроксимации
 	filtS = AdditionalData[6];					    // часть точек фильтрации сигнала
 	freqP = (int)AdditionalData[7];					// частота пилы
-	resistance = 1/*(int)AdditionalData[8]*/;		// сопротивление на цилиндре|магните (1 тк не учитываем сопротивление)
+	resistance = (int)AdditionalData[8];			// сопротивление на цилиндре|магните (1 тк не учитываем сопротивление)
 	coefPila = (int)AdditionalData[9];				// коэффициент усиления пилы
 	fuel = (int)AdditionalData[10];					// рабочее вещество (He::0|Ar::1|Ne::2)
 	Num_iter = (int)AdditionalData[11];				// количество итераций аппроксимации(сильно влияет на скорость работы программы)
 
 	/* домножаем пилу на коэффициент усиления */
-	thread T1(vectormult<myflo, int>, ref(vPila), coefPila);
-	//vectormult(vPila, coefPila);
-	/* переворачиваем ток чтобы смотрел вверх(если нужно), и делим на сопротивление */
-	resistance = is_signalpeakslookingdown(vSignal) ? -resistance : resistance;
-	thread T2(vectordiv<myflo, int>, ref(vSignal), resistance);
-	//vectordiv(vSignal, resistance);
-
-	T1.join();
-	T2.join();
+	vectormult(vPila, coefPila);
 
 	if (is_invalid(vPila.at(0))
 		|| is_invalid(vPila.at(vPila.size() - 1))
@@ -74,6 +66,12 @@ int Cilinder(_In_ vector <myflo> & vPila,
 		|| is_invalid(vStartSegIndxs.at(0))
 		|| is_invalid(vStartSegIndxs.at(vStartSegIndxs.size() - 1)))
 		return ERR_BadNoise;
+
+	/* переворачиваем ток чтобы смотрел вверх(если нужно), и делим на сопротивление */
+	resistance = is_signalpeakslookingdown(
+		take_sub_vector(vSignal, vSignal.begin() + vStartSegIndxs[0], vSignal.begin() + vStartSegIndxs[1]))
+		? -resistance : resistance;
+	vectordiv(vSignal, resistance);
 
 	fdata.SetSegmentsNumber(numSegments);
 	fdata.SetSegmentsSize(vSegPila.size());
