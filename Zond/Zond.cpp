@@ -1,12 +1,12 @@
 #include "Zond.h"
 
-int Zond(_In_ vector <myflo> & vPila,
+int Zond(_In_ vector <myflo> & vRamp,
 		 _In_ vector <myflo> & vSignal, 
 		 _In_ const vector <myflo> & AdditionalData,
 		 _Out_ Plasma_proc_result <myflo> & fdata)
 {
-	if (vPila.size() == 0
-		|| vPila.empty()
+	if (vRamp.size() == 0
+		|| vRamp.empty()
 		|| vSignal.size() == 0
 		|| vSignal.empty()
 		|| AdditionalData.size() == 0
@@ -25,12 +25,12 @@ int Zond(_In_ vector <myflo> & vPila,
 	if (AdditionalData[5] < 0 || AdditionalData[5] > 0.9)
 		return ERR_BadLinFit;
 
-	vector <myflo> vSegPila;
+	vector <myflo> vSegRamp;
 	vector <int> vStartSegIndxs;
 
 	int	numSegments = 0,	// количество отрезков в импульсе
 		resistance = 0,
-		coefPila = 0,
+		coefRamp = 0,
 		dimension = 5,		// количество столбиков parameters
 		err = 0;
 
@@ -46,13 +46,13 @@ int Zond(_In_ vector <myflo> & vPila,
 	filtS = AdditionalData[6];					    // часть точек фильтрации сигнала
 	freqP = (int)AdditionalData[7];					// частота пилы
 	resistance = (int)AdditionalData[8];			// сопротивление на зонде
-	coefPila = (int)AdditionalData[9];				// коэффициент усиления пилы
+	coefRamp = (int)AdditionalData[9];				// коэффициент усиления пилы
 	fuel = (int)AdditionalData[10];					// рабочее вещество (He::0|Ar::1|Ne::2)
 	Num_iter = (int)AdditionalData[11];				// количество итераций аппроксимации(сильно влияет на скорость работы программы)
 
 	/* домножаем пилу на коэффициент усиления */
-	thread T1(vectormult<myflo, int>, ref(vPila), coefPila);
-	//vectormult(vPila, coefPila);
+	thread T1(vectormult<myflo, int>, ref(vRamp), coefRamp);
+	//vectormult(vRamp, coefRamp);
 	/* переворачиваем ток чтобы смотрел вверх(если нужно), и делим на сопротивление */
 	thread T2(vectordiv<myflo, int>, ref(vSignal), -resistance);
 	//vectordiv(vSignal, resistance);
@@ -60,13 +60,13 @@ int Zond(_In_ vector <myflo> & vPila,
 	T1.join();
 	T2.join();
 
-	if (is_invalid(vPila.at(0))
-		|| is_invalid(vPila.at(vPila.size() - 1))
+	if (is_invalid(vRamp.at(0))
+		|| is_invalid(vRamp.at(vRamp.size() - 1))
 		|| is_invalid(vSignal.at(0))
 		|| is_invalid(vSignal.at(vSignal.size() - 1)))
 		return ERR_BadFactorizing;
 
-	ERR(find_signal_and_make_pila(vPila, vSignal, vSegPila, vStartSegIndxs));
+	ERR(find_signal_and_make_Ramp(vRamp, vSignal, vSegRamp, vStartSegIndxs));
 	numSegments = vStartSegIndxs.size();
 
 #ifdef KLUDGE
@@ -82,16 +82,16 @@ int Zond(_In_ vector <myflo> & vPila,
 
 	if (vStartSegIndxs.size() == 0
 		|| vStartSegIndxs.empty()
-		|| is_invalid(vSegPila.at(0))
-		|| is_invalid(vSegPila.at(vSegPila.size() - 1))
+		|| is_invalid(vSegRamp.at(0))
+		|| is_invalid(vSegRamp.at(vSegRamp.size() - 1))
 		|| is_invalid(vStartSegIndxs.at(0))
 		|| is_invalid(vStartSegIndxs.at(vStartSegIndxs.size() - 1)))
 		return ERR_BadNoise;
 
 	fdata.SetSegmentsNumber(numSegments);
-	fdata.SetSegmentsSize(vSegPila.size());
+	fdata.SetSegmentsSize(vSegRamp.size());
 	fdata.SetParamsNumber(dimension);
-	fdata.SetPila(vSegPila);
+	fdata.SetRamp(vSegRamp);
 
 	hThread = CreateThread(NULL, NULL, (LPTHREAD_START_ROUTINE)&DialogBoxParamWrapper, &args, NULL, NULL);
 	if (hThread)
@@ -114,13 +114,13 @@ int Zond(_In_ vector <myflo> & vPila,
 					   vcoeffs = { S, linfitP, filtS , (myflo)fuel, (myflo)Num_iter };
 
 		vY.assign(vSignal.begin() + vStartSegIndxs.at(segnum) + one_segment_width * leftP,
-			vSignal.begin() + vStartSegIndxs.at(segnum) + one_segment_width * leftP + vSegPila.size());
+			vSignal.begin() + vStartSegIndxs.at(segnum) + one_segment_width * leftP + vSegRamp.size());
 
 		fdata.SetOriginSegment(vY, segnum);
 
-		/*if (make_one_segment(0, vSegPila, vY, vres, vfilt, vdiff, vcoeffs) < 0)
+		/*if (make_one_segment(0, vSegRamp, vY, vres, vfilt, vdiff, vcoeffs) < 0)
 			continue;*/
-		make_one_segment(0, vSegPila, vY, vres, vfilt, vdiff, vcoeffs);
+		make_one_segment(0, vSegRamp, vY, vres, vfilt, vdiff, vcoeffs);
 
 		vcoeffs.insert(vcoeffs.begin(), vStartSegIndxs.at(segnum) * (1.0 / (one_segment_width * freqP)));
 	

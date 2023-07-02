@@ -18,7 +18,7 @@ public:
 	}
 	~Plasma_proc_result()
 	{
-		vPila.clear();
+		vRamp.clear();
 
 		for (int i = 0; i < NumberOfSegments; ++i)
 		{
@@ -68,9 +68,9 @@ public:
 
 
 	/* DATA SETTING */
-	void SetPila(std::vector <T> & v)
+	void SetRamp(std::vector <T> & v)
 	{
-		vPila = v;
+		vRamp = v;
 	}
 	int SetOriginSegment(std::vector <T> & v, int i)
 	{
@@ -100,9 +100,9 @@ public:
 
 
 	/* DATA GETTING */
-	std::vector < T > & const Get_vPila()
+	std::vector < T > & const Get_vRamp()
 	{
-		return vPila;
+		return vRamp;
 	}
 	std::vector < std::vector <T> > & const Get_mOriginalData()
 	{
@@ -142,7 +142,7 @@ public:
 
 private:
 
-	std::vector <T> vPila;
+	std::vector <T> vRamp;
 
 	std::vector < std::vector <T> > mOriginalData;
 	std::vector < std::vector <T> > mFeltrationData;

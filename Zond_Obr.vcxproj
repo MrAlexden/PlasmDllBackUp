@@ -132,7 +132,7 @@
       <UseFullPaths>false</UseFullPaths>
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
-      <LanguageStandard_C>stdc11</LanguageStandard_C>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
       <RuntimeLibrary>MultiThreadedDebugDLL</RuntimeLibrary>
       <ExceptionHandling>Sync</ExceptionHandling>
     </ClCompile>
@@ -163,6 +163,8 @@
       <InlineFunctionExpansion>AnySuitable</InlineFunctionExpansion>
       <FavorSizeOrSpeed>Speed</FavorSizeOrSpeed>
       <EnableFiberSafeOptimizations>true</EnableFiberSafeOptimizations>
+      <LanguageStandard>stdcpp20</LanguageStandard>
+      <LanguageStandard_C>stdc17</LanguageStandard_C>
     </ClCompile>
     <Link>
       <SubSystem>Windows</SubSystem>
@@ -178,8 +180,7 @@
     <ClInclude Include="Find_Peaks\PeakFinder.h" />
     <ClInclude Include="Lev-Marq\Lev-Marq.h" />
     <ClInclude Include="MainDllFunc.h" />
-    <ClInclude Include="Matrix Class\matrix.h" />
-    <ClInclude Include="Matrix Class\mynamespace.h" />
+    <ClInclude Include="Matrix_Class\mynamespace.h" />
     <ClInclude Include="Processing_Result_class\ProcessingResultClass.h" />
     <ClInclude Include="ProgressBarWindow\resource.h" />
     <ClInclude Include="Savitsky-Golay\Savitsky-Golay.h" />
@@ -194,7 +195,6 @@
     <ClCompile Include="GlobalVarsInit.cpp" />
     <ClCompile Include="Lev-Marq\Lev-Marq.cpp" />
     <ClCompile Include="MainDllFunc.cpp" />
-    <ClCompile Include="Matrix Class\matrix.cpp" />
     <ClCompile Include="Savitsky-Golay\Savitsky-Golay.cpp" />
     <ClCompile Include="Setka\Setka.cpp" />
     <ClCompile Include="SubFunctions\SubFuncs.cpp" />

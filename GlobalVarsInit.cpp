@@ -158,7 +158,7 @@ string ERR_GetErrorDescription(int err)
     case ERR_BadLinFit:
         return "The length of linear fit must be less than 0.9";
     case ERR_BadFactorizing:
-        return "Error after Pila|Signal factorizing";
+        return "Error after Ramp|Signal factorizing";
     case ERR_BadNoise:
         return "Error after noise extracting";
     case ERR_BadSegInput:
@@ -167,8 +167,8 @@ string ERR_GetErrorDescription(int err)
         return "Less then 4 segments found, check input arrays";
     case ERR_BadSegsLength:
         return "Error in finding segments length, check input params";
-    case ERR_BadLinearPila:
-        return "Error in pila linearizing, check cut-off params";
+    case ERR_BadLinearRamp:
+        return "Error in Ramp linearizing, check cut-off params";
     case ERR_TooManyAttempts:
         return "More than 5 attempts to find signal, check if signal is noise or not";
     case ERR_BadStartEnd:

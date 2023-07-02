@@ -35,7 +35,7 @@ BOOL WINAPI DllMain(HINSTANCE hinstDLL,  // handle to DLL module
 }
 
 extern "C" __declspec(dllexport) int MainWrapper(_In_ int diagnostics,               // diagnostics type (zond::0|setka::1|cilind::2)
-                                                 _In_ myflo * arrPila,               // 1д массив с данными пилы
+                                                 _In_ myflo * arrRamp,               // 1д массив с данными пилы
                                                  _In_ myflo * arrSignal,             // 1д массив с данными сигнала
                                                  _In_ myflo * AdditionalData,        // 1д дополнительная информация об импульсе (!размер 14!)
                                                  _Out_ myflo * OriginalData,         // возвращаемый 1д массив с разделенными на отрезки оригинальными данными
@@ -46,7 +46,7 @@ extern "C" __declspec(dllexport) int MainWrapper(_In_ int diagnostics,          
 {
     int err = 0;
 
-    if (arrPila == nullptr ||
+    if (arrRamp == nullptr ||
         arrSignal == nullptr ||
         AdditionalData == nullptr ||
         OriginalData == nullptr ||
@@ -78,7 +78,7 @@ extern "C" __declspec(dllexport) int MainWrapper(_In_ int diagnostics,          
         int arrSsize = (int)AdditionalData[13];				// размер входного массива сигнала
         int d1, d2, d3;
 
-        vector <myflo> vPila(arrPila, arrPila + arrPsize);
+        vector <myflo> vRamp(arrRamp, arrRamp + arrPsize);
         vector <myflo> vSignal(arrSignal, arrSignal + arrSsize);
         vector <myflo> vAdd(AdditionalData, AdditionalData + 14);
 
@@ -87,16 +87,16 @@ extern "C" __declspec(dllexport) int MainWrapper(_In_ int diagnostics,          
         switch (diagnostics)
         {
         case 0: // Zond
-            ERR(Zond(vPila, vSignal, vAdd, *fdata)); // вызов обработчика зонда
+            ERR(Zond(vRamp, vSignal, vAdd, *fdata)); // вызов обработчика зонда
             break;
         case 1: // Setka
-            ERR(Setka(vPila, vSignal, vAdd, *fdata)); // вызов обработчика сетки
+            ERR(Setka(vRamp, vSignal, vAdd, *fdata)); // вызов обработчика сетки
             break;
         case 2: // Cilinder|Magnit
-            ERR(Cilinder(vPila, vSignal, vAdd, *fdata)); // вызов обработчика цилиндра|магнита
+            ERR(Cilinder(vRamp, vSignal, vAdd, *fdata)); // вызов обработчика цилиндра|магнита
             break;
         case 3: // Double Prone
-            ERR(DoubleProbe(vPila, vSignal, vAdd, *fdata)); // вызов обработчика двойного зонда
+            ERR(DoubleProbe(vRamp, vSignal, vAdd, *fdata)); // вызов обработчика двойного зонда
             break;
         default:
             __assume(0);
@@ -126,7 +126,7 @@ Error:
     return err;
 }
 
-extern "C" __declspec(dllexport) int FindSignalWrapper(_In_ myflo * arrPila,                 // 1д массив с данными пилы
+extern "C" __declspec(dllexport) int FindSignalWrapper(_In_ myflo * arrRamp,                 // 1д массив с данными пилы
                                                        _In_ myflo * arrSignal,               // 1д массив с данными сигнала
                                                        _In_ myflo * AdditionalData,          // 1д дополнительная информация об импульсе (!размер 14!)
                                                        _In_ const unsigned int buffer,       // буфер под vResP, выделяемый вызывающим кодом
@@ -136,7 +136,7 @@ extern "C" __declspec(dllexport) int FindSignalWrapper(_In_ myflo * arrPila,    
 {
     int err = 0;
 
-    if (arrPila == nullptr ||
+    if (arrRamp == nullptr ||
         arrSignal == nullptr ||
         AdditionalData == nullptr)
         ERR(ERR_BadInputVecs);
@@ -162,46 +162,46 @@ extern "C" __declspec(dllexport) int FindSignalWrapper(_In_ myflo * arrPila,    
         rightP = AdditionalData[4];					        // часть точек отсечки справа
         freqP = (int)AdditionalData[7];					    // частота пилы
         int resistance = (int)AdditionalData[8];			// сопротивление на зонде
-        int coefPila = (int)AdditionalData[9];				// коэффициент усиления пилы
+        int coefRamp = (int)AdditionalData[9];				// коэффициент усиления пилы
         int arrPsize = (int)AdditionalData[12];				// размер входного массива пилы
         int arrSsize = (int)AdditionalData[13];				// размер входного массива сигнала
 
         int numSegments = 0;
 
-        vector <myflo> vPila(arrPila, arrPila + arrPsize);
+        vector <myflo> vRamp(arrRamp, arrRamp + arrPsize);
         vector <myflo> vSignal(arrSignal, arrSignal + arrSsize);
-        vector <myflo> vSegPila;
+        vector <myflo> vSegRamp;
         vector <int> vStartSegIndxs;
 
         /* домножаем пилу на коэффициент усиления */
-        vectormult(vPila, coefPila);
+        vectormult(vRamp, coefRamp);
         /* переворачиваем ток чтобы смотрел вверх(если нужно), и делим на сопротивление */
         vectordiv(vSignal, resistance);
 
-        if (is_invalid(vPila[0])
-            || is_invalid(vPila.back())
+        if (is_invalid(vRamp[0])
+            || is_invalid(vRamp.back())
             || is_invalid(vSignal[0])
             || is_invalid(vSignal.back()))
             ERR(ERR_BadFactorizing);
 
-        ERR(find_signal_and_make_pila(vPila, vSignal, vSegPila, vStartSegIndxs));
+        ERR(find_signal_and_make_Ramp(vRamp, vSignal, vSegRamp, vStartSegIndxs));
         numSegments = vStartSegIndxs.size();
         
         if (vStartSegIndxs.size() == 0
             || vStartSegIndxs.empty()
-            || is_invalid(vSegPila[0])
-            || is_invalid(vSegPila.back())
+            || is_invalid(vSegRamp[0])
+            || is_invalid(vSegRamp.back())
             || is_invalid(vStartSegIndxs[0])
             || is_invalid(vStartSegIndxs.back()))
             ERR(ERR_BadNoise);
 
         DIM1 = numSegments;
-        DIM2 = vSegPila.size();
+        DIM2 = vSegRamp.size();
 
         if (DIM2 > buffer)
             return ERR_BufferExtension;
 
-        memcpy(vResP, vSegPila.data(), sizeof myflo * vSegPila.size());
+        memcpy(vResP, vSegRamp.data(), sizeof myflo * vSegRamp.size());
     }/*************************************************************************************************************/
     
 Error:
@@ -210,8 +210,8 @@ Error:
     return err;
 }
 
-extern "C" __declspec(dllexport) int SetUpPila(_In_ int diagnostics,           // diagnostics type (zond::0|setka::1|cilind::2)
-                                               _In_ myflo * arrPila,           // 1д массив с данными пилы
+extern "C" __declspec(dllexport) int SetUpRamp(_In_ int diagnostics,           // diagnostics type (zond::0|setka::1|cilind::2)
+                                               _In_ myflo * arrRamp,           // 1д массив с данными пилы
                                                _In_ myflo * arrSignal,         // 1д массив с данными сигнала
                                                _In_ int arrPsize,              // размер пилы
                                                _In_ int arrSsize,              // размер сигнала
@@ -219,7 +219,7 @@ extern "C" __declspec(dllexport) int SetUpPila(_In_ int diagnostics,           /
 {
     int err = 0;
 
-    if (arrPila == nullptr ||
+    if (arrRamp == nullptr ||
         arrSignal == nullptr ||
         vResP == nullptr)
         ERR(ERR_BadInputVecs);
@@ -233,30 +233,30 @@ extern "C" __declspec(dllexport) int SetUpPila(_In_ int diagnostics,           /
         leftP = 0.0;					    // часть точек отсечки слева
         rightP = 0.0;					    // часть точек отсечки справа
 
-        const vector <myflo> vPila(arrPila, arrPila + arrPsize);
+        const vector <myflo> vRamp(arrRamp, arrRamp + arrPsize);
         vector <myflo> vSignal(arrSignal, arrSignal + arrSsize);
-        vector <myflo> vSegPila, IndHandler;
+        vector <myflo> vSegRamp, IndHandler;
         vector <int> vStartSegIndxs;
         vector <int> vnIndices;
         myflo vless = 0.0, vmore = 0.0;
         
-        ERR(find_signal_and_make_pila(vPila, vSignal, vSegPila, vStartSegIndxs));
+        ERR(find_signal_and_make_Ramp(vRamp, vSignal, vSegRamp, vStartSegIndxs));
 
         if (vStartSegIndxs.size() == 0
             || vStartSegIndxs.empty()
-            || is_invalid(vSegPila[0])
-            || is_invalid(vSegPila.back())
+            || is_invalid(vSegRamp[0])
+            || is_invalid(vSegRamp.back())
             || is_invalid(vStartSegIndxs[0])
             || is_invalid(vStartSegIndxs.back()))
             ERR(ERR_BadNoise);
 
         /* находим все участки на пиле при помощи пиков */
-        err = PeakFinder::findPeaks(vPila, vnIndices, false);
+        err = PeakFinder::findPeaks(vRamp, vnIndices, false);
         if (vnIndices.size() <= 3)
             ERR(ERR_TooFewSegs);
 
         /* приводим индексы начал отрезков к одной фазе с током */
-        match_pila_and_signal(vPila, vSignal, vnIndices);
+        match_Ramp_and_signal(vRamp, vSignal, vnIndices);
 
 #ifdef KLUDGE
         /* ВРЕМЕННЫЙ КОСТЫЛЬ */
@@ -276,8 +276,8 @@ extern "C" __declspec(dllexport) int SetUpPila(_In_ int diagnostics,           /
         {
             /* заполняем основную часть массива с пилой */
             for (int i = 0; i < vnIndices.size() - 1; ++i)
-                if(vnIndices.at(i) + vSegPila.size() < arrSsize)
-                    memcpy(&vResP[vnIndices.at(i)], vSegPila.data(), sizeof myflo * vSegPila.size());
+                if(vnIndices.at(i) + vSegRamp.size() < arrSsize)
+                    memcpy(&vResP[vnIndices.at(i)], vSegRamp.data(), sizeof myflo * vSegRamp.size());
         }
         catch (...)
         {
@@ -287,12 +287,12 @@ extern "C" __declspec(dllexport) int SetUpPila(_In_ int diagnostics,           /
         try
         {
             /* заполняем начало массива с пилой */
-            if (vSegPila.size() >= vnIndices.at(0))
-                memcpy(&vResP[0], &vSegPila.at(vSegPila.size() - vnIndices.at(0)), sizeof myflo * vnIndices.at(0));
+            if (vSegRamp.size() >= vnIndices.at(0))
+                memcpy(&vResP[0], &vSegRamp.at(vSegRamp.size() - vnIndices.at(0)), sizeof myflo * vnIndices.at(0));
             else
             {
-                memcpy(&vResP[vnIndices.at(0) - vSegPila.size()], vSegPila.data(), sizeof myflo * vSegPila.size());
-                memcpy(&vResP[0], &vSegPila.at(vSegPila.size() - (vnIndices.at(0) - vSegPila.size())), sizeof myflo * (vnIndices.at(0) - vSegPila.size()));
+                memcpy(&vResP[vnIndices.at(0) - vSegRamp.size()], vSegRamp.data(), sizeof myflo * vSegRamp.size());
+                memcpy(&vResP[0], &vSegRamp.at(vSegRamp.size() - (vnIndices.at(0) - vSegRamp.size())), sizeof myflo * (vnIndices.at(0) - vSegRamp.size()));
             }
         }
         catch (...)
@@ -301,25 +301,25 @@ extern "C" __declspec(dllexport) int SetUpPila(_In_ int diagnostics,           /
         }
 
         /* заполняем конец массива с пилой */
-        if (vSegPila.size() >= (arrSsize - vnIndices.back()))
-            memcpy(&vResP[vnIndices.back()], vSegPila.data(), sizeof myflo * (arrSsize - vnIndices.back()));
+        if (vSegRamp.size() >= (arrSsize - vnIndices.back()))
+            memcpy(&vResP[vnIndices.back()], vSegRamp.data(), sizeof myflo * (arrSsize - vnIndices.back()));
         else
         {
-            memcpy(&vResP[vnIndices.back()], vSegPila.data(), sizeof myflo * vSegPila.size());
-            memcpy(&vResP[vnIndices.back() + vSegPila.size()], vSegPila.data(), sizeof myflo * (arrSsize - vnIndices.back() - vSegPila.size()));
+            memcpy(&vResP[vnIndices.back()], vSegRamp.data(), sizeof myflo * vSegRamp.size());
+            memcpy(&vResP[vnIndices.back() + vSegRamp.size()], vSegRamp.data(), sizeof myflo * (arrSsize - vnIndices.back() - vSegRamp.size()));
         }
 
 
         /* убираю нули если они есть на всем протяжении массива */
-        if (vSegPila.front() < vSegPila.back()) // для случая '/'
+        if (vSegRamp.front() < vSegRamp.back()) // для случая '/'
         {
-            vless = vSegPila.front();
-            vmore = vSegPila.back();
+            vless = vSegRamp.front();
+            vmore = vSegRamp.back();
         }
         else                                    // для случая '\'
         {
-            vless = vSegPila.back();
-            vmore = vSegPila.front();
+            vless = vSegRamp.back();
+            vmore = vSegRamp.front();
         }
         for (int i = 1; i < arrSsize; ++i)
             if (vResP[i] == 0 || vResP[i] < vless || vResP[i] > vmore)
@@ -331,7 +331,7 @@ Error:
 }
 
 extern "C" __declspec(dllexport) int OriginAll(_In_ int diagnostics,               // diagnostics type (zond::0|setka::1|cilind::2)
-                                               _In_ double* arrPila,               // 1д массив с данными пилы
+                                               _In_ double* arrRamp,               // 1д массив с данными пилы
                                                _In_ double* arrSignal,             // 1д массив с данными сигнала
                                                _In_ double* AdditionalData,        // 1д дополнительная информация об импульсе (!размер 14!)
                                                _Out_ double* OriginalData,         // возвращаемый 1д массив с разделенными на отрезки оригинальными данными
@@ -342,7 +342,7 @@ extern "C" __declspec(dllexport) int OriginAll(_In_ int diagnostics,            
 {
     int err = 0;
 
-    if (arrPila == nullptr ||
+    if (arrRamp == nullptr ||
         arrSignal == nullptr ||
         AdditionalData == nullptr ||
         OriginalData == nullptr ||
@@ -374,11 +374,11 @@ extern "C" __declspec(dllexport) int OriginAll(_In_ int diagnostics,            
         int arrSsize = (int)AdditionalData[13];				// размер входного массива сигнала
         int d1, d2, d3;
 
-        vector <double> vPila(arrPila, arrPila + arrPsize);
+        vector <double> vRamp(arrRamp, arrRamp + arrPsize);
         vector <double> vSignal(arrSignal, arrSignal + arrSsize);
         vector <double> vAdd(AdditionalData, AdditionalData + 14);
 
-        vector <myflo> vP(vPila.begin(), vPila.end());
+        vector <myflo> vP(vRamp.begin(), vRamp.end());
         vector <myflo> vS(vSignal.begin(), vSignal.end());
         vector <myflo> vA(vAdd.begin(), vAdd.end());
 
@@ -437,7 +437,7 @@ Error:
 }
 
 extern "C" __declspec(dllexport) int OriginFindSignal(_In_ int diagnostics,                 // diagnostics type (zond::0|setka::1|cilind::2)
-                                                      _In_ double* arrPila,                 // 1д массив с данными пилы
+                                                      _In_ double* arrRamp,                 // 1д массив с данными пилы
                                                       _In_ double* arrSignal,               // 1д массив с данными сигнала
                                                       _In_ double* AdditionalData,          // 1д дополнительная информация об импульсе (!размер 14!)
                                                       _In_ const unsigned int buffer,       // буфер под vResP, выделяемый вызывающим кодом
@@ -448,7 +448,7 @@ extern "C" __declspec(dllexport) int OriginFindSignal(_In_ int diagnostics,     
 {
     int err = 0;
 
-    if (arrPila == nullptr ||
+    if (arrRamp == nullptr ||
         arrSignal == nullptr ||
         AdditionalData == nullptr)
         ERR(ERR_BadInputVecs);
@@ -474,43 +474,43 @@ extern "C" __declspec(dllexport) int OriginFindSignal(_In_ int diagnostics,     
         rightP = AdditionalData[4];					        // часть точек отсечки справа
         freqP = (int)AdditionalData[7];					    // частота пилы
         int resistance = (int)AdditionalData[8];			// сопротивление на зонде
-        int coefPila = (int)AdditionalData[9];				// коэффициент усиления пилы
+        int coefRamp = (int)AdditionalData[9];				// коэффициент усиления пилы
         int arrPsize = (int)AdditionalData[12];				// размер входного массива пилы
         int arrSsize = (int)AdditionalData[13];				// размер входного массива сигнала
 
         int numSegments = 0;
 
-        vector <double> vPila(arrPila, arrPila + arrPsize);
+        vector <double> vRamp(arrRamp, arrRamp + arrPsize);
         vector <double> vSignal(arrSignal, arrSignal + arrSsize);
-        vector <double> vSegPila;
+        vector <double> vSegRamp;
         vector <int> vStartSegIndxs;
 
         /* домножаем пилу на коэффициент усиления */
-        vectormult(vPila, coefPila);
+        vectormult(vRamp, coefRamp);
         /* переворачиваем ток чтобы смотрел вверх(если нужно), и делим на сопротивление */
         vectordiv(vSignal, resistance);
 
-        if (is_invalid(vPila[0])
-            || is_invalid(vPila.back())
+        if (is_invalid(vRamp[0])
+            || is_invalid(vRamp.back())
             || is_invalid(vSignal[0])
             || is_invalid(vSignal.back()))
             ERR(ERR_BadFactorizing);
         
-        vector <myflo> vP(vPila.begin(), vPila.end());
+        vector <myflo> vP(vRamp.begin(), vRamp.end());
         vector <myflo> vS(vSignal.begin(), vSignal.end());
         vector <myflo> vSP;
 
-        ERR(find_signal_and_make_pila(vP, vS, vSP, vStartSegIndxs));
+        ERR(find_signal_and_make_Ramp(vP, vS, vSP, vStartSegIndxs));
         numSegments = vStartSegIndxs.size();
 
-        vPila.assign(vP.begin(), vP.end());
+        vRamp.assign(vP.begin(), vP.end());
         vSignal.assign(vS.begin(), vS.end());
-        vSegPila.assign(vSP.begin(), vSP.end());
+        vSegRamp.assign(vSP.begin(), vSP.end());
         
         if (vStartSegIndxs.size() == 0
             || vStartSegIndxs.empty()
-            || is_invalid(vSegPila[0])
-            || is_invalid(vSegPila.back())
+            || is_invalid(vSegRamp[0])
+            || is_invalid(vSegRamp.back())
             || is_invalid(vStartSegIndxs[0])
             || is_invalid(vStartSegIndxs.back()))
             ERR(ERR_BadNoise);
@@ -530,12 +530,12 @@ extern "C" __declspec(dllexport) int OriginFindSignal(_In_ int diagnostics,     
 #endif
 
         DIM1 = numSegments;
-        DIM2 = vSegPila.size();
+        DIM2 = vSegRamp.size();
 
         if (DIM2 > buffer)
             return ERR_BufferExtension;
 
-        memcpy(vResP, vSegPila.data(), sizeof(double) * vSegPila.size());
+        memcpy(vResP, vSegRamp.data(), sizeof(double) * vSegRamp.size());
         memcpy(vSsI, vStartSegIndxs.data(), sizeof(int) * vStartSegIndxs.size());
             
     }/*************************************************************************************************************/
@@ -545,7 +545,7 @@ Error:
 }
 
 extern "C" __declspec(dllexport) int OriginMakeOne(_In_ int diagnostics,                    // diagnostics type (zond::0|setka::1|cilind::2)
-                                                   _In_ double* arrPila,                    // 1д массив с данными пилы
+                                                   _In_ double* arrRamp,                    // 1д массив с данными пилы
                                                    _In_ double* arrSignal,                  // 1д массив с данными сигнала
                                                    _In_ double* AdditionalData,             // 1д дополнительная информация об импульсе (!размер 6!)
                                                    _Out_ double* arrres,			        // array to be filled with the result
@@ -555,7 +555,7 @@ extern "C" __declspec(dllexport) int OriginMakeOne(_In_ int diagnostics,        
 {
     int err = 0;
 
-    if (arrPila == nullptr ||
+    if (arrRamp == nullptr ||
         arrSignal == nullptr ||
         AdditionalData == nullptr)
         ERR(ERR_BadInputVecs);
@@ -577,11 +577,11 @@ extern "C" __declspec(dllexport) int OriginMakeOne(_In_ int diagnostics,        
         Num_iter = (int)AdditionalData[4];
         int arrsize = (int)AdditionalData[5];
 
-        vector <double> vPila(arrPila, arrPila + arrsize);
+        vector <double> vRamp(arrRamp, arrRamp + arrsize);
         vector <double> vSignal(arrSignal, arrSignal + arrsize);
         vector <double> vres, vfilt, vdiff, vcoeffs;
 
-        vector <myflo> vP(vPila.begin(), vPila.end());
+        vector <myflo> vP(vRamp.begin(), vRamp.end());
         vector <myflo> vS(vSignal.begin(), vSignal.end());
         vector <myflo> vR, vF, vD, vC = { S, linfitP, filtS , (myflo)fuel, (myflo)Num_iter };
 

@@ -1,18 +1,18 @@
 #pragma once
 
 #define WIN32_LEAN_AND_MEAN // Исключите редко используемые компоненты из заголовков Windows
-#define KLUDGE              // будет ли использован костыль
+#define NOKLUDGE              // будет ли использован костыль
 #define NOGAUSSFITS         // будет ли использована аппроксимация гауссом в обработке сеточного
-#define GAUSSFITC           // будет ли использована аппроксимация гауссом в обработке цилиндрического
+#define NOGAUSSFITC           // будет ли использована аппроксимация гауссом в обработке цилиндрического
 
 #define TOL 10E-30f /* smallest value allowed in cholesky_decomp() */
 #define Pi 3.14159265f
-#define e 1.602176634E-19f
+#define ze 1.602176634E-19f
 #define kb 1.380649E-23f
 #define eVtoK 11604.51812f
-#define ef_koef 10 /* коэффициент эффективности, если == 1 то метод обрабатывает все точки, 
+#define boost 10 /* коэффициент ускорения, если == 1 то метод обрабатывает все точки, 
                 если == 2 каждую вторую (в два раза быстре, но точность меньше) и тд \
-                ef_koef используется в **SubFuncs** **Lev-Marq** */
+                boost используется в **SubFuncs** **Lev-Marq** */
 
 #define ERR(f) if (err = (f), err < 0) goto Error;
 
@@ -29,7 +29,7 @@
 
 #include "ProgressBarWindow/resource.h"   // progress bar resource
 #include "Processing_Result_class/ProcessingResultClass.h"
-#include "Matrix Class/mynamespace.h"
+#include "Matrix_Class/mynamespace.h"
 
 using namespace myspace;// for LMfit
 using namespace std;    // for std::
@@ -153,41 +153,6 @@ namespace PeakFinder {
                   _In_opt_ int = 1);    // from PeakFinder.cpp
 };
 
-class Matrix { // from matrix.cpp
-private:
-    unsigned m_rowSize;
-    unsigned m_colSize;
-    vector<vector<myflo> > m_matrix;
-public:
-    Matrix(unsigned, unsigned, myflo);
-    Matrix(const Matrix&);
-    ~Matrix();
-
-    // Matrix Operations
-    Matrix operator+(Matrix&);
-    Matrix operator-(Matrix&);
-    Matrix operator*(Matrix&);
-    Matrix transpose();
-
-    // Scalar Operations
-    Matrix operator+(myflo);
-    Matrix operator-(myflo);
-    Matrix operator*(myflo);
-    Matrix operator/(myflo);
-
-    // Aesthetic Methods
-    myflo& operator()(const unsigned&, const unsigned&);
-    void print() const;
-    unsigned getRows() const;
-    unsigned getCols() const;
-
-    // Power Iteration
-    tuple<Matrix, myflo, int> powerIter(unsigned, myflo);
-
-    // Deflation
-    Matrix deflation(Matrix&, myflo&);
-};
-
 /* calculate partial derivative of given func in particular point */
 myflo partial_derivative(_In_ myflo,
                          _In_ const vector <myflo> &,
@@ -203,12 +168,12 @@ void levmarq(_In_ const vector <myflo> &,					 // independent data
              _In_ myflo(*)(myflo, const vector <myflo> &));  // the function that the data will be approximated by
 
 /* my function which finds usefull signal out of noise and creates voltage approximation */
-int find_signal_and_make_pila(_In_ const vector <myflo> &,
+int find_signal_and_make_Ramp(_In_ const vector <myflo> &,
                               _In_ const vector <myflo> &,
                               _Out_ vector <myflo> &,
                               _Out_ vector <int> &);    // from SubFuncs.cpp
 
-inline int match_pila_and_signal(_In_ const vector <myflo> &,
+inline int match_Ramp_and_signal(_In_ const vector <myflo> &,
                                  _In_ const vector <myflo> &,
                                  _Inout_ vector <int> &);     // from SubFuncs.cpp
 
@@ -228,25 +193,25 @@ extern "C" __declspec(dllexport) int make_one_segment(_In_ int,					            
                                                       _Inout_ vector <myflo> &);		    // additional coeffs/results vector
 
 /* processes the whole Langmuir probe signal */
-extern "C" __declspec(dllexport) int Zond(_In_ vector <myflo> & Pila,                       // входной одномерный массив пилы
+extern "C" __declspec(dllexport) int Zond(_In_ vector <myflo> & Ramp,                       // входной одномерный массив пилы
                                           _In_ vector <myflo> & Signal,                     // входной одномерный массив сигнала
                                           _In_ const vector <myflo> & AdditionalData,       // дополнительные данные по импульсу
                                           _Out_ Plasma_proc_result <myflo> & fdata);        // выходной класс с результатом обработки
 
 /* processes the whole potential analizator signal */
-extern "C" __declspec(dllexport) int Setka(_In_ vector <myflo> & Pila,                      // входной одномерный массив пилы
+extern "C" __declspec(dllexport) int Setka(_In_ vector <myflo> & Ramp,                      // входной одномерный массив пилы
                                            _In_ vector <myflo> & Signal,                    // входной одномерный массив сигнала
                                            _In_ const vector <myflo> & AdditionalData,      // дополнительные данные по импульсу
                                            _Out_ Plasma_proc_result <myflo> & fdata);       // выходной класс с результатом обработки
 
 /* processes the whole cilinder analizator signal */
-extern "C" __declspec(dllexport) int Cilinder(_In_ vector <myflo> & Pila,                   // входной одномерный массив пилы
+extern "C" __declspec(dllexport) int Cilinder(_In_ vector <myflo> & Ramp,                   // входной одномерный массив пилы
                                               _In_ vector <myflo> & Signal,                 // входной одномерный массив сигнала
                                               _In_ const vector <myflo> & AdditionalData,   // дополнительные данные по импульсу
                                               _Out_ Plasma_proc_result <myflo> & fdata);    // выходной класс с результатом обработки
 
 /* processes the whole double Langmuir probe signal */
-extern "C" __declspec(dllexport) int DoubleProbe(_In_ vector <myflo> & vPila,               // входной одномерный массив пилы
+extern "C" __declspec(dllexport) int DoubleProbe(_In_ vector <myflo> & vRamp,               // входной одномерный массив пилы
                                                  _In_ vector <myflo> & vSignal,             // входной одномерный массив сигнала
                                                  _In_ const vector <myflo> & AdditionalData,// дополнительные данные по импульсу
                                                  _Out_ Plasma_proc_result <myflo> & fdata); // выходной класс с результатом обработки
@@ -347,12 +312,12 @@ typedef enum
     ERR_ZeroInputVals = -6202,      // Input data error, some values equals 0
     ERR_BadCutOff = -6203,          // Сut-off points must be less than 0.9 in total and more than 0 each
     ERR_BadLinFit = -6204,          // The length of linear fit must be less than 0.9
-    ERR_BadFactorizing = -6205,     // Error after Pila|Signal factorizing
+    ERR_BadFactorizing = -6205,     // Error after Ramp|Signal factorizing
     ERR_BadNoise = -6206,           // Error after noise extracting
     ERR_BadSegInput = -6207,        // Input segment's values error while segmend approximating
     ERR_TooFewSegs = -6208,         // Less then 4 segments found, check input arrays  
     ERR_BadSegsLength = -6209,      // Error in finding segments length, check input params
-    ERR_BadLinearPila = -6210,      // Error in pila linearizing, check cut-off params
+    ERR_BadLinearRamp = -6210,      // Error in Ramp linearizing, check cut-off params
     ERR_TooManyAttempts = -6211,    // More than 5 attempts to find signal, check if signal is noise or not
     ERR_BadStartEnd = -6212,        // Error in finding start|end of signal, check if signal is noise or not
     ERR_TooManySegs = -6213,        // Too many segments, check if signal is noise or not

@@ -5,7 +5,6 @@ inline void diff(_In_ const vector <myflo> & in,
 				 _In_opt_ int k)
 {
 	if (in.size() < 2) return;
-	k = (k == NULL) ? 1 : k;
 	out.resize(in.size());
 
 	for (int i = 1; i < in.size(); ++i)
@@ -77,7 +76,7 @@ int PeakFinder::findPeaks(_In_ const vector <myflo> & in,
 		vectormult<myflo, int>(x0, extrema);
 
 	vector <myflo> dx;
-	diff(x0, dx, 1);
+	diff(x0, dx);
 	replace(dx.begin(), dx.end(), (myflo)0.0, -PeakFinder::EPS);
 	vector <myflo> dx0(dx.begin(), dx.end() - 1);
 	vector <myflo> dx0_1(dx.begin() + 1, dx.end());
@@ -132,7 +131,7 @@ int PeakFinder::findPeaks(_In_ const vector <myflo> & in,
 			//  point on it does not neccessarily alternate like the rest.
 			vector <myflo> xSub0(x.begin(), x.begin() + 3);//tener cuidado subvector
 			vector <myflo> xDiff;//tener cuidado subvector
-			diff(xSub0, xDiff, 1);
+			diff(xSub0, xDiff);
 
 			vector<int> signDx;
 			signVector(xDiff, signDx);

@@ -13,9 +13,6 @@
     <ClCompile Include="MainDllFunc.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
-    <ClCompile Include="Matrix Class\matrix.cpp">
-      <Filter>Исходные файлы</Filter>
-    </ClCompile>
     <ClCompile Include="Find_Peaks\PeakFinder.cpp">
       <Filter>Исходные файлы</Filter>
     </ClCompile>
@@ -45,9 +42,6 @@
     <ClInclude Include="MainDllFunc.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="Matrix Class\matrix.h">
-      <Filter>Файлы заголовков</Filter>
-    </ClInclude>
     <ClInclude Include="Find_Peaks\PeakFinder.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
@@ -72,7 +66,7 @@
     <ClInclude Include="DoubleLangmuirProbe\DoubleProbe.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
-    <ClInclude Include="Matrix Class\mynamespace.h">
+    <ClInclude Include="Matrix_Class\mynamespace.h">
       <Filter>Файлы заголовков</Filter>
     </ClInclude>
   </ItemGroup>

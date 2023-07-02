@@ -8,11 +8,11 @@ inline myflo error_func(_In_ const vector <myflo>& vec_X,
 {
 	myflo res, err = 0;
 
-	for (int x = 0 + (ef_koef - 1); x < vec_Y.size() - (ef_koef - 1); x += ef_koef)
-		/* ef_koef - 1 чтобы было 0 если ef_koef == 1 */
+	for (int x = 0 + (boost - 1); x < vec_Y.size() - (boost - 1); x += boost)
+		/* boost - 1 чтобы было 0 если boost == 1 */
 	{
 		res = fx(vec_X[x], vParams) - vec_Y[x];
-		err += res * res * ef_koef;
+		err += res * res * boost;
 	}
 
 	return err;
@@ -21,11 +21,11 @@ inline myflo error_func(_In_ const vector <myflo>& vec_X,
 /* solve the equation Ax=b for a symmetric positive-definite matrix A,
    using the Cholesky decomposition A=LL^T.  The matrix L is passed in "ch".
    Elements above the diagonal are ignored. */
-inline void solve_axb_cholesky(_In_ Matrix& ch, 
+inline void solve_axb_cholesky(_In_ matrix<myflo>& ch, 
 							   _Out_ vector <myflo>& delta, 
 							   _In_ const vector <myflo>& drvtv)
 {
-	int i, j, npar = ch.getCols();
+	int i, j, npar = ch.cols;
 	myflo sum;
 
 	/* solve (ch)*y = drvtv for y (where delta[] is used to store y) */ 
@@ -33,8 +33,8 @@ inline void solve_axb_cholesky(_In_ Matrix& ch,
 	{
 		sum = 0;
 		for (j = 0; j < i; ++j)
-			sum += ch(i, j) * delta[j];
-		delta[i] = (drvtv[i] - sum) / ch(i, i);
+			sum += ch[i][j] * delta[j];
+		delta[i] = (drvtv[i] - sum) / ch[i][i];
 	}
 
 	/* solve (ch)^T*delta = y for delta (where delta[] is used to store both y and delta) */
@@ -42,8 +42,8 @@ inline void solve_axb_cholesky(_In_ Matrix& ch,
 	{
 		sum = 0;
 		for (j = i + 1; j < npar; ++j)
-			sum += ch(j, i) * delta[j];
-		delta[i] = (delta[i] - sum) / ch(i, i);
+			sum += ch[j][i] * delta[j];
+		delta[i] = (delta[i] - sum) / ch[i][i];
 	}
 }
 
@@ -51,10 +51,10 @@ inline void solve_axb_cholesky(_In_ Matrix& ch,
    its (lower-triangular) Cholesky factor in "ch".  Elements above the
    diagonal are neither used nor modified.  The same array may be passed
    as both ch and Hessian, in which case the decomposition is performed in place. */
-inline bool cholesky_decomp(_Inout_ Matrix& ch, 
-							_In_ Matrix& Hessian)
+inline bool cholesky_decomp(_Inout_ matrix<myflo>& ch, 
+							_In_ matrix<myflo>& Hessian)
 {
-	int i, j, k, npar = ch.getCols();
+	int i, j, k, npar = ch.cols;
 	myflo sum;
 
 	for (i = 0; i < npar; ++i)
@@ -63,16 +63,16 @@ inline bool cholesky_decomp(_Inout_ Matrix& ch,
 		{
 			sum = 0;
 			for (k = 0; k < j; ++k)
-				sum += ch(i, k) * ch(j, k);
-			ch(i, j) = (Hessian(i, j) - sum) / ch(j, j);
+				sum += ch[i][k] * ch[j][k];
+			ch[i][j] = (Hessian[i][j] - sum) / ch[j][j];
 		}
 
 		sum = 0;
 		for (k = 0; k < i; ++k)
-			sum += ch(i, k) * ch(i, k);
-		sum = Hessian(i, i) - sum;
+			sum += ch[i][k] * ch[i][k];
+		sum = Hessian[i][i] - sum;
 		if (sum < TOL) return true; /* not positive-definite */
-		ch(i, i) = sqrt(sum);
+		ch[i][i] = sqrt(sum);
 	}
 	return false;
 }
@@ -117,8 +117,8 @@ void levmarq(_In_ const vector <myflo> & vec_X,					// independent data
 	myflo lambda = 0.01f, up = 10, down = 1 / up, mult, err = 0, newerr = 0, derr = 0, target_derr = /*1E-12*/TOL;
 
 	/* check for input mistakes */
-	if (vec_X.size() <= ef_koef
-		|| vec_Y.size() <= ef_koef)
+	if (vec_X.size() <= boost
+		|| vec_Y.size() <= boost)
 		return;
 	if (vFixed.empty())
 		for (i = 0; i < vParams.size(); ++i)
@@ -137,7 +137,7 @@ void levmarq(_In_ const vector <myflo> & vec_X,					// independent data
 			vParams[i] = 1;
 	}
 
-	Matrix Hessian(npar, npar, 0.0), ch(npar, npar, 0.0);
+	matrix <myflo> Hessian(npar, npar, 0.0), ch(npar, npar, 0.0);
 	vector <myflo> grad(npar), drvtv(npar), delta(npar, 0.0), newvParams = vParams;
 
 	/* calculate the initial error ("chi-squared") */
@@ -151,11 +151,11 @@ void levmarq(_In_ const vector <myflo> & vec_X,					// independent data
 		{
 			drvtv[i] = 0.0;
 			for (j = 0; j < npar; ++j)
-				Hessian(i, j) = 0;
+				Hessian[i][j] = 0;
 		}
 
 		/* calculate the approximation to the Hessian and the "derivative" drvtv */
-		for (x = 0 + (ef_koef - 1); x < vec_Y.size() - (ef_koef - 1); x += ef_koef)
+		for (x = 0 + (boost - 1); x < vec_Y.size() - (boost - 1); x += boost)
 		{
 			/* calculate gradient */
 			for (i = 0, j = 0; i < vFixed.size(); ++i)
@@ -164,10 +164,10 @@ void levmarq(_In_ const vector <myflo> & vec_X,					// independent data
 
 			for (i = 0; i < npar; ++i)
 			{
-				drvtv[i] += (vec_Y[x] - fx(vec_X[x], vParams)) * grad[i] * ef_koef;
+				drvtv[i] += (vec_Y[x] - fx(vec_X[x], vParams)) * grad[i] * boost;
 
 				for (j = 0; j < npar; ++j)
-					Hessian(i, j) += grad[i] * grad[j] * ef_koef;
+					Hessian[i][j] += grad[i] * grad[j] * boost;
 			}
 		}
 
@@ -177,7 +177,7 @@ void levmarq(_In_ const vector <myflo> & vec_X,					// independent data
 		while (ill && (it < niter))
 		{
 			for (i = 0; i < npar; ++i)
-				Hessian(i, i) = Hessian(i, i) * mult;
+				Hessian[i][i] = Hessian[i][i] * mult;
 
 			ill = cholesky_decomp(ch, Hessian);
 
@@ -216,19 +216,3 @@ void levmarq(_In_ const vector <myflo> & vec_X,					// independent data
 
 	//MessageBoxA(NULL, ("Iterations: " + to_string(it) + "\nError: " + to_string(-derr)).c_str(), "Error!", MB_ICONINFORMATION | MB_OK);
 }
-
-//fit_polyline(iNum, x_data, y_data, iSec, vk, NULL, NULL, vxave)
-//vector vkabs;
-//vkabs = vk;
-//vkabs.Abs();
-//double dMin, dMax;
-//int iMin, iMax;
-//vkabs.GetMinMax(dMin, dMax, &iMin, &iMax);
-//double dExp = log(dMax / dMin) / (vxave[iMax] - vxave[iMin]);
-//double y2 = exp(dExp * (x_data[iNum - 1] - x_data[0]));
-//double y1 = 1;
-//double dBase = (y_data[0] * y2 - y_data[iNum - 1] * y1) / (y2 - y1);
-//double dScale = (y_data[iNum - 1] - y_data[0]) / (y2 - y1);
-//
-//if (pScaleExp != NULL)
-//	*pScaleExp = log(abs(dScale)) - dExp * x_data[0];

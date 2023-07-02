@@ -1,6 +1,6 @@
 #include "SubFuncs.h"
 
-int NumPointsOfOriginalPila = 0,
+int NumPointsOfOriginalRamp = 0,
 	i_nach = 0,
 	i_konec = 0;
 
@@ -39,7 +39,7 @@ static inline int find_i_nach(_In_ const vector <myflo> & vSignal,
 	int nach_ignored_gap = vnIndices[0] + (1 - rightP) * one_segment_width,
 		konec_ignored_gap = vnIndices[0] + (1 + leftP) * one_segment_width;
 
-	for (int i = vnIndices[0] + one_segment_width * leftP, k = 0; i < vnIndices.back(); i += ef_koef)
+	for (int i = vnIndices[0] + one_segment_width * leftP, k = 0; i < vnIndices.back(); i += boost)
 	{
 		if ((i < nach_ignored_gap) || (i > konec_ignored_gap))
 		{
@@ -72,7 +72,7 @@ static inline int find_i_konec(_In_ const vector <myflo> & vSignal,
 	int nach_ignored_gap = vnIndices.back() - (1 - rightP) * one_segment_width,
 		konec_ignored_gap = vnIndices.back() - (1 + leftP) * one_segment_width;
 
-	for (int i = vnIndices.back() - one_segment_width * rightP, counter = 0, k = 0; i > vnIndices[0]; i -= ef_koef)
+	for (int i = vnIndices.back() - one_segment_width * rightP, counter = 0, k = 0; i > vnIndices[0]; i -= boost)
 	{
 		if ((i > nach_ignored_gap) || (i < konec_ignored_gap))
 		{
@@ -107,12 +107,12 @@ static inline void noise_vecs(_In_ int k,
 	int i = 0, j = 0, n = 0, nach_ignored_gap = 0, konec_ignored_gap = 0;
 	
 	i = vnIndices[k] - one_segment_width * (1 - rightP);
-	if (i < 0 || i < ef_koef) i = ef_koef;
+	if (i < 0 || i < boost) i = boost;
 
 	nach_ignored_gap = vnIndices[k] - rightP * one_segment_width;
 	konec_ignored_gap = vnIndices[k] + leftP * one_segment_width;
 
-	for (j = 0; j < vLnoise.size() && i < vSignal.size() - ef_koef; i += ef_koef)
+	for (j = 0; j < vLnoise.size() && i < vSignal.size() - boost; i += boost)
 	{
 		if (i < nach_ignored_gap || i > konec_ignored_gap)
 		{
@@ -123,18 +123,18 @@ static inline void noise_vecs(_In_ int k,
 				konec_ignored_gap = vnIndices[k] + leftP * one_segment_width;
 			}
 
-			for (n = 0; n < ef_koef && j < vLnoise.size(); ++n, ++j)
-				vLnoise[j] = vSignal[i - ef_koef + n];
+			for (n = 0; n < boost && j < vLnoise.size(); ++n, ++j)
+				vLnoise[j] = vSignal[i - boost + n];
 		}
 	}
 
 	i = vnIndices[vnIndices.size() - 1 - k] + one_segment_width * (1 - leftP);
-	if (i > vSignal.size() - 1 || i > vSignal.size() - 1 - ef_koef) i = vSignal.size() - 1 - ef_koef;
+	if (i > vSignal.size() - 1 || i > vSignal.size() - 1 - boost) i = vSignal.size() - 1 - boost;
 
 	nach_ignored_gap = vnIndices[vnIndices.size() - 1 - k] + rightP * one_segment_width;
 	konec_ignored_gap = vnIndices[vnIndices.size() - 1 - k] - leftP * one_segment_width;
 
-	for (j = 0; j < vRnoise.size() && i > ef_koef; i -= ef_koef)
+	for (j = 0; j < vRnoise.size() && i > boost; i -= boost)
 	{
 		if (i > nach_ignored_gap || i < konec_ignored_gap)
 		{
@@ -145,8 +145,8 @@ static inline void noise_vecs(_In_ int k,
 				konec_ignored_gap = vnIndices[vnIndices.size() - 1 - k] - leftP * one_segment_width;
 			}
 
-			for (n = 0; n < ef_koef && j < vRnoise.size(); ++n, ++j)
-				vRnoise[j] = vSignal[i + ef_koef - n];
+			for (n = 0; n < boost && j < vRnoise.size(); ++n, ++j)
+				vRnoise[j] = vSignal[i + boost - n];
 		}
 	}
 
@@ -199,18 +199,18 @@ static inline void MinMaxNoise(_In_ const vector <myflo> & vLnoise,
 	////////////////////////////////////// Определяем средний уровень шума //////////////////////////////////////
 }
 
-inline void fit_linear_pila(_In_ const vector <myflo> & vPila, 
+inline void fit_linear_Ramp(_In_ const vector <myflo> & vRamp, 
 							_In_ int ind_st_of_pil, 
-							_Out_ vector <myflo> & vSegPila)
+							_Out_ vector <myflo> & vSegRamp)
 {
 	int i = 0, j = 0, ind_st, ind_end;
-	ind_st = (leftP >= 0.2) ? ind_st_of_pil + leftP * NumPointsOfOriginalPila : ind_st_of_pil + 0.2 * NumPointsOfOriginalPila;
-	ind_end = (rightP >= 0.2) ? ind_st_of_pil + (1 - rightP) * NumPointsOfOriginalPila : ind_st_of_pil + (1 - 0.2) * NumPointsOfOriginalPila;
-	myflo stVP = vPila[ind_st], endVP = vPila[ind_end], delta;
-	vSegPila.resize((one_segment_width) * (1 - leftP - rightP));
+	ind_st = (leftP >= 0.2) ? ind_st_of_pil + leftP * NumPointsOfOriginalRamp : ind_st_of_pil + 0.2 * NumPointsOfOriginalRamp;
+	ind_end = (rightP >= 0.2) ? ind_st_of_pil + (1 - rightP) * NumPointsOfOriginalRamp : ind_st_of_pil + (1 - 0.2) * NumPointsOfOriginalRamp;
+	myflo stVP = vRamp[ind_st], endVP = vRamp[ind_end], delta;
+	vSegRamp.resize((one_segment_width) * (1 - leftP - rightP));
 
 	/* определяем приращение в одной точке пилы от предыдущей */
-	myflo segment_length = endVP - stVP, segment_points_amount = abs(ind_st - ind_end), transform_factor = (myflo)one_segment_width / NumPointsOfOriginalPila;
+	myflo segment_length = endVP - stVP, segment_points_amount = abs(ind_st - ind_end), transform_factor = (myflo)one_segment_width / NumPointsOfOriginalRamp;
 	delta = segment_length / (segment_points_amount * transform_factor);
 
 #define iterator vector <myflo>::iterator
@@ -234,17 +234,17 @@ inline void fit_linear_pila(_In_ const vector <myflo> & vPila,
 #undef iterator
 	
 	/* Нужен держатель иначе дельта функция ругается на константный итератор */
-	vector <myflo> vPilaHolder(vPila.begin() + ind_st_of_pil, vPila.begin() + ind_st_of_pil + NumPointsOfOriginalPila);
-	int index_of_minormax = minormax(vPilaHolder.begin(), vPilaHolder.end()) - vPilaHolder.begin();
+	vector <myflo> vRampHolder(vRamp.begin() + ind_st_of_pil, vRamp.begin() + ind_st_of_pil + NumPointsOfOriginalRamp);
+	int index_of_minormax = minormax(vRampHolder.begin(), vRampHolder.end()) - vRampHolder.begin();
 
-	vSegPila[0] = *(vPila.begin() + ind_st_of_pil + index_of_minormax + leftP * NumPointsOfOriginalPila);
+	vSegRamp[0] = *(vRamp.begin() + ind_st_of_pil + index_of_minormax + leftP * NumPointsOfOriginalRamp);
 
 	/* после этого пила всегда будет выглядеть как '/' */
-	for (i = 1; i < vSegPila.size(); ++i)
-		vSegPila[i] = vSegPila[i - 1] + delta;
+	for (i = 1; i < vSegRamp.size(); ++i)
+		vSegRamp[i] = vSegRamp[i - 1] + delta;
 
-	if (vSegPila.back() < vSegPila.front())
-		vectormult(vSegPila, -1);
+	/*if (vSegRamp.back() < vSegRamp.front())
+		vectormult(vSegRamp, -1);*/
 }
 
 static inline int convert_time_to_pts(_In_ int v_tok_size)
@@ -317,22 +317,22 @@ inline int easy_find_peaks(_In_ const vector <myflo> & v,	// input data in which
 	return 0;
 }
 
-inline int match_pila_and_signal(_In_ const vector <myflo> & vPila,
+inline int match_Ramp_and_signal(_In_ const vector <myflo> & vRamp,
 								 _In_ const vector <myflo> & vSignal,
-								 _Inout_ vector <int> & vnPilaPeaks)
+								 _Inout_ vector <int> & vnRampPeaks)
 {
 	/* нужен держатель чтобы сделать индексы int с плавающей точкой, для точного приведения фазы */
-	vector <myflo> IndHandler(vnPilaPeaks.begin(), vnPilaPeaks.end()); 
-	if (vPila.size() != vSignal.size())
-		(vPila.size() > vSignal.size()) ? vectordiv(IndHandler, (myflo)vPila.size() / vSignal.size())
-										: vectormult(IndHandler, (myflo)vSignal.size() / vPila.size());
+	vector <myflo> IndHandler(vnRampPeaks.begin(), vnRampPeaks.end()); 
+	if (vRamp.size() != vSignal.size())
+		(vRamp.size() > vSignal.size()) ? vectordiv(IndHandler, (myflo)vRamp.size() / vSignal.size())
+										: vectormult(IndHandler, (myflo)vSignal.size() / vRamp.size());
 
 	/* возвращаем данные в основной вектор типа int */
-	vnPilaPeaks.assign(IndHandler.begin(), IndHandler.end());
+	vnRampPeaks.assign(IndHandler.begin(), IndHandler.end());
 
 	/*проверяем превышение крайнего индекса*/
-	while (vnPilaPeaks.back() > vSignal.size())
-		vnPilaPeaks.pop_back();
+	while (vnRampPeaks.back() > vSignal.size())
+		vnRampPeaks.pop_back();
 
 	/* окончательное приведение, во избежании небольшой погрешности */
 	//vector <int> vnSignalPeaks;
@@ -341,9 +341,9 @@ inline int match_pila_and_signal(_In_ const vector <myflo> & vPila,
 	return 0;
 }
 
-int find_signal_and_make_pila(_In_ const vector <myflo> & vPila,
+int find_signal_and_make_Ramp(_In_ const vector <myflo> & vRamp,
 							  _In_ const vector <myflo> & vSignal,
-							  _Out_ vector <myflo> & vSegPila,
+							  _Out_ vector <myflo> & vSegRamp,
 							  _Out_ vector <int> & vStartSegIndxs)
 {
 	vector <myflo> vLnoise, vRnoise;
@@ -360,37 +360,37 @@ int find_signal_and_make_pila(_In_ const vector <myflo> & vPila,
 
 	/* находим все участки на пиле при помощи пиков */
 	vector <int> vnIndices;
-	err = PeakFinder::findPeaks(vPila, vnIndices, false, 1);
+	err = PeakFinder::findPeaks(vRamp, vnIndices, false, 1);
 	if (vnIndices.size() <= 3) // 3 потому что дальше в функцию я передаю начало второго и он нужен целиком, тоесть от второго до третьего индекса
 		return ERR_TooFewSegs;
 
 	/* определяем длину участка изначальной пилы */
 	int todel = (int)abs(vnIndices[2] - vnIndices[1]) % 100;
 	if ((myflo)todel / 100 <= 0.5) 
-		NumPointsOfOriginalPila = abs(vnIndices[2] - vnIndices[1]) - todel;
+		NumPointsOfOriginalRamp = abs(vnIndices[2] - vnIndices[1]) - todel;
 	else 
-		NumPointsOfOriginalPila = abs(vnIndices[2] - vnIndices[1]) + 100 - todel;
+		NumPointsOfOriginalRamp = abs(vnIndices[2] - vnIndices[1]) + 100 - todel;
 
 	/* определяем длину участка сигнала */
-	one_segment_width = (vPila.size() != vSignal.size()) ? NumPointsOfOriginalPila * ((myflo)vSignal.size() / vPila.size()) :
-		NumPointsOfOriginalPila;
+	one_segment_width = (vRamp.size() != vSignal.size()) ? NumPointsOfOriginalRamp * ((myflo)vSignal.size() / vRamp.size()) :
+		NumPointsOfOriginalRamp;
 
 	/* проверка ошибок */
 	if (one_segment_width == 0 
-		|| NumPointsOfOriginalPila == 0 
+		|| NumPointsOfOriginalRamp == 0 
 		|| is_invalid(one_segment_width) 
-		|| is_invalid(NumPointsOfOriginalPila)
+		|| is_invalid(NumPointsOfOriginalRamp)
 		|| one_segment_width > vSignal.size()
-		|| NumPointsOfOriginalPila > vSignal.size())
+		|| NumPointsOfOriginalRamp > vSignal.size())
 		return ERR_BadSegsLength;
 
 	/* линейно аппроксимируем пилу и задаем ей размер с учетом leftP и rightP */
-	fit_linear_pila(vPila, vnIndices[1] + 5, vSegPila); // +5 потому что мы нашли пики пилы, а в этой функции пила строится от заданной точки, соответственно нужно спуститься вниз пилы
-	if (vSegPila.size() <= 0)
-		return ERR_BadLinearPila;
+	fit_linear_Ramp(vRamp, vnIndices[1] + 5, vSegRamp); // +5 потому что мы нашли пики пилы, а в этой функции пила строится от заданной точки, соответственно нужно спуститься вниз пилы
+	if (vSegRamp.size() <= 0)
+		return ERR_BadLinearRamp;
 
 	/* приводим индексы начал отрезков к одной фазе с током */
-	match_pila_and_signal(vPila, vSignal, vnIndices);
+	match_Ramp_and_signal(vRamp, vSignal, vnIndices);
 
 	/* ВАЖНО!!!!!!!!!!!
 	Мой метод предполагает, что либо в конце сигнала, либо в начале есть немного шума(чтобы взять его за образец и искать сигнал относительно него)
@@ -536,16 +536,16 @@ inline myflo metod_Newton(_In_ myflo x0,
 	return x1;
 }
 
-inline myflo find_floating_potential(_In_ const vector <myflo> & vPila,
+inline myflo find_floating_potential(_In_ const vector <myflo> & vRamp,
 									 _In_ const vector <myflo> & vParams)
 {
-	myflo x = metod_Newton(vPila.back(), vParams, fx_STEP);
+	myflo x = metod_Newton(vRamp.back(), vParams, fx_STEP);
 
 	if (is_invalid(x) || !x)
 	{
-		x = metod_hord(vPila[0], vPila.back(), vParams, fx_STEP);
+		x = metod_hord(vRamp[0], vRamp.back(), vParams, fx_STEP);
 		if (is_invalid(x) || !x)
-			x = vPila.back();
+			x = vRamp.back();
 	}
 
 	return x;
@@ -571,8 +571,8 @@ inline myflo find_density(_In_ const myflo ion_current,
 		__assume(0);
 	}
 
-	return abs(ion_current) * 1E-6f / (0.52026f * S * e * sqrt(kb * temperature * eVtoK / M)); //моя формула
-	//return abs(ion_current) * 1E-6f / (S * e * sqrt(2 * temperature * e / M)); //формула сергея
+	return abs(ion_current) * 1E-6f / (0.52026f * S * ze * sqrt(kb * temperature * eVtoK / M)); //моя формула
+	//return abs(ion_current) * 1E-6f / (S * ze * sqrt(2 * temperature * ze / M)); //формула сергея
 }
 
 inline myflo find_ion_current(_In_ const myflo A,
@@ -613,13 +613,13 @@ inline myflo find_width_at_half_maximum(_In_ const vector <myflo> vx, _In_ const
 	return vx[itr - vy.begin()] - vx[itl - vy.begin()];
 }
 
-int make_one_segment(_In_ const int diagnostics,			 // diagnostics type (zond::0|setka::1|cilind::2)
-					 _In_ const vector <myflo> & vPila,		 // X data
-					 _In_ vector <myflo> & vSignal,			 // Y data
-					 _Out_ vector <myflo> & vres,			 // vector to be filled with the result
-					 _Out_ vector <myflo> & vfilt,			 // vector to be filled with the filtration
-					 _Out_ vector <myflo> & vdiff,			 // vector to be filled with the differentiation
-					 _Inout_ vector <myflo> & vcoeffs)		 // additional coeffs/results vector
+inline int make_one_segment(_In_ const int diagnostics,			 // diagnostics type (zond::0|setka::1|cilind::2)
+							 _In_ const vector <myflo> & vRamp,		 // X data
+							 _In_ vector <myflo> & vSignal,			 // Y data
+							 _Out_ vector <myflo> & vres,			 // vector to be filled with the result
+							 _Out_ vector <myflo> & vfilt,			 // vector to be filled with the filtration
+							 _Out_ vector <myflo> & vdiff,			 // vector to be filled with the differentiation
+							 _Inout_ vector <myflo> & vcoeffs)		 // additional coeffs/results vector
 {
 	S = vcoeffs[0];
 	myflo linfitP = vcoeffs[1],
@@ -631,8 +631,8 @@ int make_one_segment(_In_ const int diagnostics,			 // diagnostics type (zond::0
 	{
 		case 0: // Zond
 		{
-			if (vPila.size() != vSignal.size()
-				|| vPila.empty()
+			if (vRamp.size() != vSignal.size()
+				|| vRamp.empty()
 				|| vSignal.empty())
 			{
 				vcoeffs.resize(4);
@@ -644,13 +644,13 @@ int make_one_segment(_In_ const int diagnostics,			 // diagnostics type (zond::0
 			vector <bool> vFixed = { false, false, false, false };
 			vector <myflo> vParams(4);
 
-			vres.resize(vPila.size());
-			vfilt.resize(vPila.size());
-			vdiff.resize(vPila.size());
+			vres.resize(vRamp.size());
+			vfilt.resize(vRamp.size());
+			vdiff.resize(vRamp.size());
 
 			if (filtS != 0)
 			{
-				sg_smooth(vSignal, vfilt, vPila.size() * (filtS / 2), (5/*OriginLab poly order*/ - 1));
+				sg_smooth(vSignal, vfilt, vRamp.size() * (filtS / 2), (5/*OriginLab poly order*/ - 1));
 				vSignal = vfilt;
 			}
 
@@ -658,8 +658,8 @@ int make_one_segment(_In_ const int diagnostics,			 // diagnostics type (zond::0
 			{
 				vector <myflo> vX, vY;
 
-				vX.assign(vPila.begin(), vPila.begin() + vPila.size() * linfitP);
-				vY.assign(vSignal.begin(), vSignal.begin() + vPila.size() * linfitP);
+				vX.assign(vRamp.begin(), vRamp.begin() + vRamp.size() * linfitP);
+				vY.assign(vSignal.begin(), vSignal.begin() + vRamp.size() * linfitP);
 
 				vector <myflo> vAB = linear_fit(vX, vY);
 
@@ -675,22 +675,22 @@ int make_one_segment(_In_ const int diagnostics,			 // diagnostics type (zond::0
 			}
 
 			vParams[3] = 15;
-			vParams[2] = abs((vSignal.back() - vParams[0] - vParams[1] * vPila.back()) / (exp(vPila.back() / vParams[3])));
+			vParams[2] = abs((vSignal.back() - vParams[0] - vParams[1] * vRamp.back()) / (exp(vRamp.back() / vParams[3])));
 			//vParams[2] = -vParams[0];
 
 			if (linfitP != 0)
 			{
 				vector <myflo> vX, vY;
 
-				vX.assign(vPila.begin() + vPila.size() * linfitP, vPila.end());
-				vY.assign(vSignal.begin() + vPila.size() * linfitP, vSignal.end());
+				vX.assign(vRamp.begin() + vRamp.size() * linfitP, vRamp.end());
+				vY.assign(vSignal.begin() + vRamp.size() * linfitP, vSignal.end());
 
 				levmarq(vX, vY, vParams, vFixed, Num_iter, fx_STEP);
-				//LMfit(vX, vY, vParams, vFixed, Num_iter, fx_STEP, 1/*ef_koef*/);
+				//LMfit(vX, vY, vParams, vFixed, Num_iter, fx_STEP, 1/*boost*/);
 			}
 			else
-				levmarq(vPila, vSignal, vParams, vFixed, Num_iter, fx_STEP);
-				//LMfit(vPila, vSignal, vParams, vFixed, Num_iter, fx_STEP, 1/*ef_koef*/);
+				levmarq(vRamp, vSignal, vParams, vFixed, Num_iter, fx_STEP);
+				//LMfit(vRamp, vSignal, vParams, vFixed, Num_iter, fx_STEP, 1/*boost*/);
 
 			if (vParams[3] < 0.0 
 				|| vParams[3] > 100.0
@@ -698,42 +698,42 @@ int make_one_segment(_In_ const int diagnostics,			 // diagnostics type (zond::0
 			{
 				vector <myflo> vX, vY;
 
-				vX.assign(vPila.begin(), vPila.begin() + vPila.size() * 0.5);
-				vY.assign(vSignal.begin(), vSignal.begin() + vPila.size() * 0.5);
+				vX.assign(vRamp.begin(), vRamp.begin() + vRamp.size() * 0.5);
+				vY.assign(vSignal.begin(), vSignal.begin() + vRamp.size() * 0.5);
 
 				vector <myflo> vAB = linear_fit(vX, vY);
 
 				vParams[0] = vAB[0];
 				vParams[1] = vAB[1];
 				vParams[3] = 15;
-				vParams[2] = abs((vSignal.back() - vParams[0] - vParams[1] * vPila.back()) / (exp(vPila.back() / vParams[3])));
+				vParams[2] = abs((vSignal.back() - vParams[0] - vParams[1] * vRamp.back()) / (exp(vRamp.back() / vParams[3])));
 				//vParams[2] = -vParams[0];
 				
 				vFixed[0] = vFixed[1] = true;
 
-				vX.assign(vPila.begin() + vPila.size() * (1 - 0.5), vPila.end());
-				vY.assign(vSignal.begin() + vPila.size() * (1 - 0.5), vSignal.end());
+				vX.assign(vRamp.begin() + vRamp.size() * (1 - 0.5), vRamp.end());
+				vY.assign(vSignal.begin() + vRamp.size() * (1 - 0.5), vSignal.end());
 
 				levmarq(vX, vY, vParams, vFixed, max(Num_iter, 400), fx_STEP);
-				//LMfit(vX, vY, vParams, vFixed, max(Num_iter, 400), fx_STEP, 1/*ef_koef*/);
+				//LMfit(vX, vY, vParams, vFixed, max(Num_iter, 400), fx_STEP, 1/*boost*/);
 
 				if (vParams[3] < 0.0
 					|| vParams[3] > 100.0
 					|| is_invalid(vParams[3]))
 				{
 					vParams[3] = 15;
-					vParams[2] = abs((vSignal.back() - vParams[0] - vParams[1] * vPila.back()) / (exp(vPila.back() / vParams[3])));
+					vParams[2] = abs((vSignal.back() - vParams[0] - vParams[1] * vRamp.back()) / (exp(vRamp.back() / vParams[3])));
 					//vParams[2] = - vAB[0] / 1E5;
 				}
 			}
 
 			/* записываем в vres */
-			for (i = 0; i < vPila.size(); ++i)
-				vres[i] = fx_STEP(vPila[i], vParams);
+			for (i = 0; i < vRamp.size(); ++i)
+				vres[i] = fx_STEP(vRamp[i], vParams);
 
 			/* записываем в vcoeffs */
 			vcoeffs.resize(4);
-			vcoeffs[0] = find_floating_potential(vPila, vParams);							// Floating potential
+			vcoeffs[0] = find_floating_potential(vRamp, vParams);							// Floating potential
 			vcoeffs[1] = find_ion_current(vParams[0], vParams[1], vcoeffs[0]);				// Saturate ion current
 			vcoeffs[2] = vParams[3];														// Temperature
 			vcoeffs[3] = find_density(vcoeffs[1], vcoeffs[2]);								// Density ne
@@ -742,8 +742,8 @@ int make_one_segment(_In_ const int diagnostics,			 // diagnostics type (zond::0
 		}
 		case 1: // Setka
 		{
-			if (vPila.size() != vSignal.size()
-				|| vPila.empty()
+			if (vRamp.size() != vSignal.size()
+				|| vRamp.empty()
 				|| vSignal.empty())
 			{
 				vcoeffs.resize(4);
@@ -753,19 +753,19 @@ int make_one_segment(_In_ const int diagnostics,			 // diagnostics type (zond::0
 
 			int i = 0;
 
-			vres.resize(vPila.size());
-			vfilt.resize(vPila.size());
-			vdiff.resize(vPila.size());
+			vres.resize(vRamp.size());
+			vfilt.resize(vRamp.size());
+			vdiff.resize(vRamp.size());
 
 			if (filtS == 0)
 				filtS = 0.4f;
 
 			/* фильтруем сигнал и записываем в vfilt */
-			sg_smooth(vSignal, vfilt, vPila.size() * (filtS / 2), (5/*OriginLab poly order*/ - 1));
+			sg_smooth(vSignal, vfilt, vRamp.size() * (filtS / 2), (5/*OriginLab poly order*/ - 1));
 			/* дифференцируем (первая производная) */
 			diff(vfilt, vdiff, -1); // -1 -> чтобы сразу перевернуть
 			/* фильтруем первую производную */
-			sg_smooth(vdiff, vres, vPila.size() * (filtS / 2), (5/*OriginLab poly order*/ - 1));
+			sg_smooth(vdiff, vres, vRamp.size() * (filtS / 2), (5/*OriginLab poly order*/ - 1));
 			vdiff = vres;
 
 #ifdef GAUSSFITS
@@ -773,29 +773,29 @@ int make_one_segment(_In_ const int diagnostics,			 // diagnostics type (zond::0
 			vector <myflo> vParams(4);
 
 			/* инициализируем прицельные параметры ф-ии Гаусса */
-			GAUSS_InitParams(vPila, vres, vParams);
+			GAUSS_InitParams(vRamp, vres, vParams);
 
 			/* аппроксимируем производную Гауссом */
-			levmarq(vPila, vres, vParams, vFixed, Num_iter/* * 2*/, fx_GAUSS);
+			levmarq(vRamp, vres, vParams, vFixed, Num_iter/* * 2*/, fx_GAUSS);
 
 			if (vParams[2] < 0.0 
-				|| vParams[2] > abs(vPila.back() - vPila[0]) / 2
+				|| vParams[2] > abs(vRamp.back() - vRamp[0]) / 2
 				|| is_invalid(vParams[2]))
 			{
 				filtS = max(filtS, 0.8f);
 
 				/* фильтруем сигнал и записываем в vfilt */
-				sg_smooth(vSignal, vfilt, vPila.size() * (filtS / 2), (5/*OriginLab poly order*/ - 1));
+				sg_smooth(vSignal, vfilt, vRamp.size() * (filtS / 2), (5/*OriginLab poly order*/ - 1));
 				/* дифференцируем */
 				diff(vfilt, vdiff, -1);
 				/* фильтруем производную */
-				sg_smooth(vdiff, vres, vPila.size() * (filtS / 2), (5/*OriginLab poly order*/ - 1));
+				sg_smooth(vdiff, vres, vRamp.size() * (filtS / 2), (5/*OriginLab poly order*/ - 1));
 				vdiff = vres;
 
 				/* инициализируем прицельные параметры ф-ии Гаусса */
-				GAUSS_InitParams(vPila, vres, vParams);
+				GAUSS_InitParams(vRamp, vres, vParams);
 
-				levmarq(vPila, vres, vParams, vFixed, min(Num_iter, 2), fx_GAUSS);
+				levmarq(vRamp, vres, vParams, vFixed, min(Num_iter, 2), fx_GAUSS);
 
 				if (vParams[2] < 0.0
 					|| vParams[2] > 100.0
@@ -804,22 +804,22 @@ int make_one_segment(_In_ const int diagnostics,			 // diagnostics type (zond::0
 			}
 
 			/* записываем в vres */
-			for (i = 0; i < vPila.size(); ++i)
-				vres[i] = fx_GAUSS(vPila[i], vParams);
+			for (i = 0; i < vRamp.size(); ++i)
+				vres[i] = fx_GAUSS(vRamp[i], vParams);
 
 			/* записываем в vcoeffs */
 			vcoeffs.resize(4);
 			vcoeffs[0] = *max_element(vSignal.begin(), vSignal.end());						// Max Value
 			vcoeffs[1] = abs(vParams[2]) * 0.5;												// Temp
-			vcoeffs[2] = vPila[max_element(vdiff.begin(), vdiff.end()) - vdiff.begin()];	// Peak Voltage
-			vcoeffs[3] = find_width_at_half_maximum(vPila, vdiff);							// Energy
+			vcoeffs[2] = vRamp[max_element(vdiff.begin(), vdiff.end()) - vdiff.begin()];	// Peak Voltage
+			vcoeffs[3] = find_width_at_half_maximum(vRamp, vdiff);							// Energy
 #else
 			vector <bool> vFixed = { false, false, false };
 			vector <myflo> vParams(3);
-			vector <myflo> vhandler(vPila.size());
+			vector <myflo> vhandler(vRamp.size());
 
 			int middlepoint_of_curvature = max_element(vdiff.begin(), vdiff.end()) - vdiff.begin();
-			if (middlepoint_of_curvature >= vPila.size() - 1)
+			if (middlepoint_of_curvature >= vRamp.size() - 1)
 			{
 				vcoeffs.resize(4);
 				vcoeffs[0] = vcoeffs[1] = vcoeffs[2] = vcoeffs[3] = 0;
@@ -831,19 +831,19 @@ int make_one_segment(_In_ const int diagnostics,			 // diagnostics type (zond::0
 			/* дифференцируем (вторая производная) */
 			diff(vhandler, vres, -1); // -1 -> чтобы сразу перевернуть
 			/* фильтруем вторую производную */
-			sg_smooth(vres, vhandler, vPila.size() * (filtS / 10), (5/*OriginLab poly order*/ - 1));
+			sg_smooth(vres, vhandler, vRamp.size() * (filtS / 10), (5/*OriginLab poly order*/ - 1));
 			
 			/* отрезок аппроксимации будет длинной 5 полуширин изгиба */
 			int endpoint_of_curvature = middlepoint_of_curvature + 5 * abs(max_element(vhandler.begin(), vhandler.end()) - vhandler.begin());
 
-			if (endpoint_of_curvature < vPila.size() && middlepoint_of_curvature < endpoint_of_curvature)
+			if (endpoint_of_curvature < vRamp.size() && middlepoint_of_curvature < endpoint_of_curvature)
 			{
-				vhandler.assign(vPila.begin() + middlepoint_of_curvature, vPila.begin() + endpoint_of_curvature);
+				vhandler.assign(vRamp.begin() + middlepoint_of_curvature, vRamp.begin() + endpoint_of_curvature);
 				vres.assign(vfilt.begin() + middlepoint_of_curvature, vfilt.begin() + endpoint_of_curvature);
 			}
 			else
 			{
-				vhandler.assign(vPila.begin() + middlepoint_of_curvature, vPila.end());
+				vhandler.assign(vRamp.begin() + middlepoint_of_curvature, vRamp.end());
 				vres.assign(vfilt.begin() + middlepoint_of_curvature, vfilt.end());
 			}
 
@@ -862,12 +862,12 @@ int make_one_segment(_In_ const int diagnostics,			 // diagnostics type (zond::0
 						|| is_invalid(vParams[1])) ? log(abs((vres[0] - vParams[0]) / (exp(vhandler[0] / vParams[2])))) - vParams[2] * vhandler[0] : vParams[1];
 
 			/* записываем в vres */
-			vres.resize(vPila.size());
-			for (i = 0; i < vPila.size(); ++i)
+			vres.resize(vRamp.size());
+			for (i = 0; i < vRamp.size(); ++i)
 			{
 				if (i >= middlepoint_of_curvature &&
 					i <= middlepoint_of_curvature + vhandler.size())
-					vres[i] = fx_EXP(vPila[i], vParams);
+					vres[i] = fx_EXP(vRamp[i], vParams);
 				else
 					vres[i] = NULL;
 			}
@@ -876,15 +876,15 @@ int make_one_segment(_In_ const int diagnostics,			 // diagnostics type (zond::0
 			vcoeffs.resize(4);
 			vcoeffs[0] = *max_element(vSignal.begin(), vSignal.end());						// Max Value
 			vcoeffs[1] = abs(vParams[2]);													// Temp
-			vcoeffs[2] = vPila[max_element(vdiff.begin(), vdiff.end()) - vdiff.begin()];	// Peak Voltage
-			vcoeffs[3] = find_width_at_half_maximum(vPila, vdiff);							// Energy
+			vcoeffs[2] = vRamp[max_element(vdiff.begin(), vdiff.end()) - vdiff.begin()];	// Peak Voltage
+			vcoeffs[3] = find_width_at_half_maximum(vRamp, vdiff);							// Energy
 #endif
 			break;
 		}
 		case 2: // Cilinder|Magnit
 		{
-			if (vPila.size() != vSignal.size()
-				|| vPila.empty()
+			if (vRamp.size() != vSignal.size()
+				|| vRamp.empty()
 				|| vSignal.empty())
 			{
 				vcoeffs.resize(4);
@@ -894,13 +894,13 @@ int make_one_segment(_In_ const int diagnostics,			 // diagnostics type (zond::0
 
 			int i = 0;
 
-			vres.resize(vPila.size());
-			vfilt.resize(vPila.size());
-			vdiff.resize(vPila.size());
+			vres.resize(vRamp.size());
+			vfilt.resize(vRamp.size());
+			vdiff.resize(vRamp.size());
 
 			if (filtS != 0)
 			{
-				sg_smooth(vSignal, vfilt, vPila.size() * (filtS / 2), (5/*OriginLab poly order*/ - 1));
+				sg_smooth(vSignal, vfilt, vRamp.size() * (filtS / 2), (5/*OriginLab poly order*/ - 1));
 				vSignal = vfilt;
 			}
 
@@ -909,24 +909,24 @@ int make_one_segment(_In_ const int diagnostics,			 // diagnostics type (zond::0
 			vector <myflo> vParams(4);
 
 			/* инициализируем прицельные параметры ф-ии Гаусса */
-			GAUSS_InitParams(vPila, vSignal, vParams);
+			GAUSS_InitParams(vRamp, vSignal, vParams);
 
 			/* аппроксимируем производную Гауссом */
-			levmarq(vPila, vSignal, vParams, vFixed, Num_iter/* * 2*/, fx_GAUSS);
+			levmarq(vRamp, vSignal, vParams, vFixed, Num_iter/* * 2*/, fx_GAUSS);
 
 			if (vParams[2] < 0.0 
-				|| vParams[2] > abs(vPila.back() - vPila[0]) / 2
+				|| vParams[2] > abs(vRamp.back() - vRamp[0]) / 2
 				|| is_invalid(vParams[2]))
 			{
 				filtS = max(filtS, 0.8f);
 
 				/* фильтруем сигнал и записываем в vfilt */
-				sg_smooth(vSignal, vres, vPila.size() * (filtS / 2), (5/*OriginLab poly order*/ - 1));
+				sg_smooth(vSignal, vres, vRamp.size() * (filtS / 2), (5/*OriginLab poly order*/ - 1));
 
 				/* инициализируем прицельные параметры ф-ии Гаусса */
-				GAUSS_InitParams(vPila, vres, vParams);
+				GAUSS_InitParams(vRamp, vres, vParams);
 
-				levmarq(vPila, vres, vParams, vFixed, min(Num_iter, 2), fx_GAUSS);
+				levmarq(vRamp, vres, vParams, vFixed, min(Num_iter, 2), fx_GAUSS);
 
 				if (vParams[2] < 0.0
 					|| vParams[2] > 100.0
@@ -935,35 +935,35 @@ int make_one_segment(_In_ const int diagnostics,			 // diagnostics type (zond::0
 			}
 
 			/* записываем в vres */
-			for (i = 0; i < vPila.size(); ++i)
-				vres[i] = fx_GAUSS(vPila[i], vParams);
+			for (i = 0; i < vRamp.size(); ++i)
+				vres[i] = fx_GAUSS(vRamp[i], vParams);
 
 			/* записываем в vcoeffs */
 			vcoeffs.resize(4);
 			vcoeffs[0] = *max_element(vSignal.begin(), vSignal.end());					// Max Value
 			vcoeffs[1] = abs(vParams[2]) * 0.5;											// Temp
-			vcoeffs[2] = vPila[max_element(vres.begin(), vres.end()) - vres.begin()];	// Peak Voltage
-			vcoeffs[3] = find_width_at_half_maximum(vPila, vres);						// Energy
+			vcoeffs[2] = vRamp[max_element(vres.begin(), vres.end()) - vres.begin()];	// Peak Voltage
+			vcoeffs[3] = find_width_at_half_maximum(vRamp, vres);						// Energy
 #else
 #ifndef debug
 			vector <bool> vFixed = { false, false, false };
 			vector <myflo> vParams(3);
-			vector <myflo> vhandler(vPila.size());
+			vector <myflo> vhandler(vRamp.size());
 
 			/* дифференцируем (первая производная) */
 			diff(vSignal, vhandler, -1); // -1 -> чтобы сразу перевернуть
 			/* фильтруем первую производную */
-			sg_smooth(vhandler, vres, vPila.size() * ((filtS != 0) ? (filtS / 2) : (0.4 / 2)), (5/*OriginLab poly order*/ - 1));
+			sg_smooth(vhandler, vres, vRamp.size() * ((filtS != 0) ? (filtS / 2) : (0.4 / 2)), (5/*OriginLab poly order*/ - 1));
 
 			int middlepoint_of_curvature = max_element(vres.begin(), vres.end()) - vres.begin();
-			if (middlepoint_of_curvature >= vPila.size() - 1)
+			if (middlepoint_of_curvature >= vRamp.size() - 1)
 			{
 				vcoeffs.resize(4);
 				vcoeffs[0] = vcoeffs[1] = vcoeffs[2] = vcoeffs[3] = 0;
 				return -1;
 			}
 
-			/*vhandler.assign(vPila.begin() + middlepoint_of_curvature, vPila.end());
+			/*vhandler.assign(vRamp.begin() + middlepoint_of_curvature, vRamp.end());
 			vres.assign(vSignal.begin() + middlepoint_of_curvature, vSignal.end());*/
 
 			vhandler.assign(vres.begin() + middlepoint_of_curvature, vres.end());
@@ -971,18 +971,18 @@ int make_one_segment(_In_ const int diagnostics,			 // diagnostics type (zond::0
 			/* дифференцируем (вторая производная) */
 			diff(vhandler, vres, -1); // -1 -> чтобы сразу перевернуть
 			/* фильтруем вторую производную */
-			sg_smooth(vres, vhandler, vPila.size() * (filtS / 10), (5/*OriginLab poly order*/ - 1));
+			sg_smooth(vres, vhandler, vRamp.size() * (filtS / 10), (5/*OriginLab poly order*/ - 1));
 
 			int endpoint_of_curvature = middlepoint_of_curvature + 5 * abs(max_element(vhandler.begin(), vhandler.end()) - vhandler.begin());
 
-			if (endpoint_of_curvature < vPila.size() && middlepoint_of_curvature < endpoint_of_curvature)
+			if (endpoint_of_curvature < vRamp.size() && middlepoint_of_curvature < endpoint_of_curvature)
 			{
-				vhandler.assign(vPila.begin() + middlepoint_of_curvature, vPila.begin() + endpoint_of_curvature);
+				vhandler.assign(vRamp.begin() + middlepoint_of_curvature, vRamp.begin() + endpoint_of_curvature);
 				vres.assign(vSignal.begin() + middlepoint_of_curvature, vSignal.begin() + endpoint_of_curvature);
 			}
 			else
 			{
-				vhandler.assign(vPila.begin() + middlepoint_of_curvature, vPila.end());
+				vhandler.assign(vRamp.begin() + middlepoint_of_curvature, vRamp.end());
 				vres.assign(vSignal.begin() + middlepoint_of_curvature, vSignal.end());
 			}
 
@@ -1003,21 +1003,21 @@ int make_one_segment(_In_ const int diagnostics,			 // diagnostics type (zond::0
 			/* аппроксимируем выбранный участок экспонентой */
 			levmarq(vhandler, vres, vParams, vFixed, max(Num_iter, 400), fx_EXP);
 
-			vParams[2] = (vParams[2] > 0.0
-						|| vParams[2] < -100.0
-						|| is_invalid(vParams[2])) ? -15 : vParams[2];
+			//vParams[2] = (vParams[2] > 0.0
+			//			|| vParams[2] < -100.0
+			//			|| is_invalid(vParams[2])) ? -15 : vParams[2];
 			vParams[0] = (is_invalid(vParams[0])) ? *min_element(vres.begin(), vres.end()) : vParams[0];
 			vParams[1] = (vParams[1] < 0
 						|| is_invalid(vParams[1])) ? log(abs((vres[0] - vParams[0]) / (exp(vhandler[0] / vParams[2])))) - vParams[2] * vhandler[0]
 						: vParams[1];
 
 			/* записываем в vres */
-			vres.resize(vPila.size());
-			for (i = 0; i < vPila.size(); ++i)
+			vres.resize(vRamp.size());
+			for (i = 0; i < vRamp.size(); ++i)
 			{
 				if (i >= middlepoint_of_curvature &&
 					i <= middlepoint_of_curvature + vhandler.size())
-					vres[i] = fx_EXP(vPila[i], vParams);
+					vres[i] = fx_EXP(vRamp[i], vParams);
 				else
 					vres[i] = NULL;
 			}
@@ -1026,27 +1026,27 @@ int make_one_segment(_In_ const int diagnostics,			 // diagnostics type (zond::0
 			vcoeffs.resize(4);
 			vcoeffs[0] = *max_element(vSignal.begin(), vSignal.end());							// Max Value
 			vcoeffs[1] = abs(vParams[2]);														// Temp
-			vcoeffs[2] = vPila[max_element(vSignal.begin(), vSignal.end()) - vSignal.begin()];	// Peak Voltage
-			vcoeffs[3] = find_width_at_half_maximum(vPila, vSignal);							// Energy
+			vcoeffs[2] = vRamp[max_element(vSignal.begin(), vSignal.end()) - vSignal.begin()];	// Peak Voltage
+			vcoeffs[3] = find_width_at_half_maximum(vRamp, vSignal);							// Energy
 #else
 			vector <bool> vFixed = { false, false, false, false };
 			vector <myflo> vParams(4);
-			vector <myflo> vhandler(vPila.size());
+			vector <myflo> vhandler(vRamp.size());
 
 			/* дифференцируем (первая производная) */
 			diff(vSignal, vhandler, -1); // -1 -> чтобы сразу перевернуть
 			/* фильтруем первую производную */
-			sg_smooth(vhandler, vres, vPila.size()* ((filtS != 0) ? (filtS / 2) : (0.4 / 2)), (5/*OriginLab poly order*/ - 1));
+			sg_smooth(vhandler, vres, vRamp.size()* ((filtS != 0) ? (filtS / 2) : (0.4 / 2)), (5/*OriginLab poly order*/ - 1));
 
 			int middlepoint_of_curvature = max_element(vres.begin(), vres.end()) - vres.begin();
-			if (middlepoint_of_curvature >= vPila.size() - 1)
+			if (middlepoint_of_curvature >= vRamp.size() - 1)
 			{
 				vcoeffs.resize(4);
 				vcoeffs[0] = vcoeffs[1] = vcoeffs[2] = vcoeffs[3] = 0;
 				return -1;
 			}
 
-			vhandler.assign(vPila.begin() + middlepoint_of_curvature, vPila.end());
+			vhandler.assign(vRamp.begin() + middlepoint_of_curvature, vRamp.end());
 			vres.assign(vSignal.begin() + middlepoint_of_curvature, vSignal.end());
 
 			//vhandler.assign(vres.begin() + middlepoint_of_curvature, vres.end());
@@ -1054,26 +1054,26 @@ int make_one_segment(_In_ const int diagnostics,			 // diagnostics type (zond::0
 			///* дифференцируем (вторая производная) */
 			//diff(vhandler, vres, -1); // -1 -> чтобы сразу перевернуть
 			///* фильтруем вторую производную */
-			//sg_smooth(vres, vhandler, vPila.size() * (filtS / 10), (5/*OriginLab poly order*/ - 1));
+			//sg_smooth(vres, vhandler, vRamp.size() * (filtS / 10), (5/*OriginLab poly order*/ - 1));
 
 			//int endpoint_of_curvature = middlepoint_of_curvature + 5 * abs(max_element(vhandler.begin(), vhandler.end()) - vhandler.begin());
 
-			//if (endpoint_of_curvature < vPila.size() && middlepoint_of_curvature < endpoint_of_curvature)
+			//if (endpoint_of_curvature < vRamp.size() && middlepoint_of_curvature < endpoint_of_curvature)
 			//{
-			//	vhandler.assign(vPila.begin() + middlepoint_of_curvature, vPila.begin() + endpoint_of_curvature);
+			//	vhandler.assign(vRamp.begin() + middlepoint_of_curvature, vRamp.begin() + endpoint_of_curvature);
 			//	vres.assign(vSignal.begin() + middlepoint_of_curvature, vSignal.begin() + endpoint_of_curvature);
 			//}
 			//else
 			//{
-			//	vhandler.assign(vPila.begin() + middlepoint_of_curvature, vPila.end());
+			//	vhandler.assign(vRamp.begin() + middlepoint_of_curvature, vRamp.end());
 			//	vres.assign(vSignal.begin() + middlepoint_of_curvature, vSignal.end());
 			//}
 
 			{
 				vector <myflo> vX, vY;
 
-				vX.assign(vPila.begin() + vPila.size() * linfitP, vPila.end());
-				vY.assign(vSignal.begin() + vPila.size() * linfitP, vSignal.end());
+				vX.assign(vRamp.begin() + vRamp.size() * linfitP, vRamp.end());
+				vY.assign(vSignal.begin() + vRamp.size() * linfitP, vSignal.end());
 
 				vector <myflo> vAB = linear_fit(vX, vY);
 
@@ -1084,18 +1084,18 @@ int make_one_segment(_In_ const int diagnostics,			 // diagnostics type (zond::0
 			}
 
 			vParams[3] = -15;
-			vParams[2] = abs((vSignal.front() - vParams[0] - vParams[1] * vPila.front()) / (exp(vPila.front() / vParams[3])));
+			vParams[2] = abs((vSignal.front() - vParams[0] - vParams[1] * vRamp.front()) / (exp(vRamp.front() / vParams[3])));
 
 			/* аппроксимируем выбранный участок экспонентой */
 			levmarq(vhandler, vres, vParams, vFixed, max(Num_iter, 400), fx_STEP);
 
 			/* записываем в vres */
-			vres.resize(vPila.size());
-			for (i = 0; i < vPila.size(); ++i)
+			vres.resize(vRamp.size());
+			for (i = 0; i < vRamp.size(); ++i)
 			{
 				if (i >= middlepoint_of_curvature &&
 					i <= middlepoint_of_curvature + vhandler.size())
-					vres[i] = fx_STEP(vPila[i], vParams);
+					vres[i] = fx_STEP(vRamp[i], vParams);
 				else
 					vres[i] = NULL;
 			}
@@ -1104,16 +1104,16 @@ int make_one_segment(_In_ const int diagnostics,			 // diagnostics type (zond::0
 			vcoeffs.resize(4);
 			vcoeffs[0] = *max_element(vSignal.begin(), vSignal.end());							// Max Value
 			vcoeffs[1] = abs(vParams[3]);														// Temp
-			vcoeffs[2] = vPila[max_element(vSignal.begin(), vSignal.end()) - vSignal.begin()];	// Peak Voltage
-			vcoeffs[3] = find_width_at_half_maximum(vPila, vSignal);							// Energy
+			vcoeffs[2] = vRamp[max_element(vSignal.begin(), vSignal.end()) - vSignal.begin()];	// Peak Voltage
+			vcoeffs[3] = find_width_at_half_maximum(vRamp, vSignal);							// Energy
 #endif
 #endif
 			break;
 		}
 		case 3:	// double langmuir probe
 		{
-			if (vPila.size() != vSignal.size()
-				|| vPila.empty()
+			if (vRamp.size() != vSignal.size()
+				|| vRamp.empty()
 				|| vSignal.empty())
 			{
 				vcoeffs.resize(4);
@@ -1125,23 +1125,23 @@ int make_one_segment(_In_ const int diagnostics,			 // diagnostics type (zond::0
 			vector <bool> vFixed = { false, false, false, false, false, false };
 			vector <myflo> vParams(6);
 
-			vres.resize(vPila.size());
-			vfilt.resize(vPila.size());
-			vdiff.resize(vPila.size());
+			vres.resize(vRamp.size());
+			vfilt.resize(vRamp.size());
+			vdiff.resize(vRamp.size());
 
 			if (filtS != 0)
 			{
-				sg_smooth(vSignal, vfilt, vPila.size() * (filtS / 2), (5/*OriginLab poly order*/ - 1));
+				sg_smooth(vSignal, vfilt, vRamp.size() * (filtS / 2), (5/*OriginLab poly order*/ - 1));
 				vSignal = vfilt;
 			}
 
-			PWL3_InitParams(vPila, vSignal, vParams);
+			PWL3_InitParams(vRamp, vSignal, vParams);
 
-			levmarq(vPila, vSignal, vParams, vFixed, Num_iter, fx_PWL3);
+			levmarq(vRamp, vSignal, vParams, vFixed, Num_iter, fx_PWL3);
 
 			/* записываем в vres */
-			for (i = 0; i < vPila.size(); ++i)
-				vres[i] = fx_PWL3(vPila[i], vParams);
+			for (i = 0; i < vRamp.size(); ++i)
+				vres[i] = fx_PWL3(vRamp[i], vParams);
 
 			/* записываем в vcoeffs */
 			myflo y1 = vParams[0] + vParams[1] * vParams[2],				// central PWL3 line offset 
